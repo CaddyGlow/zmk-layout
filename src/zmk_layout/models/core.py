@@ -404,6 +404,25 @@ class LayoutBinding(LayoutBaseModel):
 
         return cls(value=behavior, params=params)
 
+    def to_str(self) -> str:
+        """Convert binding back to string representation.
+
+        Returns:
+            Full binding string like "&kp D" or "&mt LCTRL A"
+        """
+        if not self.params:
+            return self.value
+
+        def param_to_str(param: LayoutParam) -> str:
+            if not param.params:
+                return str(param.value)
+            # Handle nested parameters
+            nested_strs = [param_to_str(p) for p in param.params]
+            return f"{param.value}({','.join(nested_strs)})"
+
+        param_strs = [param_to_str(p) for p in self.params]
+        return f"{self.value} {' '.join(param_strs)}"
+
 
 class LayoutLayer(LayoutBaseModel):
     """Model for keyboard layers."""

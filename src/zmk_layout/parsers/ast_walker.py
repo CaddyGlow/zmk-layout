@@ -8,10 +8,11 @@ from .ast_nodes import DTNode, DTProperty, DTVisitor
 if TYPE_CHECKING:
     from zmk_layout.providers import LayoutLogger
 
-    class StructlogMixin:
-        """Placeholder for StructlogMixin until extracted."""
 
-        pass
+class StructlogMixin:
+    """Placeholder for StructlogMixin until extracted."""
+
+    pass
 
 
 class DTWalker:

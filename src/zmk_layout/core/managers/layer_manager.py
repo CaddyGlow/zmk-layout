@@ -1,7 +1,9 @@
 """Layer management for fluent API operations."""
 
+from collections.abc import Callable, Iterator
 from typing import TYPE_CHECKING
 
+from zmk_layout.core.exceptions import LayerExistsError, LayerNotFoundError
 from zmk_layout.models.core import LayoutBinding
 
 if TYPE_CHECKING:
@@ -38,10 +40,10 @@ class LayerManager:
             ValueError: If layer name already exists
         """
         if name in self._data.layer_names:
-            raise ValueError(f"Layer '{name}' already exists")
+            raise LayerExistsError(name)
 
         # Initialize empty layer with default bindings
-        empty_layer = []
+        empty_layer: list[LayoutBinding] = []
 
         if position is None:
             # Append to end
@@ -69,7 +71,7 @@ class LayerManager:
             ValueError: If layer not found
         """
         if name not in self._data.layer_names:
-            raise ValueError(f"Layer '{name}' not found")
+            raise LayerNotFoundError(name, self._data.layer_names)
 
         from .layer_proxy import LayerProxy
 
@@ -88,7 +90,7 @@ class LayerManager:
             ValueError: If layer not found
         """
         if name not in self._data.layer_names:
-            raise ValueError(f"Layer '{name}' not found")
+            raise LayerNotFoundError(name, self._data.layer_names)
 
         index = self._data.layer_names.index(name)
         self._data.layer_names.pop(index)
@@ -111,7 +113,7 @@ class LayerManager:
             IndexError: If position out of range
         """
         if name not in self._data.layer_names:
-            raise ValueError(f"Layer '{name}' not found")
+            raise LayerNotFoundError(name, self._data.layer_names)
 
         if position < 0 or position >= len(self._data.layer_names):
             raise IndexError(f"Position {position} out of range")
@@ -196,7 +198,7 @@ class LayerManager:
             ValueError: If layer not found
         """
         if name not in self._data.layer_names:
-            raise ValueError(f"Layer '{name}' not found")
+            raise LayerNotFoundError(name, self._data.layer_names)
 
         index = self._data.layer_names.index(name)
         self._data.layers[index].clear()
@@ -221,6 +223,96 @@ class LayerManager:
         """Get number of layers."""
         return len(self._data.layer_names)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Iterate over layer names."""
         return iter(self._data.layer_names)
+
+    def add_multiple(self, names: list[str]) -> "LayerManager":
+        """Add multiple layers and return self for chaining.
+
+        Args:
+            names: List of layer names to add
+
+        Returns:
+            Self for method chaining
+
+        Raises:
+            ValueError: If any layer name already exists
+        """
+        for name in names:
+            if name in self._data.layer_names:
+                raise LayerExistsError(name)
+
+        # All names are valid, add them
+        for name in names:
+            empty_layer: list[LayoutBinding] = []
+            self._data.layer_names.append(name)
+            self._data.layers.append(empty_layer)
+
+        return self
+
+    def remove_multiple(self, names: list[str]) -> "LayerManager":
+        """Remove multiple layers and return self for chaining.
+
+        Args:
+            names: List of layer names to remove
+
+        Returns:
+            Self for method chaining
+
+        Raises:
+            ValueError: If any layer not found
+        """
+        # Validate all names exist first
+        for name in names:
+            if name not in self._data.layer_names:
+                raise ValueError(f"Layer '{name}' not found")
+
+        # Remove in reverse order to maintain indices
+        for name in reversed(names):
+            index = self._data.layer_names.index(name)
+            self._data.layer_names.pop(index)
+            self._data.layers.pop(index)
+
+        return self
+
+    def reorder(self, new_order: list[str]) -> "LayerManager":
+        """Reorder layers and return self for chaining.
+
+        Args:
+            new_order: New order of layer names
+
+        Returns:
+            Self for method chaining
+
+        Raises:
+            ValueError: If new_order doesn't match existing layers
+        """
+        if set(new_order) != set(self._data.layer_names):
+            raise ValueError("New order must contain exactly the same layer names")
+
+        # Create new ordered lists
+        new_layer_names = []
+        new_layers = []
+
+        for name in new_order:
+            index = self._data.layer_names.index(name)
+            new_layer_names.append(name)
+            new_layers.append(self._data.layers[index])
+
+        # Replace the lists
+        self._data.layer_names[:] = new_layer_names
+        self._data.layers[:] = new_layers
+
+        return self
+
+    def find(self, predicate: Callable[[str], bool]) -> list[str]:
+        """Find layers matching predicate.
+
+        Args:
+            predicate: Function that takes layer name and returns bool
+
+        Returns:
+            List of matching layer names
+        """
+        return [name for name in self._data.layer_names if predicate(name)]

@@ -6,6 +6,9 @@ enabling easy parsing, modification, and generation of layout files.
 
 __version__ = "0.1.0"
 
+# Import core classes
+from .core.layout import Layout
+
 # Import core models
 from .models import (
     ComboBehavior,
@@ -30,6 +33,8 @@ from .providers.factory import create_default_providers
 
 __all__ = [
     "__version__",
+    # Core classes
+    "Layout",
     # Core models
     "LayoutBaseModel",
     "LayoutParam",

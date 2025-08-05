@@ -19,7 +19,7 @@ def has_jinja2() -> bool:
 def has_lark() -> bool:
     """Check if lark parser is available."""
     try:
-        import lark  # type: ignore[import-not-found] # noqa: F401
+        import lark  # noqa: F401
 
         return True
     except ImportError:
@@ -62,7 +62,7 @@ def get_parser_provider() -> Any:
     """Get parser provider with fallback."""
     if has_lark():
         try:
-            from lark import Lark  # type: ignore[import-not-found]
+            from lark import Lark
 
             class LarkParserProvider:
                 def __init__(self) -> None:

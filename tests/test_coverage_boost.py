@@ -28,7 +28,7 @@ from zmk_layout.providers.factory import (
 class TestLayoutBinding:
     """Test LayoutBinding model more thoroughly."""
 
-    def test_layout_binding_from_str_complex(self):
+    def test_layout_binding_from_str_complex(self) -> None:
         """Test complex binding string parsing."""
         # Test with parameters
         binding = LayoutBinding.from_str("&mt LSHIFT A")
@@ -37,14 +37,14 @@ class TestLayoutBinding:
         assert binding.params[0].value == "LSHIFT"
         assert binding.params[1].value == "A"
 
-    def test_layout_binding_from_str_nested_params(self):
+    def test_layout_binding_from_str_nested_params(self) -> None:
         """Test nested parameter parsing."""
         binding = LayoutBinding.from_str("&kp(LSHIFT(A))")
         # Should handle complex binding format
         assert binding.value is not None
         assert "&kp" in binding.value
 
-    def test_layout_binding_validation(self):
+    def test_layout_binding_validation(self) -> None:
         """Test binding validation."""
         # Test valid binding
         binding = LayoutBinding(value="&kp", params=[LayoutParam(value="A")])
@@ -54,13 +54,13 @@ class TestLayoutBinding:
         data = binding.model_dump()
         assert data["value"] == "&kp"
 
-    def test_layout_binding_to_string(self):
+    def test_layout_binding_to_string(self) -> None:
         """Test binding string representation."""
         binding = LayoutBinding(value="&mt", params=[LayoutParam(value="LSHIFT"), LayoutParam(value="A")])
         str_repr = str(binding)
         assert "&mt" in str_repr
 
-    def test_layout_param_nested(self):
+    def test_layout_param_nested(self) -> None:
         """Test nested layout parameters."""
         nested_param = LayoutParam(value="SHIFT", params=[LayoutParam(value="LEFT")])
         assert nested_param.value == "SHIFT"
@@ -71,36 +71,36 @@ class TestLayoutBinding:
 class TestBehaviorModels:
     """Test behavior model edge cases."""
 
-    def test_hold_tap_behavior_validation(self):
+    def test_hold_tap_behavior_validation(self) -> None:
         """Test hold-tap behavior validation."""
         # Test valid hold-tap
-        ht = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tapping_term_ms=200, flavor="tap-preferred")
+        ht = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200, flavor="tap-preferred")
         assert ht.name == "&mt"
         assert len(ht.bindings) == 2
         assert ht.tapping_term_ms == 200
         assert ht.flavor == "tap-preferred"
 
-    def test_hold_tap_behavior_serialization(self):
+    def test_hold_tap_behavior_serialization(self) -> None:
         """Test hold-tap serialization."""
-        ht = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tapping_term_ms=200)
+        ht = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200)
         data = ht.model_dump()
         assert data["name"] == "&mt"
         assert "bindings" in data
 
-    def test_combo_behavior_validation(self):
+    def test_combo_behavior_validation(self) -> None:
         """Test combo behavior validation."""
         combo = ComboBehavior(
             name="esc_combo",
-            key_positions=[0, 1, 2],
+            keyPositions=[0, 1, 2],
             binding=LayoutBinding(value="&kp ESC"),
-            timeout_ms=50,
+            timeoutMs=50,
             layers=[0, 1],
         )
         assert combo.name == "esc_combo"
         assert len(combo.key_positions) == 3
         assert combo.timeout_ms == 50
 
-    def test_macro_behavior_creation(self):
+    def test_macro_behavior_creation(self) -> None:
         """Test macro behavior creation."""
         macro = MacroBehavior(
             name="&email",
@@ -109,14 +109,14 @@ class TestBehaviorModels:
                 LayoutBinding(value="&kp E"),
                 LayoutBinding(value="&kp L"),
             ],
-            wait_ms=10,
-            tap_ms=5,
+            waitMs=10,
+            tapMs=5,
         )
         assert macro.name == "&email"
         assert len(macro.bindings) == 3
         assert macro.wait_ms == 10
 
-    def test_tap_dance_behavior_creation(self):
+    def test_tap_dance_behavior_creation(self) -> None:
         """Test tap dance behavior creation."""
         td = TapDanceBehavior(
             name="&td_caps",
@@ -124,7 +124,7 @@ class TestBehaviorModels:
                 LayoutBinding(value="&kp A"),
                 LayoutBinding(value="&caps_word"),
             ],
-            tapping_term_ms=200,
+            tappingTermMs=200,
         )
         assert td.name == "&td_caps"
         assert len(td.bindings) == 2
@@ -133,16 +133,16 @@ class TestBehaviorModels:
 class TestLayoutData:
     """Test LayoutData model more thoroughly."""
 
-    def test_layout_data_with_all_behaviors(self):
+    def test_layout_data_with_all_behaviors(self) -> None:
         """Test layout data with all behavior types."""
-        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tapping_term_ms=200)
+        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200)
 
-        combo = ComboBehavior(name="esc_combo", key_positions=[0, 1], binding=LayoutBinding(value="&kp ESC"))
+        combo = ComboBehavior(name="esc_combo", keyPositions=[0, 1], binding=LayoutBinding(value="&kp ESC"))
 
-        macro = MacroBehavior(name="&email", bindings=[LayoutBinding(value="&kp H")], wait_ms=10)
+        macro = MacroBehavior(name="&email", bindings=[LayoutBinding(value="&kp H")], waitMs=10)
 
         tap_dance = TapDanceBehavior(
-            name="&td_caps", bindings=[LayoutBinding(value="&kp A"), LayoutBinding(value="&kp B")], tapping_term_ms=200
+            name="&td_caps", bindings=[LayoutBinding(value="&kp A"), LayoutBinding(value="&kp B")], tappingTermMs=200
         )
 
         layout = LayoutData(
@@ -150,10 +150,10 @@ class TestLayoutData:
             title="Full Test Layout",
             layers=[[LayoutBinding(value="&kp A")]],
             layer_names=["default"],
-            hold_taps=[hold_tap],
+            holdTaps=[hold_tap],
             combos=[combo],
             macros=[macro],
-            tap_dances=[tap_dance],
+            tapDances=[tap_dance],
         )
 
         assert len(layout.hold_taps) == 1
@@ -161,7 +161,7 @@ class TestLayoutData:
         assert len(layout.macros) == 1
         assert len(layout.tap_dances) == 1
 
-    def test_layout_data_serialization(self):
+    def test_layout_data_serialization(self) -> None:
         """Test layout data serialization."""
         layout = LayoutData(
             keyboard="test_kb", title="Test Layout", layers=[[LayoutBinding(value="&kp A")]], layer_names=["default"]
@@ -172,7 +172,7 @@ class TestLayoutData:
         assert json_data["keyboard"] == "test_kb"
         assert "layers" in json_data
 
-    def test_layout_data_validation(self):
+    def test_layout_data_validation(self) -> None:
         """Test layout data validation."""
         # Test with mismatched layers and layer_names
         layout = LayoutData(
@@ -184,24 +184,25 @@ class TestLayoutData:
 
         assert len(layout.layers) == len(layout.layer_names)
 
-    def test_layout_result_creation(self):
+    def test_layout_result_creation(self) -> None:
         """Test LayoutResult creation."""
         result = LayoutResult(
-            keymap_content="keymap content",
-            config_content="config content",
-            settings={"setting1": "value1"},
-            metadata={"generated_at": "2023-01-01"},
+            success=True,
+            messages=["Generated successfully"],
+            keymap_path="/path/to/keymap",
+            conf_path="/path/to/conf",
         )
 
-        assert result.keymap_content == "keymap content"
-        assert result.config_content == "config content"
-        assert result.settings["setting1"] == "value1"
+        assert result.success is True
+        assert result.keymap_path == "/path/to/keymap"
+        assert result.conf_path == "/path/to/conf"
+        assert "Generated successfully" in result.messages
 
 
 class TestProviderFactory:
     """Test provider factory implementations."""
 
-    def test_default_template_provider(self):
+    def test_default_template_provider(self) -> None:
         """Test default template provider."""
         provider = DefaultTemplateProvider()
 
@@ -217,7 +218,7 @@ class TestProviderFactory:
         escaped = provider.escape_content("<script>alert('xss')</script>")
         assert isinstance(escaped, str)
 
-    def test_default_configuration_provider(self):
+    def test_default_configuration_provider(self) -> None:
         """Test default configuration provider."""
         provider = DefaultConfigurationProvider()
 
@@ -233,7 +234,7 @@ class TestProviderFactory:
         paths = provider.get_search_paths()
         assert isinstance(paths, list)
 
-    def test_default_file_provider(self):
+    def test_default_file_provider(self) -> None:
         """Test default file provider."""
         provider = DefaultFileProvider()
 
@@ -244,7 +245,7 @@ class TestProviderFactory:
         assert hasattr(provider, "write_text")
         assert hasattr(provider, "exists")
 
-    def test_default_logger(self):
+    def test_default_logger(self) -> None:
         """Test default logger."""
         logger = DefaultLogger()
 
@@ -261,12 +262,12 @@ class TestProviderFactory:
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 
-    def test_empty_layout_binding(self):
+    def test_empty_layout_binding(self) -> None:
         """Test empty layout binding handling."""
         with pytest.raises(ValueError):
             LayoutBinding.from_str("")
 
-    def test_invalid_binding_format(self):
+    def test_invalid_binding_format(self) -> None:
         """Test invalid binding format handling."""
         try:
             binding = LayoutBinding.from_str("invalid_format")
@@ -276,22 +277,22 @@ class TestEdgeCases:
             # Exception is acceptable for invalid format
             pass
 
-    def test_behavior_with_empty_bindings(self):
+    def test_behavior_with_empty_bindings(self) -> None:
         """Test behavior with empty bindings."""
         try:
-            ht = HoldTapBehavior(name="&empty", bindings=[], tapping_term_ms=200)
+            ht = HoldTapBehavior(name="&empty", bindings=[], tappingTermMs=200)
             # Should handle empty bindings
             assert len(ht.bindings) == 0
         except Exception:
             # Validation error is acceptable
             pass
 
-    def test_combo_with_invalid_positions(self):
+    def test_combo_with_invalid_positions(self) -> None:
         """Test combo with invalid key positions."""
         try:
             combo = ComboBehavior(
                 name="invalid_combo",
-                key_positions=[],  # Empty positions
+                keyPositions=[],  # Empty positions
                 binding=LayoutBinding(value="&kp A"),
             )
             # Should handle invalid positions
@@ -300,7 +301,7 @@ class TestEdgeCases:
             # Validation error is acceptable
             pass
 
-    def test_layout_data_edge_cases(self):
+    def test_layout_data_edge_cases(self) -> None:
         """Test layout data edge cases."""
         # Test with minimal data
         layout = LayoutData(keyboard="minimal", title="", layers=[], layer_names=[])
@@ -313,7 +314,7 @@ class TestEdgeCases:
 class TestComplexScenarios:
     """Test complex real-world scenarios."""
 
-    def test_full_keyboard_layout(self):
+    def test_full_keyboard_layout(self) -> None:
         """Test a complete keyboard layout."""
         # Create complex layout with multiple layers and behaviors
         layers = [
@@ -334,11 +335,11 @@ class TestComplexScenarios:
         ]
 
         hold_tap = HoldTapBehavior(
-            name="&mt", bindings=["&kp LSHIFT", "&kp A"], tapping_term_ms=200, flavor="tap-preferred"
+            name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200, flavor="tap-preferred"
         )
 
         combo = ComboBehavior(
-            name="qw_esc", key_positions=[0, 1], binding=LayoutBinding.from_str("&kp ESC"), timeout_ms=50
+            name="qw_esc", keyPositions=[0, 1], binding=LayoutBinding.from_str("&kp ESC"), timeoutMs=50
         )
 
         layout = LayoutData(
@@ -346,7 +347,7 @@ class TestComplexScenarios:
             title="My Corne Layout",
             layers=layers,
             layer_names=["default", "lower"],
-            hold_taps=[hold_tap],
+            holdTaps=[hold_tap],
             combos=[combo],
         )
 

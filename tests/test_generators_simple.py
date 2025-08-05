@@ -4,9 +4,9 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from zmk_layout.generators.zmk_generator import (
-    StubBehaviorFormatter,
-    StubBehaviorRegistry,
-    StubLayoutFormatter,
+    BehaviorFormatter,
+    BehaviorRegistry,
+    LayoutFormatter,
     ZMKGenerator,
 )
 from zmk_layout.models import LayoutBinding, LayoutData
@@ -16,50 +16,56 @@ from zmk_layout.models.behaviors import ComboBehavior, HoldTapBehavior
 class TestZmkGenerator:
     """Test ZMK file content generation."""
 
-    def test_stub_behavior_registry(self):
-        """Test stub behavior registry functionality."""
-        registry = StubBehaviorRegistry()
+    def test_behavior_registry(self) -> None:
+        """Test behavior registry functionality."""
+        registry = BehaviorRegistry()
         # Should not raise
         registry.register_behavior("test_behavior")
+        
+        # Test with proper behavior object
+        mock_behavior = Mock()
+        mock_behavior.code = "&test"
+        mock_behavior.name = "test_behavior"
+        registry.register_behavior(mock_behavior)
+        
+        assert registry.is_registered("&test")
+        assert registry.get_behavior("&test") == mock_behavior
 
-    def test_stub_behavior_formatter_with_value(self):
-        """Test stub behavior formatter with value attribute."""
-        formatter = StubBehaviorFormatter()
+    def test_behavior_formatter_with_layout_binding(self) -> None:
+        """Test behavior formatter with LayoutBinding."""
+        formatter = BehaviorFormatter()
 
-        mock_binding = Mock()
-        mock_binding.value = "&kp A"
-
-        result = formatter.format_binding(mock_binding)
+        binding = LayoutBinding.from_str("&kp A")
+        result = formatter.format_binding(binding)
         assert result == "&kp A"
 
-    def test_stub_behavior_formatter_without_value(self):
-        """Test stub behavior formatter without value attribute."""
-        formatter = StubBehaviorFormatter()
+    def test_behavior_formatter_with_string(self) -> None:
+        """Test behavior formatter with string input."""
+        formatter = BehaviorFormatter()
 
-        result = formatter.format_binding("plain_string")
-        assert result == "plain_string"
+        result = formatter.format_binding("&kp B")
+        assert result == "&kp B"
 
-    def test_stub_behavior_formatter_context(self):
+    def test_behavior_formatter_context(self) -> None:
         """Test behavior formatter context setting."""
-        formatter = StubBehaviorFormatter()
+        formatter = BehaviorFormatter()
         # Should not raise
         formatter.set_behavior_reference_context(True)
         formatter.set_behavior_reference_context(False)
 
-    def test_stub_layout_formatter(self):
-        """Test stub layout formatter."""
-        formatter = StubLayoutFormatter()
+    def test_layout_formatter(self) -> None:
+        """Test layout formatter."""
+        formatter = LayoutFormatter()
 
-        # Test with mock layer data
-        mock_layer = Mock()
-        mock_layer.bindings = ["&kp A", "&kp B"]
-
-        result = formatter.generate_layer_layout(mock_layer)
+        # Test with string bindings
+        bindings = ["&kp A", "&kp B", "&kp C"]
+        result = formatter.generate_layer_layout(bindings)
         assert isinstance(result, str)
         assert "&kp A" in result
         assert "&kp B" in result
+        assert "&kp C" in result
 
-    def test_zmk_generator_initialization(self):
+    def test_zmk_generator_initialization(self) -> None:
         """Test ZMK generator initialization."""
         mock_config = Mock()
         mock_template = Mock()
@@ -72,14 +78,14 @@ class TestZmkGenerator:
         assert generator._behavior_registry is not None
         assert generator._layout_formatter is not None
 
-    def test_zmk_generator_default_initialization(self):
+    def test_zmk_generator_default_initialization(self) -> None:
         """Test ZMK generator with default parameters."""
         generator = ZMKGenerator()
         assert generator.configuration_provider is None
         assert generator.template_provider is None
         assert generator._behavior_formatter is not None
 
-    def test_zmk_generator_with_layout_data(self):
+    def test_zmk_generator_with_layout_data(self) -> None:
         """Test ZMK generator with layout data."""
         generator = ZMKGenerator()
 
@@ -91,18 +97,18 @@ class TestZmkGenerator:
         assert generator is not None
         assert layout_data.keyboard == "test_kb"
 
-    def test_zmk_generator_with_behaviors(self):
+    def test_zmk_generator_with_behaviors(self) -> None:
         """Test ZMK generator with behavior data."""
         generator = ZMKGenerator()
 
-        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tapping_term_ms=200)
+        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200)
 
         layout_data = LayoutData(
             keyboard="test_kb",
             title="Test Layout",
             layers=[[LayoutBinding(value="&mt LSHIFT A")]],
             layer_names=["default"],
-            hold_taps=[hold_tap],
+            holdTaps=[hold_tap],
         )
 
         # Test that generator can handle behavior data
@@ -113,7 +119,7 @@ class TestZmkGenerator:
 class TestConfigGenerator:
     """Test configuration file generation (simplified)."""
 
-    def test_config_generation_imports(self):
+    def test_config_generation_imports(self) -> None:
         """Test that config generation module imports work."""
         from zmk_layout.generators.config_generator import (
             generate_config_file,
@@ -124,7 +130,7 @@ class TestConfigGenerator:
         assert generate_config_file is not None
         assert get_required_includes_for_layout is not None
 
-    def test_get_required_includes_stub(self):
+    def test_get_required_includes_stub(self) -> None:
         """Test stub implementation of get_required_includes_for_layout."""
         from zmk_layout.generators.config_generator import get_required_includes_for_layout
 
@@ -136,7 +142,7 @@ class TestConfigGenerator:
         # Stub implementation returns empty list
         assert result == []
 
-    def test_generate_config_file_basic(self):
+    def test_generate_config_file_basic(self) -> None:
         """Test basic config file generation."""
         from zmk_layout.generators.config_generator import generate_config_file
 
@@ -156,25 +162,26 @@ class TestConfigGenerator:
 class TestTemplateContext:
     """Test template context (simplified)."""
 
-    def test_template_context_imports(self):
+    def test_template_context_imports(self) -> None:
         """Test that template context module imports work."""
         try:
             from zmk_layout.generators.template_context import (
-                TemplateContextData,
-                create_template_context,
+                TemplateContext,
+                create_template_service,
             )
 
             # Classes should be importable
-            assert TemplateContextData is not None
-            assert create_template_context is not None
+            assert TemplateContext is not None
+            assert create_template_service is not None
         except ImportError:
             # Module might not have these exports, that's ok
             pass
 
-    def test_template_context_basic(self):
+    def test_template_context_basic(self) -> None:
         """Test basic template context functionality."""
         try:
-            from zmk_layout.generators.template_context import create_template_context
+            from zmk_layout.generators.template_context import TemplateService
+            from zmk_layout.providers.factory import create_default_providers
 
             layout_data = LayoutData(
                 keyboard="test_keyboard",
@@ -183,7 +190,9 @@ class TestTemplateContext:
                 layer_names=["default"],
             )
 
-            context = create_template_context(layout_data)
+            providers = create_default_providers()
+            service = TemplateService(providers)
+            context = service.create_template_context(layout_data, "basic")
 
             # Should return some kind of context object
             assert context is not None
@@ -196,7 +205,7 @@ class TestTemplateContext:
 class TestGeneratorIntegration:
     """Test generator integration."""
 
-    def test_full_generator_workflow(self):
+    def test_full_generator_workflow(self) -> None:
         """Test complete generator workflow."""
         # Create generator with mocked dependencies
         mock_config = Mock()
@@ -206,9 +215,9 @@ class TestGeneratorIntegration:
         generator = ZMKGenerator(mock_config, mock_template, mock_logger)
 
         # Create layout with behaviors
-        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tapping_term_ms=200)
+        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200)
 
-        combo = ComboBehavior(name="esc_combo", key_positions=[0, 1], binding=LayoutBinding(value="&kp ESC"))
+        combo = ComboBehavior(name="esc_combo", keyPositions=[0, 1], binding=LayoutBinding(value="&kp ESC"))
 
         layout_data = LayoutData(
             keyboard="corne",
@@ -218,7 +227,7 @@ class TestGeneratorIntegration:
                 [LayoutBinding(value="&mt LSHIFT A"), LayoutBinding(value="&kp S")],
             ],
             layer_names=["default", "lower"],
-            hold_taps=[hold_tap],
+            holdTaps=[hold_tap],
             combos=[combo],
         )
 

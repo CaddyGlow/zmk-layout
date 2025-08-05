@@ -253,12 +253,17 @@ class FullKeymapProcessor(BaseKeymapProcessor):
                     context.warnings.extend([str(error) for error in parse_errors])
             except ImportError:
                 # Fallback to Lark parser if enhanced parser not available
-                # TODO: Add Lark parser when available
-                # roots, parse_error_strings = parse_dt_lark_safe(transformed_content)
-                roots, parse_error_strings = [], ["Lark parser not available"]
-                # These are already strings
-                if parse_error_strings:
-                    context.warnings.extend(parse_error_strings)
+                try:
+                    from .dt_parser import parse_dt_lark_safe
+                    roots, parse_error_strings = parse_dt_lark_safe(transformed_content)
+                    # These are already strings
+                    if parse_error_strings:
+                        context.warnings.extend(parse_error_strings)
+                except ImportError:
+                    roots, parse_error_strings = [], ["Lark parser not available"]
+                    # These are already strings
+                    if parse_error_strings:
+                        context.warnings.extend(parse_error_strings)
 
             if not roots:
                 context.errors.append("Failed to parse device tree AST")

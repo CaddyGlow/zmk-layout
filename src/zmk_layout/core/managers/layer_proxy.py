@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from zmk_layout.core.exceptions import LayerNotFoundError
 from zmk_layout.models.core import LayoutBinding
 
 if TYPE_CHECKING:
@@ -25,7 +26,7 @@ class LayerProxy:
         self._providers = providers
 
         if layer_name not in self._data.layer_names:
-            raise ValueError(f"Layer '{layer_name}' not found")
+            raise LayerNotFoundError(layer_name, self._data.layer_names)
 
         self._layer_index = self._data.layer_names.index(layer_name)
 
@@ -115,7 +116,7 @@ class LayerProxy:
             ValueError: If source layer not found
         """
         if source_layer not in self._data.layer_names:
-            raise ValueError(f"Source layer '{source_layer}' not found")
+            raise LayerNotFoundError(source_layer, self._data.layer_names)
 
         source_index = self._data.layer_names.index(source_layer)
         source_bindings = self._data.layers[source_index]

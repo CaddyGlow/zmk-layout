@@ -15,7 +15,7 @@ from zmk_layout.models.behaviors import (
 )
 from zmk_layout.models.core import LayerBindings
 
-# Stub implementations for extracted behavior formatter functionality
+# Real formatter implementations for ZMK behavior and layout formatting
 
 if TYPE_CHECKING:
     from zmk_layout.models.metadata import LayoutData
@@ -25,38 +25,213 @@ if TYPE_CHECKING:
 KeyboardProfile = Any
 
 
-class StubBehaviorRegistry:
-    """Stub implementation of behavior registry."""
+class BehaviorRegistry:
+    """Registry for tracking and validating behaviors."""
+
+    def __init__(self) -> None:
+        """Initialize the behavior registry."""
+        self._behaviors: dict[str, Any] = {}
 
     def register_behavior(self, behavior: Any) -> None:
-        """Stub method - does nothing."""
-        pass
+        """Register a behavior for tracking and validation.
+        
+        Args:
+            behavior: Behavior to register (SystemBehavior or similar)
+        """
+        if hasattr(behavior, "code") and hasattr(behavior, "name"):
+            self._behaviors[behavior.code] = behavior
+        elif hasattr(behavior, "name"):
+            self._behaviors[behavior.name] = behavior
+
+    def get_behavior(self, code: str) -> Any | None:
+        """Get a registered behavior by code.
+        
+        Args:
+            code: Behavior code to lookup
+            
+        Returns:
+            Behavior if found, None otherwise
+        """
+        return self._behaviors.get(code)
+
+    def is_registered(self, code: str) -> bool:
+        """Check if a behavior is registered.
+        
+        Args:
+            code: Behavior code to check
+            
+        Returns:
+            True if behavior is registered
+        """
+        return code in self._behaviors
+
+    def get_all_behaviors(self) -> dict[str, Any]:
+        """Get all registered behaviors.
+        
+        Returns:
+            Dictionary of all registered behaviors
+        """
+        return self._behaviors.copy()
 
 
-class StubBehaviorFormatter:
-    """Stub implementation of behavior formatter."""
+class BehaviorFormatter:
+    """Formatter for ZMK behavior bindings."""
+
+    def __init__(self) -> None:
+        """Initialize the behavior formatter."""
+        self._behavior_reference_context = False
 
     def set_behavior_reference_context(self, enabled: bool) -> None:
-        """Stub method - does nothing."""
-        pass
+        """Set whether we're formatting behavior references (for hold-tap bindings).
+        
+        Args:
+            enabled: True if formatting behavior references, False for normal bindings
+        """
+        self._behavior_reference_context = enabled
 
     def format_binding(self, binding: Any) -> str:
-        """Stub method - returns string representation."""
+        """Format a binding into proper ZMK syntax.
+        
+        Args:
+            binding: LayoutBinding instance or string to format
+            
+        Returns:
+            Formatted ZMK binding string like "&kp A", "&mt LCTRL SPACE"
+        """
+        # Handle string inputs (for compatibility)
+        if isinstance(binding, str):
+            return binding
+
+        # Handle LayoutBinding objects
+        if hasattr(binding, "value") and hasattr(binding, "params"):
+            behavior = binding.value
+            params = binding.params
+
+            # Format parameters
+            param_strings = []
+            for param in params:
+                param_strings.append(self._format_param(param))
+
+            # Combine behavior with parameters
+            if param_strings:
+                return f"{behavior} {' '.join(param_strings)}"
+            else:
+                return behavior
+
+        # Fallback to string representation
         if hasattr(binding, "value"):
             return str(binding.value)
         return str(binding)
 
+    def _format_param(self, param: Any) -> str:
+        """Format a single parameter (LayoutParam).
+        
+        Args:
+            param: LayoutParam instance to format
+            
+        Returns:
+            Formatted parameter string
+        """
+        if not hasattr(param, "value"):
+            return str(param)
 
-class StubLayoutFormatter:
-    """Stub implementation of layout formatter."""
+        value = str(param.value)
+        
+        # Handle nested parameters (like modifier chains)
+        if hasattr(param, "params") and param.params:
+            nested_params = []
+            for nested_param in param.params:
+                nested_params.append(self._format_param(nested_param))
+            
+            if nested_params:
+                return f"{value}({','.join(nested_params)})"
+        
+        return value
 
-    def generate_layer_layout(self, layer_data: Any, **kwargs: Any) -> str:
-        """Stub method - returns simple grid representation."""
-        if hasattr(layer_data, "bindings"):
+
+class LayoutFormatter:
+    """Formatter for keyboard layout grids."""
+
+    def __init__(self) -> None:
+        """Initialize the layout formatter."""
+        pass
+
+    def generate_layer_layout(self, layer_data: Any, profile: Any = None, base_indent: str = "            ", **kwargs: Any) -> str:
+        """Generate formatted layout grid for a layer's bindings.
+        
+        Args:
+            layer_data: Layer bindings (list of strings) or layer object with bindings
+            profile: Optional keyboard profile for layout-specific formatting
+            base_indent: Base indentation for grid lines
+            **kwargs: Additional formatting options
+            
+        Returns:
+            Formatted grid string with proper indentation and spacing
+        """
+        # Extract bindings from various input formats
+        bindings = []
+        
+        if isinstance(layer_data, list):
+            bindings = layer_data
+        elif hasattr(layer_data, "bindings"):
             bindings = layer_data.bindings
-            if isinstance(bindings, list):
-                return " ".join(str(b) for b in bindings)
-        return str(layer_data)
+        else:
+            return str(layer_data)
+
+        if not bindings:
+            return f"{base_indent}// Empty layer"
+
+        # Determine grid layout based on keyboard profile or binding count
+        rows, cols = self._determine_grid_layout(len(bindings), profile)
+        
+        # Format bindings into grid
+        grid_lines = []
+        
+        for row in range(rows):
+            row_bindings = []
+            
+            for col in range(cols):
+                index = row * cols + col
+                if index < len(bindings):
+                    binding_str = str(bindings[index])
+                    # Pad bindings for alignment
+                    row_bindings.append(f"{binding_str:<12}")
+                else:
+                    # Fill incomplete rows with padding
+                    row_bindings.append("            ")
+            
+            # Join row bindings with proper spacing
+            row_line = f"{base_indent}{' '.join(row_bindings).rstrip()}"
+            grid_lines.append(row_line)
+
+        return "\n".join(grid_lines)
+
+    def _determine_grid_layout(self, binding_count: int, profile: Any = None) -> tuple[int, int]:
+        """Determine the grid layout (rows, cols) for the given binding count.
+        
+        Args:
+            binding_count: Number of key bindings
+            profile: Optional keyboard profile with layout info
+            
+        Returns:
+            Tuple of (rows, cols)
+        """
+        # Common keyboard layouts
+        if binding_count == 42:  # Corne 3x6+3
+            return (4, 12)  # 3 main rows + 1 thumb row, but format as 4x12 for simplicity
+        elif binding_count == 36:  # Planck/similar
+            return (3, 12)
+        elif binding_count == 58:  # Lily58
+            return (4, 15)  # Approximate
+        elif binding_count == 60:  # Standard 60%
+            return (5, 12)
+        elif binding_count == 104:  # Full-size
+            return (6, 18)
+        else:
+            # Default: try to make a reasonable rectangular grid
+            rows = max(3, int((binding_count ** 0.5) * 0.7))  # Favor wider layouts
+            cols = (binding_count + rows - 1) // rows  # Ceiling division
+            return (rows, cols)
 
 
 class ZMKGenerator:
@@ -79,10 +254,10 @@ class ZMKGenerator:
         self.template_provider = template_provider
         self.logger = logger or logging.getLogger(__name__)
 
-        # Use stub implementations for formatters
-        self._behavior_formatter = StubBehaviorFormatter()
-        self._behavior_registry = StubBehaviorRegistry()
-        self._layout_formatter = StubLayoutFormatter()
+        # Use real implementations for formatters
+        self._behavior_formatter = BehaviorFormatter()
+        self._behavior_registry = BehaviorRegistry()
+        self._layout_formatter = LayoutFormatter()
 
     def generate_layer_defines(self, profile: KeyboardProfile, layer_names: list[str]) -> str:
         """Generate #define statements for layers.
@@ -230,7 +405,9 @@ class ZMKGenerator:
             dtsi_parts.append("};")
             dtsi_parts.append("")
 
-        dtsi_parts.pop()  # Remove last blank line
+        # Remove last blank line if present
+        if dtsi_parts:
+            dtsi_parts.pop()
         return "\n".join(self._indent_array(dtsi_parts, " " * 8))
 
     def generate_tap_dances_dtsi(self, profile: KeyboardProfile, tap_dances_data: Sequence[TapDanceBehavior]) -> str:
@@ -247,9 +424,34 @@ class ZMKGenerator:
             return ""
 
         dtsi_parts = []
-        dtsi_parts.append("behaviors {")
+        valid_tap_dances = []
 
         for td in tap_dances_data:
+            name = td.name
+            if not name:
+                if self.logger:
+                    self.logger.warning("Skipping tap-dance with missing name")
+                continue
+
+            description = td.description or ""
+            tapping_term = td.tapping_term_ms
+            bindings = td.bindings
+
+            if not bindings or len(bindings) < 2:
+                if self.logger:
+                    self.logger.warning(f"Tap dance '{name}' requires at least 2 bindings, found {len(bindings) if bindings else 0}. Skipping.")
+                continue
+
+            # This is a valid tap dance, add it to our list
+            valid_tap_dances.append(td)
+
+        # If no valid tap dances, return empty string
+        if not valid_tap_dances:
+            return ""
+
+        dtsi_parts.append("behaviors {")
+
+        for td in valid_tap_dances:
             name = td.name
             description = td.description or ""
             tapping_term = td.tapping_term_ms
@@ -303,9 +505,12 @@ class ZMKGenerator:
             dtsi_parts.append("    };")
             dtsi_parts.append("")
 
+        # Remove last empty line if present (before adding closing brace)
+        if len(dtsi_parts) > 1 and dtsi_parts[-1] == "":
+            dtsi_parts.pop()
         dtsi_parts.append("};")
 
-        # Remove last empty line if present
+        # Remove any trailing empty line at the very end
         if dtsi_parts and dtsi_parts[-2] == "":
             dtsi_parts.pop(-2)
 
@@ -330,7 +535,7 @@ class ZMKGenerator:
             name = macro.name
             if not name:
                 if self.logger:
-                    self.logger.warning("Skipping macro with missing 'name'.")
+                    self.logger.warning("Skipping macro with missing name")
                 continue
 
             node_name = name[1:] if name.startswith("&") else name
@@ -341,6 +546,12 @@ class ZMKGenerator:
             params = macro.params or []
             wait_ms = macro.wait_ms
             tap_ms = macro.tap_ms
+
+            # Check for empty bindings
+            if not bindings:
+                if self.logger:
+                    self.logger.warning(f"Macro '{name}' has no bindings. Skipping.")
+                continue
 
             # Set compatible string and binding-cells based on macro parameters
             compatible_strings = profile.keyboard_config.zmk.compatible_strings
@@ -396,7 +607,9 @@ class ZMKGenerator:
             dtsi_parts.extend(self._indent_array(macro_parts, "        "))
             dtsi_parts.append("")
 
-        dtsi_parts.pop()  # Remove last blank line
+        # Remove last blank line if present
+        if dtsi_parts:
+            dtsi_parts.pop()
         return "\n".join(dtsi_parts)
 
     def generate_combos_dtsi(
@@ -424,31 +637,55 @@ class ZMKGenerator:
         for i in range(profile.keyboard_config.key_count):
             key_position_map[f"KEY_{i}"] = i
 
-        dtsi_parts = ["combos {"]
-        combos_compatible = profile.keyboard_config.zmk.compatible_strings.combos
-        dtsi_parts.append(f'    compatible = "{combos_compatible}";')
-
-        # Layer patterns for combo processing (if needed later)
-        # layer_define_pattern = profile.keyboard_config.zmk.patterns.layer_define
-        # sanitize_pattern = profile.keyboard_config.zmk.patterns.node_name_sanitize
-
+        # First, collect all valid combos
+        valid_combos = []
+        
         for combo in combos_data:
             name = combo.name
             if not name:
                 if self.logger:
-                    self.logger.warning("Skipping combo with missing 'name'.")
+                    self.logger.warning("Skipping combo with missing name")
                 continue
 
-            node_name = re.sub(r"\W|^(?=\d)", "_", name)
             binding_data = combo.binding
             key_positions_indices = combo.key_positions
-            timeout = combo.timeout_ms
-            layers_spec = combo.layers
 
             if not binding_data or not key_positions_indices:
                 if self.logger:
                     self.logger.warning(f"Combo '{name}' is missing binding or keyPositions. Skipping.")
                 continue
+
+            # Check for empty bindings like &none
+            if binding_data and hasattr(binding_data, 'value') and binding_data.value in ['&none']:
+                if self.logger:
+                    self.logger.warning(f"Combo '{name}' has no bindings. Skipping.")
+                continue
+
+            # Check key position count
+            if len(key_positions_indices) < 2:
+                if self.logger:
+                    self.logger.warning(f"Combo '{name}' requires at least 2 key positions, found {len(key_positions_indices)}. Skipping.")
+                continue
+
+            # This combo is valid, add it to our list
+            valid_combos.append(combo)
+
+        # If no valid combos, return empty string
+        if not valid_combos:
+            return ""
+
+        # Generate DTSI structure for valid combos
+        dtsi_parts = ["combos {"]
+        combos_compatible = profile.keyboard_config.zmk.compatible_strings.combos
+        dtsi_parts.append(f'    compatible = "{combos_compatible}";')
+
+        for combo in valid_combos:
+            name = combo.name
+            node_name = re.sub(r"\W|^(?=\d)", "_", name)
+            binding_data = combo.binding
+            key_positions_indices = combo.key_positions
+            timeout = combo.timeout_ms
+            layers_spec = combo.layers
 
             description_lines = (combo.description or node_name).split("\n")
             label = "\n".join([f"    // {line}" for line in description_lines])
@@ -487,7 +724,9 @@ class ZMKGenerator:
             dtsi_parts.append("    };")
             dtsi_parts.append("")
 
-        dtsi_parts.pop()  # Remove last blank line
+        # Remove last blank line if present
+        if dtsi_parts and dtsi_parts[-1] == "":
+            dtsi_parts.pop()
         dtsi_parts.append("};")
         return "\n".join(self._indent_array(dtsi_parts))
 
@@ -574,12 +813,14 @@ class ZMKGenerator:
         Returns:
             DTSI keymap node content as string
         """
-        if not layers_data:
-            return ""
-
         # Create the keymap opening
         keymap_compatible = profile.keyboard_config.zmk.compatible_strings.keymap
         dtsi_parts = ["keymap {", f'    compatible = "{keymap_compatible}";']
+
+        if not layers_data:
+            # Still generate valid keymap structure even with no layers
+            dtsi_parts.append("};")
+            return "\n".join(self._indent_array(dtsi_parts))
 
         # Process each layer
         for _i, (layer_name, layer_bindings) in enumerate(zip(layer_names, layers_data, strict=False)):
@@ -602,9 +843,11 @@ class ZMKGenerator:
 
             # Format the bindings using the layout formatter with custom indent for DTSI
             if self._layout_formatter:
-                formatted_grid = self._layout_formatter.generate_layer_layout(
-                    formatted_bindings, profile, base_indent=""
+                formatted_grid_str = self._layout_formatter.generate_layer_layout(
+                    formatted_bindings, profile=profile, base_indent=""
                 )
+                # Split the formatted string into lines for consistent handling
+                formatted_grid = formatted_grid_str.split("\n") if formatted_grid_str else []
             else:
                 # Fallback: simple grid formatting
                 formatted_grid = [f"            {binding}" for binding in formatted_bindings]
@@ -625,7 +868,7 @@ class ZMKGenerator:
         self,
         keymap_data: "LayoutData",
         profile: KeyboardProfile,
-    ) -> tuple[str, dict[str, str | int]]:
+    ) -> tuple[str, dict[str, int]]:
         """Generate kconfig content and settings from keymap data.
 
         Args:

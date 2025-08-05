@@ -2,10 +2,10 @@
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
-    from ..providers import FileProvider
+    from ..providers import FileProvider, TemplateProvider
 
 from ..models import LayoutData
 
@@ -37,6 +37,7 @@ def load_layout_file(
     file_provider: "FileProvider",
     skip_variable_resolution: bool = False,
     skip_template_processing: bool = False,
+    template_provider: Optional["TemplateProvider"] = None,
 ) -> LayoutData:
     """Load and validate a layout JSON file."""
     if not file_provider.exists(file_path):
@@ -46,6 +47,13 @@ def load_layout_file(
 
     try:
         content = file_provider.read_text(file_path)
+        
+        # Apply template processing if enabled and provider available
+        if not skip_template_processing and template_provider is not None and template_provider.has_template_syntax(content):
+            # For now, use empty context - this could be extended to accept context
+            context: dict[str, str | int | float | bool | None] = {}
+            content = template_provider.render_string(content, context)
+        
         data = json.loads(content)
 
         # Set the module flag before validation
@@ -53,8 +61,6 @@ def load_layout_file(
         _skip_variable_resolution = skip_variable_resolution
 
         try:
-            # For now, just validate without template processing
-            # TODO: Implement template processing when provider pattern is fully integrated
             return LayoutData.model_validate(data)
         finally:
             # Restore the original flag value

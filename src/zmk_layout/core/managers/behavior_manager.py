@@ -58,7 +58,7 @@ class BehaviorManager:
         hold_tap = HoldTapBehavior(
             name=name,
             bindings=[hold, tap],  # Hold first, then tap
-            tapping_term_ms=tapping_term_ms,
+            tappingTermMs=tapping_term_ms,
             flavor=flavor,
             **kwargs,
         )
@@ -103,9 +103,9 @@ class BehaviorManager:
         # Create combo behavior
         combo = ComboBehavior(
             name=name,
-            key_positions=keys,
+            keyPositions=keys,
             binding=layout_binding,
-            timeout_ms=timeout_ms,
+            timeoutMs=timeout_ms,
             layers=layers or [-1],  # -1 means all layers
             **kwargs,
         )
@@ -145,7 +145,7 @@ class BehaviorManager:
         layout_bindings = [LayoutBinding.from_str(binding) for binding in sequence]
 
         # Create macro behavior
-        macro = MacroBehavior(name=name, bindings=layout_bindings, wait_ms=wait_ms, tap_ms=tap_ms, **kwargs)
+        macro = MacroBehavior(name=name, bindings=layout_bindings, waitMs=wait_ms, tapMs=tap_ms, **kwargs)
 
         # Initialize macros list if needed
         if self._data.macros is None:
@@ -181,7 +181,7 @@ class BehaviorManager:
         layout_bindings = [LayoutBinding.from_str(binding) for binding in bindings]
 
         # Create tap dance behavior
-        tap_dance = TapDanceBehavior(name=name, bindings=layout_bindings, tapping_term_ms=tapping_term_ms, **kwargs)
+        tap_dance = TapDanceBehavior(name=name, bindings=layout_bindings, tappingTermMs=tapping_term_ms, **kwargs)
 
         # Initialize tap_dances list if needed
         if self._data.tap_dances is None:

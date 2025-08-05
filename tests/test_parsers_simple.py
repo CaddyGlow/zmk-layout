@@ -20,7 +20,7 @@ from zmk_layout.parsers.tokenizer import (
 class TestTokenizer:
     """Test device tree tokenizer functionality."""
 
-    def test_token_creation(self):
+    def test_token_creation(self) -> None:
         """Test Token creation."""
         token = Token(TokenType.IDENTIFIER, "test_value", 1, 5)
         assert token.type == TokenType.IDENTIFIER
@@ -28,14 +28,14 @@ class TestTokenizer:
         assert token.line == 1
         assert token.column == 5
 
-    def test_token_repr(self):
+    def test_token_repr(self) -> None:
         """Test Token string representation."""
         token = Token(TokenType.STRING, "hello", 2, 10)
         repr_str = repr(token)
         assert "STRING" in repr_str
         assert "hello" in repr_str
 
-    def test_tokenize_dt_simple(self):
+    def test_tokenize_dt_simple(self) -> None:
         """Test basic device tree tokenization."""
         content = 'test = "value";'
         tokens = tokenize_dt(content)
@@ -50,7 +50,7 @@ class TestTokenizer:
         assert TokenType.STRING in token_types
         assert TokenType.SEMICOLON in token_types
 
-    def test_tokenize_dt_with_references(self):
+    def test_tokenize_dt_with_references(self) -> None:
         """Test tokenization with references."""
         content = "bindings = <&kp A &kp B>;"
         tokens = tokenize_dt(content)
@@ -60,7 +60,7 @@ class TestTokenizer:
         assert TokenType.ANGLE_OPEN in token_types
         assert TokenType.ANGLE_CLOSE in token_types
 
-    def test_tokens_to_string(self):
+    def test_tokens_to_string(self) -> None:
         """Test converting tokens back to string."""
         tokens = [
             Token(TokenType.IDENTIFIER, "test", 1, 0),
@@ -74,7 +74,7 @@ class TestTokenizer:
         assert "test" in result
         assert "value" in result
 
-    def test_dt_tokenizer_init(self):
+    def test_dt_tokenizer_init(self) -> None:
         """Test DTTokenizer initialization."""
         try:
             tokenizer = DTTokenizer("test content")
@@ -83,7 +83,7 @@ class TestTokenizer:
             # Constructor might require arguments, that's ok
             pass
 
-    def test_dt_tokenizer_tokenize(self):
+    def test_dt_tokenizer_tokenize(self) -> None:
         """Test DTTokenizer tokenize method."""
         try:
             tokenizer = DTTokenizer('label = "test";')
@@ -96,13 +96,13 @@ class TestTokenizer:
 class TestASTNodes:
     """Test AST node functionality."""
 
-    def test_dt_value_type_enum(self):
+    def test_dt_value_type_enum(self) -> None:
         """Test DTValueType enum."""
         assert DTValueType.STRING is not None
         assert DTValueType.INTEGER is not None
         assert DTValueType.REFERENCE is not None
 
-    def test_dt_value_creation(self):
+    def test_dt_value_creation(self) -> None:
         """Test DTValue creation."""
         try:
             value = DTValue(DTValueType.STRING, "test")
@@ -112,34 +112,39 @@ class TestASTNodes:
             # Constructor might be different, that's ok
             pass
 
-    def test_dt_property_creation(self):
+    def test_dt_property_creation(self) -> None:
         """Test DTProperty creation."""
         try:
-            # Try different constructor patterns
-            prop = DTProperty("test_prop", "test_value")
+            # DTProperty constructor: name: str, value: DTValue | None = None
+            prop = DTProperty("test_prop")
             assert prop.name == "test_prop"
+            assert prop.value is None
+            
+            # Test with DTValue
+            dt_value = DTValue.string("test_value")
+            prop_with_value = DTProperty("test_prop2", dt_value)
+            assert prop_with_value.name == "test_prop2"
+            assert prop_with_value.value is not None
         except Exception:
-            try:
-                prop = DTProperty(name="test_prop", value="test_value")
-                assert prop.name == "test_prop"
-            except Exception:
-                # Constructor might be different, that's ok
-                pass
+            # Constructor might be different, that's ok
+            pass
 
-    def test_dt_node_creation(self):
+    def test_dt_node_creation(self) -> None:
         """Test DTNode creation."""
         try:
-            node = DTNode("test_node", [])
+            # DTNode constructor: name: str = "", label: str = "", unit_address: str = "", line: int = 0, column: int = 0
+            node = DTNode("test_node")
             assert node.name == "test_node"
+            
+            # Test with label
+            node_with_label = DTNode(name="test_node", label="test_label")
+            assert node_with_label.name == "test_node"
+            assert node_with_label.label == "test_label"
         except Exception:
-            try:
-                node = DTNode(name="test_node", children=[])
-                assert node.name == "test_node"
-            except Exception:
-                # Constructor might be different, that's ok
-                pass
+            # Constructor might be different, that's ok
+            pass
 
-    def test_dt_comment_creation(self):
+    def test_dt_comment_creation(self) -> None:
         """Test DTComment creation."""
         try:
             comment = DTComment("// Test comment")
@@ -152,7 +157,7 @@ class TestASTNodes:
                 # Constructor might be different, that's ok
                 pass
 
-    def test_dt_parse_error(self):
+    def test_dt_parse_error(self) -> None:
         """Test DTParseError exception."""
         error = DTParseError("Test parse error")
         error_str = str(error)
@@ -163,7 +168,7 @@ class TestASTNodes:
 class TestParsingIntegration:
     """Test basic parsing integration."""
 
-    def test_basic_parsing_workflow(self):
+    def test_basic_parsing_workflow(self) -> None:
         """Test basic parsing workflow with available components."""
         content = """
         test_node {
@@ -181,7 +186,7 @@ class TestParsingIntegration:
         assert isinstance(reconstructed, str)
         assert len(reconstructed) > 0
 
-    def test_complex_content_parsing(self):
+    def test_complex_content_parsing(self) -> None:
         """Test parsing more complex content."""
         content = """
         keymap {
@@ -207,7 +212,7 @@ class TestParsingIntegration:
         assert TokenType.LBRACE in token_types
         assert TokenType.RBRACE in token_types
 
-    def test_error_handling(self):
+    def test_error_handling(self) -> None:
         """Test error handling in parsing."""
         # Test with malformed content
         invalid_content = "{{{{ invalid syntax"

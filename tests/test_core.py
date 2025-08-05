@@ -92,10 +92,11 @@ class TestOptionalDependencies:
         assert display_provider is None or display_provider is not None
         assert parser_provider is None or parser_provider is not None
 
-        # All checkers should return False
+        # All checkers should return False (except lark which is now core dependency)
         assert has_jinja2() is False
         assert has_rich() is False
-        assert has_lark() is False
+        # lark is now a core dependency, so it should be available
+        # assert has_lark() is False
 
     def test_import_error_handling(self) -> None:
         """Test that ImportError is handled correctly."""

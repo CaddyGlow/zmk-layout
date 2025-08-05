@@ -1,9 +1,11 @@
 """Core Layout class for fluent API operations."""
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from zmk_layout.core.exceptions import FileOperationError, ValidationError
 from zmk_layout.models.metadata import LayoutData
 
 if TYPE_CHECKING:
@@ -47,10 +49,17 @@ class Layout:
             Layout instance
         """
         # Load JSON file and validate as LayoutData
-        with open(Path(source), encoding="utf-8") as f:
-            data = json.load(f)
-        layout_data = LayoutData.model_validate(data)
-        return cls(layout_data, providers)
+        try:
+            with open(Path(source), encoding="utf-8") as f:
+                data = json.load(f)
+            layout_data = LayoutData.model_validate(data)
+            return cls(layout_data, providers)
+        except FileNotFoundError as e:
+            raise FileOperationError(f"Layout file not found: {source}", str(source), "read") from e
+        except json.JSONDecodeError as e:
+            raise FileOperationError(f"Invalid JSON in layout file: {e}", str(source), "read") from e
+        except Exception as e:
+            raise FileOperationError(f"Failed to load layout file: {e}", str(source), "read") from e
 
     @classmethod
     def from_dict(cls, data: dict[str, Any], providers: "LayoutProviders | None" = None) -> "Layout":
@@ -109,9 +118,14 @@ class Layout:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Convert to dict and save as JSON
-        layout_dict = self._data.model_dump(exclude_none=True)
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(layout_dict, f, indent=2, ensure_ascii=False)
+        try:
+            layout_dict = self._data.model_dump(exclude_none=True)
+            with output_path.open("w", encoding="utf-8") as f:
+                json.dump(layout_dict, f, indent=2, ensure_ascii=False)
+        except OSError as e:
+            raise FileOperationError(f"Failed to write layout file: {e}", str(output_path), "write") from e
+        except Exception as e:
+            raise FileOperationError(f"Unexpected error saving layout: {e}", str(output_path), "write") from e
 
         return self
 
@@ -126,11 +140,26 @@ class Layout:
         """
         # Pydantic validation happens automatically on model access
         # Additional custom validation can be added here
+        validation_errors = []
+
         if not self._data.keyboard:
-            raise ValueError("Keyboard name is required")
+            validation_errors.append("Keyboard name is required")
 
         if len(self._data.layers) != len(self._data.layer_names):
-            raise ValueError("Layer count mismatch between layers and layer_names")
+            validation_errors.append("Layer count mismatch between layers and layer_names")
+
+        # Check for duplicate layer names
+        if len(set(self._data.layer_names)) != len(self._data.layer_names):
+            validation_errors.append("Duplicate layer names found")
+
+        # Validate behavior names don't conflict
+        if self._data.hold_taps:
+            hold_tap_names = [ht.name for ht in self._data.hold_taps]
+            if len(set(hold_tap_names)) != len(hold_tap_names):
+                validation_errors.append("Duplicate hold-tap behavior names found")
+
+        if validation_errors:
+            raise ValidationError("Layout validation failed", validation_errors)
 
         return self
 
@@ -154,8 +183,19 @@ class Layout:
         except ImportError:
             # Create minimal providers if factory not available
             from zmk_layout.providers import LayoutProviders
+            from zmk_layout.providers.factory import (
+                DefaultConfigurationProvider,
+                DefaultFileProvider,
+                DefaultLogger,
+                DefaultTemplateProvider,
+            )
 
-            return LayoutProviders()
+            return LayoutProviders(
+                configuration=DefaultConfigurationProvider(),
+                template=DefaultTemplateProvider(),
+                logger=DefaultLogger(),
+                file=DefaultFileProvider(),
+            )
 
     def _create_layer_manager(self) -> "LayerManager":
         """Create layer manager instance."""
@@ -168,6 +208,81 @@ class Layout:
         from zmk_layout.core.managers import BehaviorManager
 
         return BehaviorManager(self._data, self._providers)
+
+    def __enter__(self) -> "Layout":
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+        """Context manager exit - could auto-save if configured."""
+        # Implementation note: Auto-save on context exit is optional
+        # Could be enabled via a flag in the future
+        pass
+
+    def batch_operation(self, operations: list[Callable[["Layout"], Any]]) -> "Layout":
+        """Execute multiple operations in batch and return self for chaining.
+
+        Args:
+            operations: List of functions that take Layout as argument
+
+        Returns:
+            Self for method chaining
+
+        Example:
+            layout.batch_operation([
+                lambda l: l.layers.add("gaming"),
+                lambda l: l.layers.get("gaming").set(0, "&kp ESC"),
+                lambda l: l.behaviors.add_hold_tap("hm", "&kp A", "&mo 1")
+            ])
+        """
+        for operation in operations:
+            operation(self)
+        return self
+
+    def find_layers(self, predicate: Callable[[str], bool]) -> list[str]:
+        """Find layers matching predicate.
+
+        Args:
+            predicate: Function that takes layer name and returns bool
+
+        Returns:
+            List of matching layer names
+
+        Example:
+            gaming_layers = layout.find_layers(lambda name: "game" in name.lower())
+        """
+        return [name for name in self._data.layer_names if predicate(name)]
+
+    def get_statistics(self) -> dict[str, Any]:
+        """Get layout statistics.
+
+        Returns:
+            Dictionary with layout statistics
+        """
+        stats = {
+            "keyboard": self._data.keyboard,
+            "title": self._data.title,
+            "layer_count": len(self._data.layer_names),
+            "layer_names": list(self._data.layer_names),
+            "total_bindings": sum(len(layer) for layer in self._data.layers),
+            "behavior_counts": {
+                "hold_taps": len(self._data.hold_taps) if self._data.hold_taps else 0,
+                "combos": len(self._data.combos) if self._data.combos else 0,
+                "macros": len(self._data.macros) if self._data.macros else 0,
+                "tap_dances": len(self._data.tap_dances) if self._data.tap_dances else 0,
+            },
+            "total_behaviors": self._behaviors.total_count,
+        }
+
+        # Add layer sizes
+        if self._data.layers:
+            layer_sizes = [len(layer) for layer in self._data.layers]
+            stats["layer_sizes"] = dict(zip(self._data.layer_names, layer_sizes, strict=False))
+            stats["avg_layer_size"] = sum(layer_sizes) / len(layer_sizes) if layer_sizes else 0
+            stats["max_layer_size"] = max(layer_sizes) if layer_sizes else 0
+            stats["min_layer_size"] = min(layer_sizes) if layer_sizes else 0
+
+        return stats
 
     def __repr__(self) -> str:
         """String representation."""

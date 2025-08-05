@@ -32,8 +32,6 @@ if TYPE_CHECKING:
     from zmk_layout.models.keymap import ConfigDirective, KeymapComment, KeymapInclude
     from zmk_layout.providers import ConfigurationProvider, LayoutLogger
 
-    from .parsing_models import ExtractionConfig
-
     class KeyboardProfile:
         """Placeholder for KeyboardProfile until extracted."""
 
@@ -44,25 +42,8 @@ if TYPE_CHECKING:
         def keyboard_name(self) -> str:
             return self.name
 
-    class ParsingContext:
-        """Placeholder for ParsingContext until extracted."""
-
-        def __init__(
-            self,
-            keymap_content: str,
-            title: str,
-            keyboard_name: str,
-            extraction_config: list["ExtractionConfig"],
-        ) -> None:
-            self.keymap_content = keymap_content
-            self.title = title
-            self.keyboard_name = keyboard_name
-            self.extraction_config = extraction_config
-            self.errors: list[str] = []
-            self.warnings: list[str] = []
-
     class ProcessorProtocol(Protocol):
-        def process(self, context: "ParsingContext") -> LayoutData | None: ...
+        def process(self, context: ParsingContext) -> LayoutData | None: ...
 
 
 class ModelFactory:
@@ -260,14 +241,14 @@ class ZMKKeymapParser:
     def _get_extraction_config(
         self,
         profile: Optional["KeyboardProfile"] = None,
-    ) -> list["ExtractionConfig"]:
+    ) -> dict[str, Any] | None:
         """Get extraction configuration from profile or use default.
 
         Args:
             keyboard_profile: Keyboard profile
 
         Returns:
-            List of extraction configurations
+            Extraction configuration dictionary
         """
         if profile:
             try:
@@ -275,8 +256,8 @@ class ZMKKeymapParser:
                 # TODO: currently not implemented in profile
                 if hasattr(profile, "keymap_extraction") and profile.keymap_extraction:
                     extraction_sections = profile.keymap_extraction.sections
-                    # Ensure we return the proper typed list
-                    return list(extraction_sections)
+                    # Convert to dict format expected by ParsingContext
+                    return {"sections": list(extraction_sections)}
             except Exception as e:
                 if self.logger:
                     self.logger.warning(
@@ -602,7 +583,16 @@ class ZMKKeymapParser:
         """
         if self.model_factory is None:
             raise RuntimeError("ModelFactory not initialized")
-        return self.model_factory.create_comment(comment_dict)
+        result = self.model_factory.create_comment(comment_dict)
+        # Import here to avoid circular imports
+        from zmk_layout.models.keymap import KeymapComment
+
+        if not isinstance(result, KeymapComment):
+            # Fallback - create from dict if factory returned dict
+            if isinstance(result, dict):
+                return KeymapComment(**result)
+            raise TypeError(f"Expected KeymapComment, got {type(result)}")
+        return result
 
     def _convert_include_to_model(self, include_dict: dict[str, object]) -> "KeymapInclude":
         """Convert include dictionary to KeymapInclude model instance.
@@ -615,7 +605,16 @@ class ZMKKeymapParser:
         """
         if self.model_factory is None:
             raise RuntimeError("ModelFactory not initialized")
-        return self.model_factory.create_include(include_dict)
+        result = self.model_factory.create_include(include_dict)
+        # Import here to avoid circular imports
+        from zmk_layout.models.keymap import KeymapInclude
+
+        if not isinstance(result, KeymapInclude):
+            # Fallback - create from dict if factory returned dict
+            if isinstance(result, dict):
+                return KeymapInclude(**result)
+            raise TypeError(f"Expected KeymapInclude, got {type(result)}")
+        return result
 
     def _convert_directive_to_model(self, directive_dict: dict[str, object]) -> "ConfigDirective":
         """Convert config directive dictionary to ConfigDirective model instance.
@@ -628,7 +627,16 @@ class ZMKKeymapParser:
         """
         if self.model_factory is None:
             raise RuntimeError("ModelFactory not initialized")
-        return self.model_factory.create_directive(directive_dict)
+        result = self.model_factory.create_directive(directive_dict)
+        # Import here to avoid circular imports
+        from zmk_layout.models.keymap import ConfigDirective
+
+        if not isinstance(result, ConfigDirective):
+            # Fallback - create from dict if factory returned dict
+            if isinstance(result, dict):
+                return ConfigDirective(**result)
+            raise TypeError(f"Expected ConfigDirective, got {type(result)}")
+        return result
 
     def _preprocess_moergo_binding_edge_cases(self, binding_str: str) -> str:
         """Preprocess binding string to handle MoErgo JSON edge cases.
