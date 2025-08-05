@@ -79,20 +79,16 @@ def build_template_context(
     # Extract data for generation with fallback to empty lists
     layer_names = keymap_data.layer_names
     layers_data = keymap_data.layers
-    hold_taps_data = keymap_data.hold_taps
-    combos_data = keymap_data.combos
-    macros_data = keymap_data.macros
-    input_listeners_data = getattr(keymap_data, "input_listeners", [])
+    getattr(keymap_data, "input_listeners", [])
 
     # Get resolved includes from the profile and format them as #include <>
     resolved_includes = []
-    if hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "keymap"):
-        if (
-            hasattr(profile.keyboard_config.keymap, "header_includes")
-            and profile.keyboard_config.keymap.header_includes is not None
-        ):
-            # Format bare header names as #include <header_name>
-            resolved_includes = [f"#include <{include}>" for include in profile.keyboard_config.keymap.header_includes]
+    if hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "keymap") and (
+        hasattr(profile.keyboard_config.keymap, "header_includes")
+        and profile.keyboard_config.keymap.header_includes is not None
+    ):
+        # Format bare header names as #include <header_name>
+        resolved_includes = [f"#include <{include}>" for include in profile.keyboard_config.keymap.header_includes]
 
     additional_includes = get_required_includes_for_layout(profile, keymap_data)
     resolved_includes.extend([f"#include <{include}>" for include in additional_includes])
@@ -219,8 +215,8 @@ def generate_kconfig_conf(
             name = opt.param_name
             # Add kconfig prefix if needed
             kconfig_prefix = "CONFIG_ZMK_"  # Default prefix
-            if hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "zmk"):
-                if hasattr(profile.keyboard_config.zmk, "patterns"):
+            if (hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "zmk") 
+                and hasattr(profile.keyboard_config.zmk, "patterns")):
                     kconfig_prefix = profile.keyboard_config.zmk.patterns.kconfig_prefix
             
             if not name.startswith(kconfig_prefix):

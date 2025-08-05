@@ -1,7 +1,6 @@
 """Base model for ZMK layout library."""
 
-from typing import Any, Literal
-from typing_extensions import Self
+from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict
 

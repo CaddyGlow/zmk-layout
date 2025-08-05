@@ -38,15 +38,21 @@ def has_rich() -> bool:
 
 def get_template_provider() -> "TemplateProvider":
     """Get template provider with fallback."""
-    if has_jinja2():
-        # TODO: Implement Jinja2TemplateProvider when needed
+    try:
         from zmk_layout.providers.factory import DefaultTemplateProvider
-
         return DefaultTemplateProvider()
-    else:
-        from zmk_layout.providers.factory import DefaultTemplateProvider
-
-        return DefaultTemplateProvider()
+    except ImportError:
+        # If we can't import the fallback provider, create a minimal inline provider
+        # that doesn't require any imports
+        class NullTemplateProvider:
+            def render_string(self, template: str, context: dict[str, Any] | None = None) -> str:
+                return template
+            def has_template_syntax(self, text: str) -> bool:
+                return False
+            def escape_content(self, content: str) -> str:
+                return content
+        
+        return NullTemplateProvider()
 
 
 def get_parser_provider() -> Any:
