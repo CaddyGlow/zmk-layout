@@ -1,13 +1,15 @@
 """Tests for provider protocols and default implementations."""
 
-from zmk_layout.providers import (
+from pathlib import Path
+
+from zmk_layout.providers import (  # type: ignore
     ConfigurationProvider,
     FileProvider,
     LayoutLogger,
     LayoutProviders,
     TemplateProvider,
 )
-from zmk_layout.providers.factory import (
+from zmk_layout.providers.factory import (  # type: ignore
     DefaultConfigurationProvider,
     DefaultFileProvider,
     DefaultLogger,
@@ -19,7 +21,7 @@ from zmk_layout.providers.factory import (
 class TestProviderProtocols:
     """Test that provider protocols define the expected interface."""
 
-    def test_configuration_provider_protocol(self):
+    def test_configuration_provider_protocol(self) -> None:
         """Test ConfigurationProvider protocol methods."""
         # Protocol methods should exist
         assert hasattr(ConfigurationProvider, 'get_behavior_definitions')
@@ -29,13 +31,13 @@ class TestProviderProtocols:
         assert hasattr(ConfigurationProvider, 'get_kconfig_options')
         assert hasattr(ConfigurationProvider, 'get_formatting_config')
 
-    def test_template_provider_protocol(self):
+    def test_template_provider_protocol(self) -> None:
         """Test TemplateProvider protocol methods."""
         assert hasattr(TemplateProvider, 'render_string')
         assert hasattr(TemplateProvider, 'has_template_syntax')
         assert hasattr(TemplateProvider, 'escape_content')
 
-    def test_layout_logger_protocol(self):
+    def test_layout_logger_protocol(self) -> None:
         """Test LayoutLogger protocol methods."""
         assert hasattr(LayoutLogger, 'info')
         assert hasattr(LayoutLogger, 'error')
@@ -43,7 +45,7 @@ class TestProviderProtocols:
         assert hasattr(LayoutLogger, 'debug')
         assert hasattr(LayoutLogger, 'exception')
 
-    def test_file_provider_protocol(self):
+    def test_file_provider_protocol(self) -> None:
         """Test FileProvider protocol methods."""
         assert hasattr(FileProvider, 'read_text')
         assert hasattr(FileProvider, 'write_text')
@@ -54,7 +56,7 @@ class TestProviderProtocols:
 class TestDefaultProviders:
     """Test default provider implementations."""
 
-    def test_default_logger(self):
+    def test_default_logger(self) -> None:
         """Test default logger implementation."""
         logger = DefaultLogger("test")
         
@@ -65,7 +67,7 @@ class TestDefaultProviders:
         logger.debug("test debug")
         logger.exception("test exception")
 
-    def test_default_template_provider(self):
+    def test_default_template_provider(self) -> None:
         """Test default template provider."""
         provider = DefaultTemplateProvider()
         
@@ -83,7 +85,7 @@ class TestDefaultProviders:
         escaped = provider.escape_content("Hello {name}")
         assert "{" in escaped and "}" in escaped
 
-    def test_default_configuration_provider(self):
+    def test_default_configuration_provider(self) -> None:
         """Test default configuration provider."""
         provider = DefaultConfigurationProvider()
         
@@ -117,7 +119,7 @@ class TestDefaultProviders:
         assert "key_gap" in formatting
         assert "base_indent" in formatting
 
-    def test_default_file_provider(self, tmp_path):
+    def test_default_file_provider(self, tmp_path: Path) -> None:
         """Test default file provider."""
         provider = DefaultFileProvider()
         
@@ -144,7 +146,7 @@ class TestDefaultProviders:
 class TestLayoutProviders:
     """Test LayoutProviders dataclass."""
 
-    def test_layout_providers_creation(self):
+    def test_layout_providers_creation(self) -> None:
         """Test creating LayoutProviders instance."""
         providers = create_default_providers()
         
@@ -160,7 +162,7 @@ class TestLayoutProviders:
         assert hasattr(providers.logger, 'info')
         assert hasattr(providers.file, 'read_text')
 
-    def test_providers_functionality(self, tmp_path):
+    def test_providers_functionality(self, tmp_path: Path) -> None:
         """Test that providers work together."""
         providers = create_default_providers()
         

@@ -1,6 +1,6 @@
 """ZMK keymap parser for reverse engineering keymaps to JSON layouts."""
 
-import logging
+# logging module not needed anymore since we don't use isEnabledFor
 import re
 from datetime import datetime
 from enum import Enum
@@ -24,17 +24,21 @@ from .ast_nodes import DTNode, DTValue
 
 def create_full_keymap_processor() -> "ProcessorProtocol":
     """Placeholder function - TODO: Extract full keymap processor."""
+
     class StubProcessor:
         def process(self, context: "ParsingContext") -> LayoutData | None:
             return None
+
     return StubProcessor()  # type: ignore
 
 
 def create_template_aware_processor() -> "ProcessorProtocol":
     """Placeholder function - TODO: Extract template aware processor."""
+
     class StubProcessor:
         def process(self, context: "ParsingContext") -> LayoutData | None:
             return None
+
     return StubProcessor()  # type: ignore
 
 
@@ -44,21 +48,25 @@ if TYPE_CHECKING:
 
     # from .parsing_models import ExtractionConfig  # TODO: Extract parsing models
     # from .parsing_models import ParsingContext  # TODO: Extract parsing models
-    
+
     class KeyboardProfile:
         """Placeholder for KeyboardProfile until extracted."""
+
         pass
-        
+
     class ParsingContext:
         """Placeholder for ParsingContext until extracted."""
+
         pass
-        
+
     class ExtractionConfig:
         """Placeholder for ExtractionConfig until extracted."""
+
         pass
-        
+
     class ModelFactory:
         """Placeholder for ModelFactory until extracted."""
+
         pass
 
     class ProcessorProtocol(Protocol):
@@ -121,7 +129,7 @@ class ZMKKeymapParser:
         self.logger = logger
 
         # Initialize processors for different parsing modes
-        # TODO: Add processors when available  
+        # TODO: Add processors when available
         # self.processors = processors or {
         #     ParsingMode.FULL: create_full_keymap_processor(),
         #     ParsingMode.TEMPLATE_AWARE: create_template_aware_processor(),
@@ -148,7 +156,8 @@ class ZMKKeymapParser:
             # Check if token is a define (but not a behavior reference starting with &)
             if not token.startswith("&") and token in self.defines:
                 resolved = self.defines[token]
-                self.logger.debug("Resolved define %s -> %s", token, resolved)
+                if self.logger:
+                    self.logger.debug("Resolved define", token=token, resolved=resolved)
                 resolved_tokens.append(resolved)
             else:
                 resolved_tokens.append(token)
@@ -210,9 +219,7 @@ class ZMKKeymapParser:
             if layout_data:
                 layout_data.date = datetime.now()
                 layout_data.creator = "glovebox"
-                layout_data.notes = (
-                    f"Automatically generated from keymap file {keymap_file.name}"
-                )
+                layout_data.notes = f"Automatically generated from keymap file {keymap_file.name}"
 
                 result.layout_data = layout_data
                 result.success = True
@@ -223,8 +230,8 @@ class ZMKKeymapParser:
             result.warnings.extend(context.warnings)
 
         except Exception as e:
-            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-            self.logger.error("Failed to parse keymap: %s", e, exc_info=exc_info)
+            if self.logger:
+                self.logger.error("Failed to parse keymap", exc_info=True, error=str(e))
             result.errors.append(f"Parsing failed: {e}")
 
         return result
@@ -250,13 +257,15 @@ class ZMKKeymapParser:
                     # Ensure we return the proper typed list
                     return list(extraction_sections)
             except Exception as e:
-                exc_info = self.logger.isEnabledFor(logging.DEBUG)
-                self.logger.warning(
-                    "Failed to load extraction config from profile %s: %s",
-                    profile.keyboard_name if profile else "unknown",
-                    e,
-                    exc_info=exc_info,
-                )
+                if self.logger:
+                    self.logger.warning(
+                        "Failed to load extraction config from profile",
+                        profile_name=profile.keyboard_name
+                        if (profile and hasattr(profile, "keyboard_name"))
+                        else "unknown",
+                        error=str(e),
+                        exc_info=True,
+                    )
 
         # Return default configuration
         # TODO: Extract default extraction config when parsing models are available
@@ -273,11 +282,7 @@ class ZMKKeymapParser:
         """
         try:
             # Check if profile has keymap template configuration
-            if (
-                hasattr(profile, "keymap")
-                and profile.keymap
-                and hasattr(profile.keymap, "keymap_dtsi_file")
-            ):
+            if hasattr(profile, "keymap") and profile.keymap and hasattr(profile.keymap, "keymap_dtsi_file"):
                 # External template file
                 template_file = profile.keymap.keymap_dtsi_file
                 if template_file:
@@ -292,12 +297,11 @@ class ZMKKeymapParser:
 
             # Fallback to default template location in the project
             project_root = Path(__file__).parent.parent.parent.parent
-            return Path(
-                project_root / "keyboards" / "config" / "templates" / "keymap.dtsi.j2"
-            )
+            return Path(project_root / "keyboards" / "config" / "templates" / "keymap.dtsi.j2")
 
         except Exception as e:
-            self.logger.warning("Could not determine template path: %s", e)
+            if self.logger:
+                self.logger.warning("Could not determine template path", error=str(e))
             return None
 
     def _extract_balanced_node(self, content: str, node_name: str) -> str | None:
@@ -344,42 +348,42 @@ class ZMKKeymapParser:
             keymap_node = None
 
             # Log the root node structure for debugging
-            if self.logger.isEnabledFor(logging.DEBUG):
+            if self.logger:
                 self.logger.debug(
-                    "Searching for keymap node in root: name='%s', children=%s",
-                    root.name,
-                    list(root.children.keys()),
+                    "Searching for keymap node in root",
+                    root_name=root.name,
+                    children_count=len(root.children.keys()),
                 )
 
             # Method 1: Direct check if root is keymap
             if root.name == "keymap":
                 keymap_node = root
-                if self.logger.isEnabledFor(logging.DEBUG):
+                if self.logger:
                     self.logger.debug("Found keymap node as root node")
 
             # Method 2: Try direct path lookup
             if not keymap_node:
                 keymap_node = root.find_node_by_path("/keymap")
-                if keymap_node and self.logger.isEnabledFor(logging.DEBUG):
+                if keymap_node and self.logger:
                     self.logger.debug("Found keymap node via path /keymap")
 
             # Method 3: For main root nodes (name=""), look for keymap child directly
             if not keymap_node and root.name == "":
                 keymap_node = root.get_child("keymap")
-                if keymap_node and self.logger.isEnabledFor(logging.DEBUG):
+                if keymap_node and self.logger:
                     self.logger.debug("Found keymap node as direct child of main root")
 
             # Method 4: Recursive search through all child nodes
             if not keymap_node:
                 keymap_node = self._find_keymap_node_recursive(root)
-                if keymap_node and self.logger.isEnabledFor(logging.DEBUG):
+                if keymap_node and self.logger:
                     self.logger.debug("Found keymap node via recursive search")
 
             if not keymap_node:
-                if self.logger.isEnabledFor(logging.DEBUG):
+                if self.logger:
                     # Log the full tree structure for debugging
                     self._log_ast_structure(root, level=0, max_level=2)
-                self.logger.warning("No keymap node found in AST")
+                    self.logger.warning("No keymap node found in AST")
                 return None
 
             layer_names = []
@@ -398,13 +402,15 @@ class ZMKKeymapParser:
                         layers.append([])
 
             if not layer_names:
-                self.logger.warning("No layer definitions found in keymap node")
+                if self.logger:
+                    self.logger.warning("No layer definitions found in keymap node")
                 return None
 
             return {"layer_names": layer_names, "layers": layers}
 
         except Exception as e:
-            self.logger.warning("Failed to extract layers from AST: %s", e)
+            if self.logger:
+                self.logger.warning("Failed to extract layers from AST", error=str(e))
             return None
 
     def _find_keymap_node_recursive(self, node: DTNode) -> DTNode | None:
@@ -428,9 +434,7 @@ class ZMKKeymapParser:
 
         return None
 
-    def _log_ast_structure(
-        self, node: DTNode, level: int = 0, max_level: int = 2
-    ) -> None:
+    def _log_ast_structure(self, node: DTNode, level: int = 0, max_level: int = 2) -> None:
         """Log AST structure for debugging.
 
         Args:
@@ -442,13 +446,14 @@ class ZMKKeymapParser:
             return
 
         indent = "  " * level
-        self.logger.debug(
-            "%sNode: name='%s', children=%s, properties=%s",
-            indent,
-            node.name,
-            list(node.children.keys()),
-            list(node.properties.keys()),
-        )
+        if self.logger:
+            self.logger.debug(
+                "AST Node structure",
+                indent=indent,
+                name=node.name,
+                children_count=len(node.children.keys()),
+                properties_count=len(node.properties.keys()),
+            )
 
         # Log children recursively
         for _child_name, child_node in node.children.items():
@@ -497,55 +502,49 @@ class ZMKKeymapParser:
                     binding_str = " ".join(binding_parts)
 
                     # Log the binding string for debugging parameter issues
-                    if self.logger.isEnabledFor(logging.DEBUG):
+                    if self.logger:
                         self.logger.debug(
-                            "Converting binding: '%s' from parts: %s",
-                            binding_str,
-                            binding_parts,
+                            "Converting binding",
+                            binding_str=binding_str,
+                            binding_parts_count=len(binding_parts),
                         )
 
                     try:
                         # Preprocess for MoErgo edge cases
-                        preprocessed_binding_str = (
-                            self._preprocess_moergo_binding_edge_cases(binding_str)
-                        )
+                        preprocessed_binding_str = self._preprocess_moergo_binding_edge_cases(binding_str)
 
                         # Resolve defines in the binding string
-                        resolved_binding_str = self._resolve_binding_string(
-                            preprocessed_binding_str
-                        )
+                        resolved_binding_str = self._resolve_binding_string(preprocessed_binding_str)
 
                         # Use the existing LayoutBinding.from_str method
                         binding = LayoutBinding.from_str(resolved_binding_str)
                         bindings.append(binding)
 
                         # Debug log the parsed parameters
-                        if self.logger.isEnabledFor(logging.DEBUG):
-                            param_strs = [str(p.value) for p in binding.params]
+                        if self.logger:
+                            [str(p.value) for p in binding.params]
                             self.logger.debug(
-                                "Parsed binding '%s' with %d params: %s",
-                                binding.value,
-                                len(binding.params),
-                                param_strs,
+                                "Parsed binding",
+                                binding_value=binding.value,
+                                param_count=len(binding.params),
                             )
                     except Exception as e:
-                        exc_info = self.logger.isEnabledFor(logging.DEBUG)
-                        self.logger.error(
-                            "Failed to parse binding '%s': %s",
-                            binding_str,
-                            e,
-                            exc_info=exc_info,
-                        )
+                        if self.logger:
+                            self.logger.error(
+                                "Failed to parse binding",
+                                binding_str=binding_str,
+                                error=str(e),
+                                exc_info=True,
+                            )
                         # Create fallback binding with empty params
-                        bindings.append(
-                            LayoutBinding(value=binding_parts[0], params=[])
-                        )
+                        bindings.append(LayoutBinding(value=binding_parts[0], params=[]))
                 else:
                     # Standalone parameter without behavior - this shouldn't happen in well-formed keymap
-                    self.logger.warning(
-                        "Found standalone parameter '%s' without behavior reference",
-                        item,
-                    )
+                    if self.logger:
+                        self.logger.warning(
+                            "Found standalone parameter without behavior reference",
+                            parameter=item,
+                        )
                     i += 1
         else:
             # Single binding
@@ -553,32 +552,26 @@ class ZMKKeymapParser:
             if binding_str:
                 try:
                     # Preprocess for MoErgo edge cases
-                    preprocessed_binding_str = (
-                        self._preprocess_moergo_binding_edge_cases(binding_str)
-                    )
+                    preprocessed_binding_str = self._preprocess_moergo_binding_edge_cases(binding_str)
 
                     # Resolve defines in the binding string
-                    resolved_binding_str = self._resolve_binding_string(
-                        preprocessed_binding_str
-                    )
+                    resolved_binding_str = self._resolve_binding_string(preprocessed_binding_str)
 
                     binding = LayoutBinding.from_str(resolved_binding_str)
                     bindings.append(binding)
                 except Exception as e:
-                    exc_info = self.logger.isEnabledFor(logging.DEBUG)
-                    self.logger.error(
-                        "Failed to parse single binding '%s': %s",
-                        binding_str,
-                        e,
-                        exc_info=exc_info,
-                    )
+                    if self.logger:
+                        self.logger.error(
+                            "Failed to parse single binding",
+                            binding_str=binding_str,
+                            error=str(e),
+                            exc_info=True,
+                        )
                     bindings.append(LayoutBinding(value=binding_str, params=[]))
 
         return bindings
 
-    def _convert_comment_to_model(
-        self, comment_dict: dict[str, object]
-    ) -> "KeymapComment":
+    def _convert_comment_to_model(self, comment_dict: dict[str, object]) -> "KeymapComment":
         """Convert comment dictionary to KeymapComment model instance.
 
         Args:
@@ -589,9 +582,7 @@ class ZMKKeymapParser:
         """
         return self.model_factory.create_comment(comment_dict)
 
-    def _convert_include_to_model(
-        self, include_dict: dict[str, object]
-    ) -> "KeymapInclude":
+    def _convert_include_to_model(self, include_dict: dict[str, object]) -> "KeymapInclude":
         """Convert include dictionary to KeymapInclude model instance.
 
         Args:
@@ -602,9 +593,7 @@ class ZMKKeymapParser:
         """
         return self.model_factory.create_include(include_dict)
 
-    def _convert_directive_to_model(
-        self, directive_dict: dict[str, object]
-    ) -> "ConfigDirective":
+    def _convert_directive_to_model(self, directive_dict: dict[str, object]) -> "ConfigDirective":
         """Convert config directive dictionary to ConfigDirective model instance.
 
         Args:
@@ -626,9 +615,8 @@ class ZMKKeymapParser:
         """
         # Edge case 1: Transform &sys_reset to &reset
         if binding_str == "&sys_reset":
-            self.logger.debug(
-                "Transforming &sys_reset to &reset for MoErgo compatibility"
-            )
+            if self.logger:
+                self.logger.debug("Transforming &sys_reset to &reset for MoErgo compatibility")
             return "&reset"
 
         # Edge case 2: Handle &magic parameter cleanup
@@ -636,10 +624,12 @@ class ZMKKeymapParser:
         if binding_str.startswith("&magic "):
             parts = binding_str.split()
             if len(parts) >= 3 and parts[1].startswith("LAYER_") and parts[2] == "0":
-                self.logger.debug(
-                    "Cleaning up &magic parameters for MoErgo compatibility: %s -> &magic",
-                    binding_str,
-                )
+                if self.logger:
+                    self.logger.debug(
+                        "Cleaning up &magic parameters for MoErgo compatibility",
+                        original=binding_str,
+                        cleaned="&magic",
+                    )
                 return "&magic"
 
         return binding_str

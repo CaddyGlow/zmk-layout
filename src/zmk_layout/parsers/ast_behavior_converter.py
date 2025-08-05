@@ -1,10 +1,13 @@
 """AST-based behavior converter for extracting behaviors from device tree nodes."""
 
-import logging
+# logging module not needed anymore since we don't use isEnabledFor
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ..providers import LayoutLogger
+
+# TODO: Extract AST nodes from glovebox
+from glovebox.layout.parsers.ast_nodes import DTNode, DTProperty, DTValueType
 
 from ..models import (
     CapsWordBehavior,
@@ -16,9 +19,6 @@ from ..models import (
     StickyKeyBehavior,
     TapDanceBehavior,
 )
-
-# TODO: Extract AST nodes from glovebox
-from glovebox.layout.parsers.ast_nodes import DTNode, DTProperty, DTValueType
 
 
 class ASTBehaviorConverter:
@@ -46,7 +46,7 @@ class ASTBehaviorConverter:
         if token in self.defines:
             resolved = self.defines[token]
             if self.logger:
-                self.logger.debug("Resolved define %s -> %s", token, resolved)
+                self.logger.debug("Resolved define", token=token, resolved=resolved)
             return resolved
         return token
 
@@ -107,7 +107,8 @@ class ASTBehaviorConverter:
             # Extract basic information
             name = node.label or node.name
             if not name:
-                self.logger.warning("Hold-tap node missing name/label")
+                if self.logger:
+                    self.logger.warning("Hold-tap node missing name/label")
                 return None
 
             # Add & prefix for JSON format consistency
@@ -125,13 +126,13 @@ class ASTBehaviorConverter:
             return hold_tap
 
         except Exception as e:
-            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-            self.logger.error(
-                "Failed to convert hold-tap node '%s': %s",
-                node.name,
-                e,
-                exc_info=exc_info,
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert hold-tap node",
+                    node_name=node.name,
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
     def convert_macro_node(self, node: DTNode) -> MacroBehavior | None:
@@ -147,7 +148,8 @@ class ASTBehaviorConverter:
             # Extract basic information
             name = node.label or node.name
             if not name:
-                self.logger.warning("Macro node missing name/label")
+                if self.logger:
+                    self.logger.warning("Macro node missing name/label")
                 return None
 
             # Add & prefix for JSON format consistency
@@ -165,10 +167,13 @@ class ASTBehaviorConverter:
             return macro
 
         except Exception as e:
-            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-            self.logger.error(
-                "Failed to convert macro node '%s': %s", node.name, e, exc_info=exc_info
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert macro node",
+                    node_name=node.name,
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
     def convert_combo_node(self, node: DTNode) -> ComboBehavior | None:
@@ -184,7 +189,8 @@ class ASTBehaviorConverter:
             # Extract basic information
             name = node.label or node.name
             if not name:
-                self.logger.warning("Combo node missing name/label")
+                if self.logger:
+                    self.logger.warning("Combo node missing name/label")
                 return None
 
             # Combos use plain names without & prefix in JSON format
@@ -199,23 +205,27 @@ class ASTBehaviorConverter:
             # Key positions are required for combos
             key_positions_prop = node.get_property("key-positions")
             if not key_positions_prop:
-                self.logger.warning("Combo '%s' missing key-positions property", name)
+                if self.logger:
+                    self.logger.warning("Combo missing key-positions property", combo_name=name)
                 return None
 
             key_positions = self._extract_array_from_property(key_positions_prop)
             if not key_positions:
-                self.logger.warning("Combo '%s' has invalid key-positions", name)
+                if self.logger:
+                    self.logger.warning("Combo has invalid key-positions", combo_name=name)
                 return None
 
             # Bindings are required
             bindings_prop = node.get_property("bindings")
             if not bindings_prop:
-                self.logger.warning("Combo '%s' missing bindings property", name)
+                if self.logger:
+                    self.logger.warning("Combo missing bindings property", combo_name=name)
                 return None
 
             binding = self._extract_single_binding_from_property(bindings_prop)
             if not binding:
-                self.logger.warning("Combo '%s' has invalid bindings", name)
+                if self.logger:
+                    self.logger.warning("Combo has invalid bindings", combo_name=name)
                 return None
 
             # Create combo behavior
@@ -232,10 +242,13 @@ class ASTBehaviorConverter:
             return combo
 
         except Exception as e:
-            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-            self.logger.error(
-                "Failed to convert combo node '%s': %s", node.name, e, exc_info=exc_info
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert combo node",
+                    node_name=node.name,
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
     def _extract_description_from_node(self, node: DTNode) -> str:
@@ -325,9 +338,7 @@ class ASTBehaviorConverter:
 
         return ""
 
-    def _populate_hold_tap_properties(
-        self, hold_tap: HoldTapBehavior, node: DTNode
-    ) -> None:
+    def _populate_hold_tap_properties(self, hold_tap: HoldTapBehavior, node: DTNode) -> None:
         """Populate hold-tap behavior properties from device tree node.
 
         Args:
@@ -337,9 +348,7 @@ class ASTBehaviorConverter:
         # Timing properties
         tapping_term_prop = node.get_property("tapping-term-ms")
         if tapping_term_prop:
-            hold_tap.tapping_term_ms = self._extract_int_from_property(
-                tapping_term_prop
-            )
+            hold_tap.tapping_term_ms = self._extract_int_from_property(tapping_term_prop)
 
         quick_tap_prop = node.get_property("quick-tap-ms")
         if quick_tap_prop:
@@ -347,9 +356,7 @@ class ASTBehaviorConverter:
 
         require_prior_idle_prop = node.get_property("require-prior-idle-ms")
         if require_prior_idle_prop:
-            hold_tap.require_prior_idle_ms = self._extract_int_from_property(
-                require_prior_idle_prop
-            )
+            hold_tap.require_prior_idle_ms = self._extract_int_from_property(require_prior_idle_prop)
 
         # Flavor property
         flavor_prop = node.get_property("flavor")
@@ -415,17 +422,19 @@ class ASTBehaviorConverter:
             elif binding_cells == 2:
                 macro.params = ["param1", "param2"]
             else:
-                self.logger.warning(
-                    "Unexpected binding-cells value for macro %s: %s",
-                    macro.name,
-                    binding_cells,
+                if self.logger:
+                    self.logger.warning(
+                        "Unexpected binding-cells value for macro",
+                        macro_name=macro.name,
+                        binding_cells=binding_cells,
+                    )
+            if self.logger:
+                self.logger.debug(
+                    "Using #binding-cells for macro",
+                    binding_cells=binding_cells,
+                    macro_name=macro.name,
+                    param_count=len(macro.params) if macro.params else 0,
                 )
-            self.logger.debug(
-                "Using #binding-cells=%d for macro %s: %s",
-                binding_cells,
-                macro.name,
-                macro.params,
-            )
         else:
             # Fallback: infer from compatible property when #binding-cells is missing
             compatible_prop = node.get_property("compatible")
@@ -434,33 +443,37 @@ class ASTBehaviorConverter:
 
                 if compatible_value == "zmk,behavior-macro-one-param":
                     macro.params = ["code"]
-                    self.logger.warning(
-                        "Missing #binding-cells for macro %s, inferred 1 parameter from compatible property '%s'. Consider adding #binding-cells = <1>; to the macro definition.",
-                        macro.name,
-                        compatible_value,
-                    )
+                    if self.logger:
+                        self.logger.warning(
+                            "Missing #binding-cells for macro, inferred 1 parameter from compatible property. Consider adding #binding-cells = <1>; to the macro definition.",
+                            macro_name=macro.name,
+                            compatible_value=compatible_value,
+                        )
                 elif compatible_value == "zmk,behavior-macro-two-param":
                     macro.params = ["param1", "param2"]
-                    self.logger.warning(
-                        "Missing #binding-cells for macro %s, inferred 2 parameters from compatible property '%s'. Consider adding #binding-cells = <2>; to the macro definition.",
-                        macro.name,
-                        compatible_value,
-                    )
+                    if self.logger:
+                        self.logger.warning(
+                            "Missing #binding-cells for macro, inferred 2 parameters from compatible property. Consider adding #binding-cells = <2>; to the macro definition.",
+                            macro_name=macro.name,
+                            compatible_value=compatible_value,
+                        )
                 elif compatible_value == "zmk,behavior-macro":
                     # Standard macro with no parameters by default
                     macro.params = []
-                    self.logger.warning(
-                        "Missing #binding-cells for macro %s, inferred 0 parameters from compatible property '%s'. Consider adding #binding-cells = <0>; to the macro definition.",
-                        macro.name,
-                        compatible_value,
-                    )
+                    if self.logger:
+                        self.logger.warning(
+                            "Missing #binding-cells for macro, inferred 0 parameters from compatible property. Consider adding #binding-cells = <0>; to the macro definition.",
+                            macro_name=macro.name,
+                            compatible_value=compatible_value,
+                        )
 
         # If we haven't set params yet, warn and default to empty
         if not hasattr(macro, "params") or macro.params is None:
-            self.logger.warning(
-                "Unable to determine parameter count for macro %s - missing #binding-cells and unrecognized compatible property. Defaulting to no parameters. Please add #binding-cells property to the macro definition.",
-                macro.name,
-            )
+            if self.logger:
+                self.logger.warning(
+                    "Unable to determine parameter count for macro - missing #binding-cells and unrecognized compatible property. Defaulting to no parameters. Please add #binding-cells property to the macro definition.",
+                    macro_name=macro.name,
+                )
             macro.params = []
 
     def _populate_combo_properties(self, combo: ComboBehavior, node: DTNode) -> None:
@@ -484,7 +497,8 @@ class ASTBehaviorConverter:
             # Fallback: when layers property is missing, add placeholder
             # This ensures combos have the required layers field with a default value
             combo.layers = [-1]
-            self.logger.debug("Added placeholder layers [-1] for combo %s", combo.name)
+            if self.logger:
+                self.logger.debug("Added placeholder layers for combo", combo_name=combo.name)
 
     def _extract_string_from_property(self, prop: DTProperty) -> str:
         """Extract string value from device tree property.
@@ -622,9 +636,7 @@ class ASTBehaviorConverter:
         except (ValueError, AttributeError):
             return []
 
-    def _extract_macro_bindings_from_property(
-        self, prop: DTProperty
-    ) -> list[LayoutBinding]:
+    def _extract_macro_bindings_from_property(self, prop: DTProperty) -> list[LayoutBinding]:
         """Extract macro bindings from device tree property.
 
         Args:
@@ -667,53 +679,47 @@ class ASTBehaviorConverter:
                         binding_str = " ".join(binding_parts)
 
                         # Log the binding string for debugging parameter issues
-                        if self.logger.isEnabledFor(logging.DEBUG):
+                        if self.logger:
                             self.logger.debug(
-                                "Converting macro binding: '%s' from parts: %s",
-                                binding_str,
-                                binding_parts,
+                                "Converting macro binding",
+                                binding_str=binding_str,
+                                binding_parts_count=len(binding_parts),
                             )
 
                         try:
                             # Preprocess for MoErgo edge cases
-                            preprocessed_binding_str = (
-                                self._preprocess_moergo_binding_edge_cases(binding_str)
-                            )
+                            preprocessed_binding_str = self._preprocess_moergo_binding_edge_cases(binding_str)
 
                             # Resolve defines in the binding string
-                            resolved_binding_str = self._resolve_binding_string(
-                                preprocessed_binding_str
-                            )
+                            resolved_binding_str = self._resolve_binding_string(preprocessed_binding_str)
                             binding = LayoutBinding.from_str(resolved_binding_str)
                             bindings.append(binding)
 
                             # Debug log the parsed parameters
-                            if self.logger.isEnabledFor(logging.DEBUG):
-                                param_strs = [str(p.value) for p in binding.params]
+                            if self.logger:
+                                [str(p.value) for p in binding.params]
                                 self.logger.debug(
-                                    "Parsed macro binding '%s' with %d params: %s",
-                                    binding.value,
-                                    len(binding.params),
-                                    param_strs,
+                                    "Parsed macro binding",
+                                    binding_value=binding.value,
+                                    param_count=len(binding.params),
                                 )
                         except Exception as e:
-                            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-                            self.logger.error(
-                                "Failed to parse macro binding '%s': %s",
-                                binding_str,
-                                e,
-                                exc_info=exc_info,
-                            )
+                            if self.logger:
+                                self.logger.error(
+                                    "Failed to parse macro binding",
+                                    binding_str=binding_str,
+                                    error=str(e),
+                                    exc_info=True,
+                                )
                             # Create fallback binding with empty params
-                            bindings.append(
-                                LayoutBinding(value=binding_parts[0], params=[])
-                            )
+                            bindings.append(LayoutBinding(value=binding_parts[0], params=[]))
                     else:
                         # Standalone parameter without behavior - this shouldn't happen in well-formed macro
-                        self.logger.warning(
-                            "Found standalone parameter '%s' without behavior reference in macro",
-                            item,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Found standalone parameter without behavior reference in macro",
+                                parameter=item,
+                            )
                         i += 1
             else:
                 # Fallback to raw parsing for non-array values
@@ -729,20 +735,19 @@ class ASTBehaviorConverter:
                     if part and part.startswith("&"):
                         try:
                             # Preprocess for MoErgo edge cases
-                            preprocessed_part = (
-                                self._preprocess_moergo_binding_edge_cases(part)
-                            )
+                            preprocessed_part = self._preprocess_moergo_binding_edge_cases(part)
 
                             # Resolve defines in the binding string
-                            resolved_part = self._resolve_binding_string(
-                                preprocessed_part
-                            )
+                            resolved_part = self._resolve_binding_string(preprocessed_part)
                             binding = LayoutBinding.from_str(resolved_part)
                             bindings.append(binding)
                         except Exception as e:
-                            self.logger.warning(
-                                "Failed to parse macro binding '%s': %s", part, e
-                            )
+                            if self.logger:
+                                self.logger.warning(
+                                    "Failed to parse macro binding",
+                                    binding_str=part,
+                                    error=str(e),
+                                )
                             # Create fallback binding
                             bindings.append(LayoutBinding(value=part, params=[]))
 
@@ -751,9 +756,7 @@ class ASTBehaviorConverter:
 
         return bindings
 
-    def _extract_single_binding_from_property(
-        self, prop: DTProperty
-    ) -> LayoutBinding | None:
+    def _extract_single_binding_from_property(self, prop: DTProperty) -> LayoutBinding | None:
         """Extract single binding from device tree property for combos.
 
         Args:
@@ -767,13 +770,17 @@ class ASTBehaviorConverter:
 
         try:
             # Debug: log the raw value and array value
-            self.logger.debug(
-                "Processing combo binding - raw: '%s', type: %s",
-                prop.value.raw if prop.value else "None",
-                prop.value.type if prop.value else "None",
-            )
-            if prop.value and prop.value.type == DTValueType.ARRAY:
-                self.logger.debug("Array value: %s", prop.value.value)
+            if self.logger:
+                self.logger.debug(
+                    "Processing combo binding",
+                    raw_value=prop.value.raw if prop.value else "None",
+                    value_type=str(prop.value.type) if prop.value else "None",
+                )
+                if prop.value and prop.value.type == DTValueType.ARRAY:
+                    self.logger.debug(
+                        "Array value present",
+                        array_length=len(prop.value.value) if isinstance(prop.value.value, list) else 1,
+                    )
 
             # Try raw parsing first to preserve complex nested structures like LG(LA(LC(LSHFT)))
             raw_value = prop.value.raw.strip()
@@ -786,37 +793,31 @@ class ASTBehaviorConverter:
             if cleaned_raw and cleaned_raw.startswith("&"):
                 # If it contains spaced parentheses, fix them and try parsing
                 if "( " in cleaned_raw or " )" in cleaned_raw:
-                    self.logger.debug(
-                        "Raw value has spaced parentheses, attempting to fix and parse directly"
-                    )
+                    if self.logger:
+                        self.logger.debug("Raw value has spaced parentheses, attempting to fix and parse directly")
                     # Fix the spaced parentheses by removing spaces around them
                     fixed_raw = cleaned_raw.replace(" ( ", "(").replace(" )", ")")
                     try:
                         # Preprocess for MoErgo edge cases
-                        preprocessed_fixed_raw = (
-                            self._preprocess_moergo_binding_edge_cases(fixed_raw)
-                        )
+                        preprocessed_fixed_raw = self._preprocess_moergo_binding_edge_cases(fixed_raw)
 
                         # Resolve defines in the binding string
-                        resolved_fixed_raw = self._resolve_binding_string(
-                            preprocessed_fixed_raw
-                        )
+                        resolved_fixed_raw = self._resolve_binding_string(preprocessed_fixed_raw)
                         return LayoutBinding.from_str(resolved_fixed_raw)
                     except Exception as e:
-                        self.logger.debug(
-                            "Failed to parse fixed raw value '%s': %s", fixed_raw, e
-                        )
+                        if self.logger:
+                            self.logger.debug(
+                                "Failed to parse fixed raw value",
+                                fixed_raw=fixed_raw,
+                                error=str(e),
+                            )
                         # Fall through to array reconstruction
                 else:
                     # Preprocess for MoErgo edge cases
-                    preprocessed_cleaned_raw = (
-                        self._preprocess_moergo_binding_edge_cases(cleaned_raw)
-                    )
+                    preprocessed_cleaned_raw = self._preprocess_moergo_binding_edge_cases(cleaned_raw)
 
                     # Resolve defines in the binding string
-                    resolved_cleaned_raw = self._resolve_binding_string(
-                        preprocessed_cleaned_raw
-                    )
+                    resolved_cleaned_raw = self._resolve_binding_string(preprocessed_cleaned_raw)
                     return LayoutBinding.from_str(resolved_cleaned_raw)
 
             # Fallback to array parsing for simpler cases
@@ -829,26 +830,23 @@ class ASTBehaviorConverter:
 
                 if binding_parts and binding_parts[0].startswith("&"):
                     # Smart reconstruction for nested function calls
-                    complete_binding = self._reconstruct_nested_function_call(
-                        binding_parts
-                    )
+                    complete_binding = self._reconstruct_nested_function_call(binding_parts)
                     # Preprocess for MoErgo edge cases
-                    preprocessed_complete_binding = (
-                        self._preprocess_moergo_binding_edge_cases(complete_binding)
-                    )
+                    preprocessed_complete_binding = self._preprocess_moergo_binding_edge_cases(complete_binding)
 
                     # Resolve defines in the binding string
-                    resolved_complete_binding = self._resolve_binding_string(
-                        preprocessed_complete_binding
-                    )
+                    resolved_complete_binding = self._resolve_binding_string(preprocessed_complete_binding)
                     return LayoutBinding.from_str(resolved_complete_binding)
 
             # Return fallback binding
             return LayoutBinding(value="&none", params=[])
         except Exception as e:
-            self.logger.warning(
-                "Failed to parse combo binding '%s': %s", prop.value.raw, e
-            )
+            if self.logger:
+                self.logger.warning(
+                    "Failed to parse combo binding",
+                    raw_value=prop.value.raw if prop.value else "None",
+                    error=str(e),
+                )
             # Return fallback binding
             return LayoutBinding(value="&none", params=[])
 
@@ -931,9 +929,8 @@ class ASTBehaviorConverter:
         """
         # Edge case 1: Transform &sys_reset to &reset
         if binding_str == "&sys_reset":
-            self.logger.debug(
-                "Transforming &sys_reset to &reset for MoErgo compatibility"
-            )
+            if self.logger:
+                self.logger.debug("Transforming &sys_reset to &reset for MoErgo compatibility")
             return "&reset"
 
         # Edge case 2: Handle &magic parameter cleanup
@@ -941,10 +938,12 @@ class ASTBehaviorConverter:
         if binding_str.startswith("&magic "):
             parts = binding_str.split()
             if len(parts) >= 3 and parts[1].startswith("LAYER_") and parts[2] == "0":
-                self.logger.debug(
-                    "Cleaning up &magic parameters for MoErgo compatibility: %s -> &magic",
-                    binding_str,
-                )
+                if self.logger:
+                    self.logger.debug(
+                        "Cleaning up &magic parameters for MoErgo compatibility",
+                        original=binding_str,
+                        cleaned="&magic",
+                    )
                 return "&magic"
 
         return binding_str
@@ -966,7 +965,8 @@ class ASTBehaviorConverter:
             # Extract the code (node name with &)
             code = f"&{node.name}" if node.name else ""
             if not code or code == "&":
-                self.logger.warning("Input listener node missing name")
+                if self.logger:
+                    self.logger.warning("Input listener node missing name")
                 return None
 
             # Create base input listener
@@ -974,27 +974,23 @@ class ASTBehaviorConverter:
 
             # Extract child nodes as input listener nodes
             for child_name, child_node in node.children.items():
-                listener_node = self._convert_input_listener_child_node(
-                    child_name, child_node
-                )
+                listener_node = self._convert_input_listener_child_node(child_name, child_node)
                 if listener_node:
                     input_listener.nodes.append(listener_node)
 
             return input_listener
 
         except Exception as e:
-            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-            self.logger.error(
-                "Failed to convert input listener node '%s': %s",
-                node.name,
-                e,
-                exc_info=exc_info,
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert input listener node",
+                    node_name=node.name,
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
-    def _convert_input_listener_child_node(
-        self, child_name: str, child_node: DTNode
-    ) -> Any | None:
+    def _convert_input_listener_child_node(self, child_name: str, child_node: DTNode) -> Any | None:
         """Convert a child node within an input listener.
 
         Args:
@@ -1025,9 +1021,7 @@ class ASTBehaviorConverter:
             input_processors = None
             processors_prop = child_node.get_property("input-processors")
             if processors_prop:
-                extracted_processors = self._extract_input_processors_from_property(
-                    processors_prop
-                )
+                extracted_processors = self._extract_input_processors_from_property(processors_prop)
                 if extracted_processors:
                     input_processors = extracted_processors
 
@@ -1042,13 +1036,13 @@ class ASTBehaviorConverter:
             return listener_node
 
         except Exception as e:
-            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-            self.logger.error(
-                "Failed to convert input listener child node '%s': %s",
-                child_name,
-                e,
-                exc_info=exc_info,
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert input listener child node",
+                    child_name=child_name,
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
     def _extract_input_processors_from_property(self, prop: DTProperty) -> list[Any]:
@@ -1123,17 +1117,16 @@ class ASTBehaviorConverter:
                                     # Keep as string if not integer
                                     separate_params.append(param_str)
 
-                            processor = InputProcessor(
-                                code=code, params=separate_params
-                            )
+                            processor = InputProcessor(code=code, params=separate_params)
                             processors.append(processor)
 
                     else:
                         # Standalone parameter without processor - this shouldn't happen
-                        self.logger.warning(
-                            "Found standalone parameter '%s' without processor reference in input processors",
-                            item,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Found standalone parameter without processor reference in input processors",
+                                parameter=item,
+                            )
                         i += 1
             else:
                 # Single processor
@@ -1143,10 +1136,12 @@ class ASTBehaviorConverter:
                     processors.append(processor)
 
         except Exception as e:
-            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-            self.logger.error(
-                "Failed to extract input processors: %s", e, exc_info=exc_info
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to extract input processors",
+                    error=str(e),
+                    exc_info=True,
+                )
 
         return processors
 
@@ -1166,10 +1161,7 @@ class ASTBehaviorConverter:
                 return None
 
             compatible_value = compatible_prop.value.value
-            if (
-                not isinstance(compatible_value, str)
-                or "zmk,behavior-tap-dance" not in compatible_value
-            ):
+            if not isinstance(compatible_value, str) or "zmk,behavior-tap-dance" not in compatible_value:
                 return None
 
             # Extract name (strip & prefix if present)
@@ -1177,9 +1169,7 @@ class ASTBehaviorConverter:
 
             # Extract description from label if available
             label_prop = node.get_property("label")
-            description = (
-                str(label_prop.value.value) if label_prop and label_prop.value else ""
-            )
+            description = str(label_prop.value.value) if label_prop and label_prop.value else ""
 
             # Extract tapping-term-ms
             tapping_term_ms = None
@@ -1196,11 +1186,12 @@ class ASTBehaviorConverter:
                     try:
                         tapping_term_ms = int(value)
                     except (ValueError, TypeError):
-                        self.logger.warning(
-                            "Invalid tapping-term-ms value for tap dance '%s': %s",
-                            name,
-                            tapping_prop.value.value,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Invalid tapping-term-ms value for tap dance",
+                                name=name,
+                                value=tapping_prop.value.value,
+                            )
 
             # Extract bindings
             bindings_prop = node.get_property("bindings")
@@ -1214,11 +1205,12 @@ class ASTBehaviorConverter:
                         binding = LayoutBinding.from_str(resolved_binding_str)
                         bindings.append(binding)
                     except Exception as e:
-                        self.logger.warning(
-                            "Failed to parse tap dance binding '%s': %s",
-                            binding_str,
-                            e,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Failed to parse tap dance binding",
+                                binding_str=binding_str,
+                                error=str(e),
+                            )
 
             # Create tap dance behavior
             tap_dance = TapDanceBehavior(
@@ -1231,21 +1223,23 @@ class ASTBehaviorConverter:
             if tapping_term_ms is not None:
                 tap_dance.tapping_term_ms = tapping_term_ms
 
-            self.logger.debug(
-                "Extracted tap dance '%s' with %d bindings",
-                name,
-                len(bindings),
-            )
+            if self.logger:
+                self.logger.debug(
+                    "Extracted tap dance",
+                    name=name,
+                    binding_count=len(bindings),
+                )
 
             return tap_dance
 
         except Exception as e:
-            self.logger.error(
-                "Failed to convert tap dance node '%s': %s",
-                node.name if node else "unknown",
-                e,
-                exc_info=self.logger.isEnabledFor(logging.DEBUG),
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert tap dance node",
+                    node_name=node.name if node else "unknown",
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
     def convert_sticky_key_node(self, node: DTNode) -> StickyKeyBehavior | None:
@@ -1264,10 +1258,7 @@ class ASTBehaviorConverter:
                 return None
 
             compatible_value = compatible_prop.value.value
-            if (
-                not isinstance(compatible_value, str)
-                or "zmk,behavior-sticky-key" not in compatible_value
-            ):
+            if not isinstance(compatible_value, str) or "zmk,behavior-sticky-key" not in compatible_value:
                 return None
 
             # Extract name (strip & prefix if present)
@@ -1275,9 +1266,7 @@ class ASTBehaviorConverter:
 
             # Extract description from label if available
             label_prop = node.get_property("label")
-            description = (
-                str(label_prop.value.value) if label_prop and label_prop.value else ""
-            )
+            description = str(label_prop.value.value) if label_prop and label_prop.value else ""
 
             # Extract release-after-ms
             release_after_ms = None
@@ -1294,11 +1283,12 @@ class ASTBehaviorConverter:
                     try:
                         release_after_ms = int(value)
                     except (ValueError, TypeError):
-                        self.logger.warning(
-                            "Invalid release-after-ms value for sticky key '%s': %s",
-                            name,
-                            release_prop.value.value,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Invalid release-after-ms value for sticky key",
+                                name=name,
+                                value=release_prop.value.value,
+                            )
 
             # Extract quick-release
             quick_release = False
@@ -1330,11 +1320,12 @@ class ASTBehaviorConverter:
                         binding = LayoutBinding.from_str(resolved_binding_str)
                         bindings.append(binding)
                     except Exception as e:
-                        self.logger.warning(
-                            "Failed to parse sticky key binding '%s': %s",
-                            binding_str,
-                            e,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Failed to parse sticky key binding",
+                                binding_str=binding_str,
+                                error=str(e),
+                            )
 
             # Create sticky key behavior
             sticky_key = StickyKeyBehavior(
@@ -1347,21 +1338,23 @@ class ASTBehaviorConverter:
                 bindings=bindings,
             )
 
-            self.logger.debug(
-                "Extracted sticky key '%s' with %d bindings",
-                name,
-                len(bindings),
-            )
+            if self.logger:
+                self.logger.debug(
+                    "Extracted sticky key",
+                    name=name,
+                    binding_count=len(bindings),
+                )
 
             return sticky_key
 
         except Exception as e:
-            self.logger.error(
-                "Failed to convert sticky key node '%s': %s",
-                node.name if node else "unknown",
-                e,
-                exc_info=self.logger.isEnabledFor(logging.DEBUG),
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert sticky key node",
+                    node_name=node.name if node else "unknown",
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
     def convert_caps_word_node(self, node: DTNode) -> CapsWordBehavior | None:
@@ -1380,10 +1373,7 @@ class ASTBehaviorConverter:
                 return None
 
             compatible_value = compatible_prop.value.value
-            if (
-                not isinstance(compatible_value, str)
-                or "zmk,behavior-caps-word" not in compatible_value
-            ):
+            if not isinstance(compatible_value, str) or "zmk,behavior-caps-word" not in compatible_value:
                 return None
 
             # Extract name (strip & prefix if present)
@@ -1391,9 +1381,7 @@ class ASTBehaviorConverter:
 
             # Extract description from label if available
             label_prop = node.get_property("label")
-            description = (
-                str(label_prop.value.value) if label_prop and label_prop.value else ""
-            )
+            description = str(label_prop.value.value) if label_prop and label_prop.value else ""
 
             # Extract continue-list
             continue_list = []
@@ -1434,11 +1422,12 @@ class ASTBehaviorConverter:
                     try:
                         mods = int(value)
                     except (ValueError, TypeError):
-                        self.logger.warning(
-                            "Invalid mods value for caps word '%s': %s",
-                            name,
-                            mods_prop.value.value,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Invalid mods value for caps word",
+                                name=name,
+                                value=mods_prop.value.value,
+                            )
 
             # Create caps word behavior
             caps_word = CapsWordBehavior(
@@ -1448,21 +1437,23 @@ class ASTBehaviorConverter:
                 mods=mods,
             )
 
-            self.logger.debug(
-                "Extracted caps word '%s' with %d continue-list items",
-                name,
-                len(continue_list),
-            )
+            if self.logger:
+                self.logger.debug(
+                    "Extracted caps word",
+                    name=name,
+                    continue_list_count=len(continue_list),
+                )
 
             return caps_word
 
         except Exception as e:
-            self.logger.error(
-                "Failed to convert caps word node '%s': %s",
-                node.name if node else "unknown",
-                e,
-                exc_info=self.logger.isEnabledFor(logging.DEBUG),
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert caps word node",
+                    node_name=node.name if node else "unknown",
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
     def convert_mod_morph_node(self, node: DTNode) -> ModMorphBehavior | None:
@@ -1481,10 +1472,7 @@ class ASTBehaviorConverter:
                 return None
 
             compatible_value = compatible_prop.value.value
-            if (
-                not isinstance(compatible_value, str)
-                or "zmk,behavior-mod-morph" not in compatible_value
-            ):
+            if not isinstance(compatible_value, str) or "zmk,behavior-mod-morph" not in compatible_value:
                 return None
 
             # Extract name (strip & prefix if present)
@@ -1492,9 +1480,7 @@ class ASTBehaviorConverter:
 
             # Extract description from label if available
             label_prop = node.get_property("label")
-            description = (
-                str(label_prop.value.value) if label_prop and label_prop.value else ""
-            )
+            description = str(label_prop.value.value) if label_prop and label_prop.value else ""
 
             # Extract mods (required)
             mods = 0
@@ -1511,11 +1497,12 @@ class ASTBehaviorConverter:
                     try:
                         mods = int(value)
                     except (ValueError, TypeError):
-                        self.logger.warning(
-                            "Invalid mods value for mod-morph '%s': %s",
-                            name,
-                            mods_prop.value.value,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Invalid mods value for mod-morph",
+                                name=name,
+                                value=mods_prop.value.value,
+                            )
 
             # Extract keep-mods
             keep_mods = None
@@ -1532,11 +1519,12 @@ class ASTBehaviorConverter:
                     try:
                         keep_mods = int(value)
                     except (ValueError, TypeError):
-                        self.logger.warning(
-                            "Invalid keep-mods value for mod-morph '%s': %s",
-                            name,
-                            keep_mods_prop.value.value,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Invalid keep-mods value for mod-morph",
+                                name=name,
+                                value=keep_mods_prop.value.value,
+                            )
 
             # Extract bindings (should be exactly 2)
             bindings_prop = node.get_property("bindings")
@@ -1550,11 +1538,12 @@ class ASTBehaviorConverter:
                         binding = LayoutBinding.from_str(resolved_binding_str)
                         bindings.append(binding)
                     except Exception as e:
-                        self.logger.warning(
-                            "Failed to parse mod-morph binding '%s': %s",
-                            binding_str,
-                            e,
-                        )
+                        if self.logger:
+                            self.logger.warning(
+                                "Failed to parse mod-morph binding",
+                                binding_str=binding_str,
+                                error=str(e),
+                            )
 
             # Create mod-morph behavior
             mod_morph = ModMorphBehavior(
@@ -1568,21 +1557,23 @@ class ASTBehaviorConverter:
             if keep_mods is not None:
                 mod_morph.keep_mods = keep_mods
 
-            self.logger.debug(
-                "Extracted mod-morph '%s' with %d bindings",
-                name,
-                len(bindings),
-            )
+            if self.logger:
+                self.logger.debug(
+                    "Extracted mod-morph",
+                    name=name,
+                    binding_count=len(bindings),
+                )
 
             return mod_morph
 
         except Exception as e:
-            self.logger.error(
-                "Failed to convert mod-morph node '%s': %s",
-                node.name if node else "unknown",
-                e,
-                exc_info=self.logger.isEnabledFor(logging.DEBUG),
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert mod-morph node",
+                    node_name=node.name if node else "unknown",
+                    error=str(e),
+                    exc_info=True,
+                )
             return None
 
 

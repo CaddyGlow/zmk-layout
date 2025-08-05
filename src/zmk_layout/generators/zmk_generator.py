@@ -55,8 +55,8 @@ class ZMKGenerator:
         # self._behavior_registry = behavior_formatter._registry
         # self._layout_formatter = GridLayoutFormatter()
         self._behavior_formatter = None  # Placeholder
-        self._behavior_registry = None   # Placeholder
-        self._layout_formatter = None    # Placeholder
+        self._behavior_registry = None  # Placeholder
+        self._layout_formatter = None  # Placeholder
 
     def generate_layer_defines(self, profile: KeyboardProfile, layer_names: list[str]) -> str:
         """Generate #define statements for layers.
@@ -364,9 +364,7 @@ class ZMKGenerator:
                         f"<{self._behavior_formatter.format_binding(b)}>" for b in bindings
                     )
                 else:
-                    bindings_str = "\n                , ".join(
-                        f"<{str(b)}>" for b in bindings
-                    )
+                    bindings_str = "\n                , ".join(f"<{str(b)}>" for b in bindings)
                 macro_parts.append(f"    bindings = {bindings_str};")
             macro_parts.append("};")
             dtsi_parts.extend(self._indent_array(macro_parts, "        "))
@@ -598,7 +596,9 @@ class ZMKGenerator:
         return "\n".join(self._indent_array(dtsi_parts))
 
     def generate_kconfig_conf(
-        self, keymap_data: "LayoutData", profile: KeyboardProfile,
+        self,
+        keymap_data: "LayoutData",
+        profile: KeyboardProfile,
     ) -> tuple[str, dict[str, str | int]]:
         """Generate kconfig content and settings from keymap data.
 

@@ -1,6 +1,6 @@
 """Keymap processing strategies for different parsing modes."""
 
-import logging
+# logging module not needed anymore since we don't use isEnabledFor
 from typing import TYPE_CHECKING, Any, Protocol
 
 from zmk_layout.models.metadata import LayoutData
@@ -8,14 +8,16 @@ from zmk_layout.models.metadata import LayoutData
 from .ast_nodes import DTNode
 
 # TODO: These imports will need to be updated when we extract more components
-# from .dt_parser import parse_dt_lark_safe  
+# from .dt_parser import parse_dt_lark_safe
 # from .parsing_models import ParsingContext, get_default_extraction_config
 # from .section_extractor import create_section_extractor
+
 
 # Placeholder functions for missing imports
 def get_default_extraction_config() -> Any:
     """Placeholder function."""
     return None
+
 
 def create_section_extractor() -> Any:
     """Placeholder function."""
@@ -26,9 +28,10 @@ if TYPE_CHECKING:
     from zmk_layout.providers import LayoutLogger
     # from .section_extractor import BehaviorExtractorProtocol  # TODO: Extract section extractor
     # from .parsing_models import ParsingContext  # TODO: Extract parsing models
-    
+
     class ParsingContext:
         """Placeholder for ParsingContext until extracted."""
+
         keyboard_name: str = ""
         title: str = ""
         keymap_content: str = ""
@@ -36,32 +39,29 @@ if TYPE_CHECKING:
         errors: list[str] = []
         defines: dict[str, str] = {}
         extraction_config: Any = None
-        
+
     class BehaviorExtractorProtocol(Protocol):
         """Placeholder for BehaviorExtractorProtocol until extracted."""
+
         pass
 
     class SectionExtractorProtocol(Protocol):
-        def extract_sections(
-            self, content: str, configs: list[Any]
-        ) -> dict[str, Any]: ...
-        def process_extracted_sections(
-            self, sections: dict[str, Any], context: Any
-        ) -> dict[str, Any]: ...
+        def extract_sections(self, content: str, configs: list[Any]) -> dict[str, Any]: ...
+        def process_extracted_sections(self, sections: dict[str, Any], context: Any) -> dict[str, Any]: ...
         @property
         def behavior_extractor(self) -> "BehaviorExtractorProtocol": ...
 
 
 class BaseKeymapProcessor:
     """Base class for keymap processors with common functionality."""
-    
+
     def __init__(
         self,
         logger: "LayoutLogger | None" = None,
         section_extractor: "SectionExtractorProtocol | None" = None,
     ) -> None:
         """Initialize base processor.
-        
+
         Args:
             logger: Optional logger for structured logging
             section_extractor: Optional section extractor
@@ -91,9 +91,7 @@ class BaseKeymapProcessor:
             for conditional in root.conditionals:
                 if conditional.directive == "define":
                     # Parse the define content: "NAME VALUE"
-                    parts = conditional.condition.split(
-                        None, 1
-                    )  # Split on first whitespace
+                    parts = conditional.condition.split(None, 1)  # Split on first whitespace
                     if len(parts) >= 2:
                         name = parts[0]
                         value = parts[1]
@@ -165,9 +163,7 @@ class BaseKeymapProcessor:
             lines = body.split("\n")
             if len(lines) > 1:
                 # Insert after the opening brace
-                transformed_body = (
-                    lines[0] + "\n" + compatible_line + "\n".join(lines[1:])
-                )
+                transformed_body = lines[0] + "\n" + compatible_line + "\n".join(lines[1:])
             else:
                 transformed_body = compatible_line + body
 
@@ -176,17 +172,16 @@ class BaseKeymapProcessor:
         # Generic pattern to match any behavior references: &name { ... };
         pattern = r"&(\w+)\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\};"
 
-        transformed = re.sub(
-            pattern, transform_behavior_reference, dtsi_content, flags=re.DOTALL
-        )
+        transformed = re.sub(pattern, transform_behavior_reference, dtsi_content, flags=re.DOTALL)
 
         # Count transformations
         import re as regex_module
 
-        self.logger.debug(
-            "Transformed %d behavior references to definitions",
-            len(regex_module.findall(r"&\w+", dtsi_content)),
-        )
+        if self.logger:
+            self.logger.debug(
+                "Transformed behavior references to definitions",
+                reference_count=len(regex_module.findall(r"&\w+", dtsi_content)),
+            )
 
         return transformed
 
@@ -230,16 +225,10 @@ class BaseKeymapProcessor:
             Dictionary of behavior models
         """
         # Extract behaviors using AST converter with comment support
-        behavior_models = (
-            self.section_extractor.behavior_extractor.extract_behaviors_as_models(
-                roots, content, defines
-            )
-        )
+        behavior_models = self.section_extractor.behavior_extractor.extract_behaviors_as_models(roots, content, defines)
         return behavior_models
 
-    def _populate_behaviors_in_layout(
-        self, layout_data: LayoutData, converted_behaviors: dict[str, Any]
-    ) -> None:
+    def _populate_behaviors_in_layout(self, layout_data: LayoutData, converted_behaviors: dict[str, Any]) -> None:
         """Populate layout data with converted behaviors.
 
         Args:
@@ -291,9 +280,7 @@ class FullKeymapProcessor(BaseKeymapProcessor):
         try:
             # Transform behavior references (&name) to proper definitions before parsing
             # This handles input listeners and other behavior references in full mode
-            transformed_content = self._transform_behavior_references_to_definitions(
-                context.keymap_content
-            )
+            transformed_content = self._transform_behavior_references_to_definitions(context.keymap_content)
 
             # Parse content into AST using enhanced parser for comment support
             try:
@@ -318,10 +305,8 @@ class FullKeymapProcessor(BaseKeymapProcessor):
 
             # Extract all #define statements from AST
             context.defines = self._extract_defines_from_ast(roots)
-            if context.defines:
-                self.logger.info(
-                    "Extracted %d define statements from keymap", len(context.defines)
-                )
+            if context.defines and self.logger:
+                self.logger.info("Extracted define statements from keymap", define_count=len(context.defines))
 
             # Create base layout data with enhanced metadata
             layout_data = self._create_base_layout_data(context)
@@ -333,9 +318,7 @@ class FullKeymapProcessor(BaseKeymapProcessor):
                 layout_data.layers = layers_data["layers"]
 
             # Extract behaviors (use transformed content for metadata extraction too)
-            behaviors_dict = self._extract_behaviors_and_metadata(
-                roots, transformed_content, context.defines
-            )
+            behaviors_dict = self._extract_behaviors_and_metadata(roots, transformed_content, context.defines)
 
             # Populate behaviors directly (already converted by AST converter)
             self._populate_behaviors_in_layout(layout_data, behaviors_dict)
@@ -377,13 +360,14 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
                 roots, parse_errors = parse_dt_multiple_safe(context.keymap_content)
                 if roots:
                     context.defines = self._extract_defines_from_ast(roots)
-                    if context.defines:
+                    if context.defines and self.logger:
                         self.logger.info(
-                            "Extracted %d define statements from keymap",
-                            len(context.defines),
+                            "Extracted define statements from keymap",
+                            define_count=len(context.defines),
                         )
             except Exception as e:
-                self.logger.debug("Could not extract defines", error=str(e))
+                if self.logger:
+                    self.logger.debug("Could not extract defines", error=str(e))
                 # Continue anyway - defines are optional
 
             layout_data = self._create_base_layout_data(context)
@@ -394,9 +378,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
             )
 
             # Extract sections using template-aware approach (only user content)
-            extracted_sections = self.section_extractor.extract_sections(
-                context.keymap_content, extraction_config
-            )
+            extracted_sections = self.section_extractor.extract_sections(context.keymap_content, extraction_config)
 
             # Apply transformation to extracted sections BEFORE processing
             transformed_sections = {}
@@ -406,9 +388,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
                     # Ensure content is a string before transformation
                     if isinstance(section.content, str):
                         transformed_content: str | dict[str, object] | list[object] = (
-                            self._transform_behavior_references_to_definitions(
-                                section.content
-                            )
+                            self._transform_behavior_references_to_definitions(section.content)
                         )
                     else:
                         # Skip transformation for non-string content
@@ -427,9 +407,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
                     transformed_sections[section_name] = section
 
             # Process extracted sections with transformations applied
-            processed_data = self.section_extractor.process_extracted_sections(
-                transformed_sections, context
-            )
+            processed_data = self.section_extractor.process_extracted_sections(transformed_sections, context)
 
             # Populate layout data with processed sections
             self._populate_layout_from_processed_data(layout_data, processed_data)
@@ -442,9 +420,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
             context.errors.append(f"Template-aware parsing failed: {e}")
             return None
 
-    def _populate_layout_from_processed_data(
-        self, layout_data: LayoutData, processed_data: dict[str, Any]
-    ) -> None:
+    def _populate_layout_from_processed_data(self, layout_data: LayoutData, processed_data: dict[str, Any]) -> None:
         """Populate layout data from processed section data.
 
         Args:
@@ -489,33 +465,30 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
         # Handle input listeners - convert to JSON models instead of storing as raw DTSI
         if "input_listeners" in processed_data:
             input_listeners_data = processed_data["input_listeners"]
-            self.logger.debug(
-                "Processing input listeners data: type=%s, content preview=%s",
-                type(input_listeners_data).__name__,
-                str(input_listeners_data)[:100] if input_listeners_data else "None",
-            )
+            if self.logger:
+                self.logger.debug(
+                    "Processing input listeners data",
+                    data_type=type(input_listeners_data).__name__,
+                )
             if isinstance(input_listeners_data, str):
                 # This is raw DTSI content, need to parse and convert to models
-                self._convert_input_listeners_from_dtsi(
-                    layout_data, input_listeners_data
-                )
+                self._convert_input_listeners_from_dtsi(layout_data, input_listeners_data)
             elif isinstance(input_listeners_data, list):
                 # Already converted to models
                 if layout_data.input_listeners is None:
                     layout_data.input_listeners = []
                 layout_data.input_listeners.extend(input_listeners_data)
             else:
-                self.logger.warning(
-                    "Unexpected input listeners data type: %s",
-                    type(input_listeners_data).__name__,
-                )
+                if self.logger:
+                    self.logger.warning(
+                        "Unexpected input listeners data type",
+                        data_type=type(input_listeners_data).__name__,
+                    )
 
         # Store raw content for template variables
         self._store_raw_content_for_templates(layout_data, processed_data)
 
-    def _convert_input_listeners_from_dtsi(
-        self, layout_data: LayoutData, input_listeners_dtsi: str
-    ) -> None:
+    def _convert_input_listeners_from_dtsi(self, layout_data: LayoutData, input_listeners_dtsi: str) -> None:
         """Convert raw input listeners DTSI content to JSON models.
 
         Args:
@@ -535,38 +508,32 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
 
             # If parsing failed and content doesn't start with '/', try transforming and wrapping it
             if (not roots or parse_errors) and not dtsi_content.startswith("/"):
-                self.logger.debug(
-                    "Initial parse failed, attempting to transform behavior references to definitions"
-                )
+                if self.logger:
+                    self.logger.debug(
+                        "Initial parse failed, attempting to transform behavior references to definitions"
+                    )
 
                 # Transform behavior references (&name) to proper definitions (name)
                 # Also add compatible strings for input listeners
-                transformed_content = (
-                    self._transform_behavior_references_to_definitions(dtsi_content)
-                )
+                transformed_content = self._transform_behavior_references_to_definitions(dtsi_content)
 
                 # Wrap transformed behavior definitions in device tree structure
                 wrapped_content = f"/ {{\n{transformed_content}\n}};"
                 roots, parse_errors = parse_dt_lark_safe(wrapped_content)
 
-                if parse_errors:
+                if parse_errors and self.logger:
                     self.logger.warning(
-                        "Parse errors while converting wrapped input listeners: %s",
-                        parse_errors,
+                        "Parse errors while converting wrapped input listeners",
+                        error_count=len(parse_errors) if isinstance(parse_errors, list) else 1,
                     )
 
             if not roots:
-                self.logger.warning(
-                    "No AST roots found in input listeners DTSI content after wrapping attempt"
-                )
+                if self.logger:
+                    self.logger.warning("No AST roots found in input listeners DTSI content after wrapping attempt")
                 return
 
             # Use the behavior extractor to convert input listener nodes
-            behavior_models = (
-                self.section_extractor.behavior_extractor.extract_behaviors_as_models(
-                    roots, dtsi_content
-                )
-            )
+            behavior_models = self.section_extractor.behavior_extractor.extract_behaviors_as_models(roots, dtsi_content)
 
             # Extract input listeners from behavior models
             if behavior_models.get("input_listeners"):
@@ -575,34 +542,30 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
                 input_listeners = behavior_models["input_listeners"]
                 if isinstance(input_listeners, list):
                     layout_data.input_listeners.extend(input_listeners)
-                self.logger.debug(
-                    "Converted %d input listeners from DTSI to JSON models",
-                    len(layout_data.input_listeners),
-                )
+                if self.logger:
+                    self.logger.debug(
+                        "Converted input listeners from DTSI to JSON models",
+                        listener_count=len(layout_data.input_listeners),
+                    )
                 # Debug the structure of converted input listeners
-                if layout_data.input_listeners:
-                    for i, listener in enumerate(layout_data.input_listeners):
-                        self.logger.debug(
-                            "Input listener %d: code=%s, nodes=%d, inputProcessors=%d",
-                            i,
-                            listener.code,
-                            len(listener.nodes) if listener.nodes else 0,
-                            len(listener.input_processors)
-                            if listener.input_processors
-                            else 0,
-                        )
+                if layout_data.input_listeners and self.logger:
+                    self.logger.debug(
+                        "Input listeners converted",
+                        total_listeners=len(layout_data.input_listeners),
+                    )
             else:
-                self.logger.debug("No input listeners found in DTSI content")
+                if self.logger:
+                    self.logger.debug("No input listeners found in DTSI content")
 
         except Exception as e:
-            exc_info = self.logger.isEnabledFor(logging.DEBUG)
-            self.logger.error(
-                "Failed to convert input listeners from DTSI: %s", e, exc_info=exc_info
-            )
+            if self.logger:
+                self.logger.error(
+                    "Failed to convert input listeners from DTSI",
+                    error=str(e),
+                    exc_info=True,
+                )
 
-    def _store_raw_content_for_templates(
-        self, layout_data: LayoutData, processed_data: dict[str, Any]
-    ) -> None:
+    def _store_raw_content_for_templates(self, layout_data: LayoutData, processed_data: dict[str, Any]) -> None:
         """Store raw section content for template rendering.
 
         Args:

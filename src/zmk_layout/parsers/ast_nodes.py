@@ -207,9 +207,7 @@ class DTNode:
         label_part = f"{self.label}: " if self.label else ""
         props = len(self.properties)
         children = len(self.children)
-        return (
-            f"DTNode({label_part}{self.full_name}, {props} props, {children} children)"
-        )
+        return f"DTNode({label_part}{self.full_name}, {props} props, {children} children)"
 
 
 class DTVisitor(ABC):
@@ -259,9 +257,7 @@ class DTParseError(Exception):
     column: int = 0
     context: str = ""
 
-    def __init__(
-        self, message: str, line: int = 0, column: int = 0, context: str = ""
-    ) -> None:
+    def __init__(self, message: str, line: int = 0, column: int = 0, context: str = "") -> None:
         """Initialize DTParseError."""
         super().__init__(message)
         self.message = message
@@ -271,8 +267,6 @@ class DTParseError(Exception):
 
     def __str__(self) -> str:
         """String representation of error."""
-        location = (
-            f" at line {self.line}, column {self.column}" if self.line > 0 else ""
-        )
+        location = f" at line {self.line}, column {self.column}" if self.line > 0 else ""
         context_part = f"\nContext: {self.context}" if self.context else ""
         return f"Parse error{location}: {self.message}{context_part}"

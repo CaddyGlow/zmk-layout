@@ -37,7 +37,8 @@ class DependencyInfo(LayoutBaseModel):
     """Dependency tracking information for behaviors and includes."""
 
     include_dependencies: list[str] = Field(
-        default_factory=list, description="List of include files this keymap depends on",
+        default_factory=list,
+        description="List of include files this keymap depends on",
     )
     behavior_sources: dict[str, str] = Field(
         default_factory=dict,

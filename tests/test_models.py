@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from zmk_layout.models import (
+from zmk_layout.models import (  # type: ignore
     ComboBehavior,
     HoldTapBehavior,
     LayoutBaseModel,
@@ -18,10 +18,10 @@ from zmk_layout.models import (
 class TestLayoutBaseModel:
     """Test the base model functionality."""
 
-    def test_create_instance(self):
+    def test_create_instance(self) -> None:
         """Test creating a base model instance."""
 
-        class TestModel(LayoutBaseModel):
+        class TestModel(LayoutBaseModel):  # type: ignore
             name: str
             value: int
 
@@ -29,10 +29,10 @@ class TestLayoutBaseModel:
         assert model.name == "test"
         assert model.value == 42
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Test dictionary conversion."""
 
-        class TestModel(LayoutBaseModel):
+        class TestModel(LayoutBaseModel):  # type: ignore
             name: str
             value: int
 
@@ -40,10 +40,10 @@ class TestLayoutBaseModel:
         result = model.to_dict()
         assert result == {"name": "test", "value": 42}
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Test creating from dictionary."""
 
-        class TestModel(LayoutBaseModel):
+        class TestModel(LayoutBaseModel):  # type: ignore
             name: str
             value: int
 
@@ -56,13 +56,13 @@ class TestLayoutBaseModel:
 class TestLayoutParam:
     """Test LayoutParam model."""
 
-    def test_create_simple_param(self):
+    def test_create_simple_param(self) -> None:
         """Test creating simple parameter."""
         param = LayoutParam(value="Q")
         assert param.value == "Q"
         assert param.params == []
 
-    def test_create_nested_param(self):
+    def test_create_nested_param(self) -> None:
         """Test creating nested parameter."""
         inner = LayoutParam(value="X")
         outer = LayoutParam(value="LC", params=[inner])
@@ -74,27 +74,27 @@ class TestLayoutParam:
 class TestLayoutBinding:
     """Test LayoutBinding model."""
 
-    def test_create_simple_binding(self):
+    def test_create_simple_binding(self) -> None:
         """Test creating simple binding."""
         binding = LayoutBinding(value="&kp", params=[LayoutParam(value="Q")])
         assert binding.value == "&kp"
         assert len(binding.params) == 1
         assert binding.params[0].value == "Q"
 
-    def test_from_str_simple(self):
+    def test_from_str_simple(self) -> None:
         """Test parsing simple behavior string."""
         binding = LayoutBinding.from_str("&kp Q")
         assert binding.value == "&kp"
         assert len(binding.params) == 1
         assert binding.params[0].value == "Q"
 
-    def test_from_str_no_params(self):
+    def test_from_str_no_params(self) -> None:
         """Test parsing behavior with no parameters."""
         binding = LayoutBinding.from_str("&trans")
         assert binding.value == "&trans"
         assert binding.params == []
 
-    def test_from_str_multiple_params(self):
+    def test_from_str_multiple_params(self) -> None:
         """Test parsing behavior with multiple parameters."""
         binding = LayoutBinding.from_str("&mt LCTRL A")
         assert binding.value == "&mt"
@@ -102,7 +102,7 @@ class TestLayoutBinding:
         assert binding.params[0].value == "LCTRL"
         assert binding.params[1].value == "A"
 
-    def test_from_str_nested_params(self):
+    def test_from_str_nested_params(self) -> None:
         """Test parsing behavior with nested parameters."""
         binding = LayoutBinding.from_str("&kp LC(X)")
         assert binding.value == "&kp"
@@ -111,7 +111,7 @@ class TestLayoutBinding:
         assert len(binding.params[0].params) == 1
         assert binding.params[0].params[0].value == "X"
 
-    def test_from_str_empty_raises_error(self):
+    def test_from_str_empty_raises_error(self) -> None:
         """Test that empty string raises error."""
         with pytest.raises(ValueError, match="Behavior string cannot be empty"):
             LayoutBinding.from_str("")
@@ -120,7 +120,7 @@ class TestLayoutBinding:
 class TestLayoutLayer:
     """Test LayoutLayer model."""
 
-    def test_create_layer(self):
+    def test_create_layer(self) -> None:
         """Test creating layer with bindings."""
         bindings = [
             LayoutBinding.from_str("&kp Q"),
@@ -130,7 +130,7 @@ class TestLayoutLayer:
         assert layer.name == "test"
         assert len(layer.bindings) == 2
 
-    def test_convert_string_bindings(self):
+    def test_convert_string_bindings(self) -> None:
         """Test automatic conversion of string bindings."""
         layer = LayoutLayer(name="test", bindings=["&kp Q", "&kp W"])
         assert len(layer.bindings) == 2
@@ -141,7 +141,7 @@ class TestLayoutLayer:
 class TestHoldTapBehavior:
     """Test HoldTapBehavior model."""
 
-    def test_create_hold_tap(self):
+    def test_create_hold_tap(self) -> None:
         """Test creating hold-tap behavior."""
         ht = HoldTapBehavior(name="test_ht", bindings=["&kp", "&mt"], tapping_term_ms=200, flavor="balanced")
         assert ht.name == "test_ht"
@@ -149,7 +149,7 @@ class TestHoldTapBehavior:
         assert ht.tapping_term_ms == 200
         assert ht.flavor == "balanced"
 
-    def test_validate_flavor(self):
+    def test_validate_flavor(self) -> None:
         """Test flavor validation."""
         # Valid flavor should pass
         ht = HoldTapBehavior(name="test", bindings=["&kp", "&mt"], flavor="balanced")
@@ -159,7 +159,7 @@ class TestHoldTapBehavior:
         with pytest.raises(ValueError, match="Invalid flavor"):
             HoldTapBehavior(name="test", bindings=["&kp", "&mt"], flavor="invalid")
 
-    def test_validate_bindings_count(self):
+    def test_validate_bindings_count(self) -> None:
         """Test that exactly 2 bindings are required."""
         # Valid: 2 bindings
         ht = HoldTapBehavior(name="test", bindings=["&kp", "&mt"])
@@ -173,19 +173,19 @@ class TestHoldTapBehavior:
 class TestComboBehavior:
     """Test ComboBehavior model."""
 
-    def test_create_combo(self):
+    def test_create_combo(self) -> None:
         """Test creating combo behavior."""
         combo = ComboBehavior(name="test_combo", key_positions=[0, 1], binding=LayoutBinding.from_str("&kp ESC"))
         assert combo.name == "test_combo"
         assert combo.key_positions == [0, 1]
         assert combo.binding.value == "&kp"
 
-    def test_validate_key_positions_empty(self):
+    def test_validate_key_positions_empty(self) -> None:
         """Test that empty key positions raise error."""
         with pytest.raises(ValueError, match="at least one key position"):
             ComboBehavior(name="test", key_positions=[], binding=LayoutBinding.from_str("&kp ESC"))
 
-    def test_validate_key_positions_negative(self):
+    def test_validate_key_positions_negative(self) -> None:
         """Test that negative key positions raise error."""
         with pytest.raises(ValueError, match="Invalid key position"):
             ComboBehavior(name="test", key_positions=[-1, 0], binding=LayoutBinding.from_str("&kp ESC"))
@@ -194,7 +194,7 @@ class TestComboBehavior:
 class TestLayoutData:
     """Test LayoutData model."""
 
-    def test_create_layout_data(self):
+    def test_create_layout_data(self) -> None:
         """Test creating complete layout data."""
         data = LayoutData(keyboard="test_keyboard", title="Test Layout", layers=[], hold_taps=[], combos=[])
         assert data.keyboard == "test_keyboard"
@@ -202,7 +202,7 @@ class TestLayoutData:
         assert isinstance(data.date, datetime)
         assert data.layers == []
 
-    def test_date_serialization(self):
+    def test_date_serialization(self) -> None:
         """Test date serialization to timestamp."""
         data = LayoutData(keyboard="test", title="Test", date=datetime(2023, 1, 1))
         json_data = data.model_dump(mode="json")
@@ -210,7 +210,7 @@ class TestLayoutData:
         assert isinstance(json_data["date"], int)
         assert json_data["date"] == int(datetime(2023, 1, 1).timestamp())
 
-    def test_alias_support(self):
+    def test_alias_support(self) -> None:
         """Test that aliases work correctly."""
         data = LayoutData(
             keyboard="test",

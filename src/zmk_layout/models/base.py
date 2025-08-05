@@ -35,8 +35,7 @@ class LayoutBaseModel(BaseModel):
         exclude_none: bool = True,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        """Override model_dump to default to using aliases.
-        """
+        """Override model_dump to default to using aliases."""
         # We explicitly set by_alias=True as the default for this method's signature.
         return super().model_dump(
             mode=mode,
@@ -53,8 +52,7 @@ class LayoutBaseModel(BaseModel):
         exclude_none: bool = True,
         **kwargs: Any,
     ) -> str:
-        """Override model_dump_json to default to using aliases.
-        """
+        """Override model_dump_json to default to using aliases."""
         return super().model_dump_json(
             by_alias=by_alias,
             exclude_none=exclude_none,

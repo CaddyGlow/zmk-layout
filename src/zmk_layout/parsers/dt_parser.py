@@ -53,9 +53,7 @@ class DTParser:
 
             # If no root node was parsed, create an empty one
             if root is None:
-                root = DTNode(
-                    "", line=self._current_line(), column=self._current_column()
-                )
+                root = DTNode("", line=self._current_line(), column=self._current_column())
 
             if self.errors:
                 # Return partial result with errors
@@ -314,9 +312,7 @@ class DTParser:
                 actual_values.extend(v.value)
             else:
                 # Otherwise append the value itself
-                actual_values.append(
-                    v.value if v.type != DTValueType.REFERENCE else f"&{v.value}"
-                )
+                actual_values.append(v.value if v.type != DTValueType.REFERENCE else f"&{v.value}")
 
         return DTValue.array(actual_values, raw)
 
@@ -585,9 +581,7 @@ class DTParser:
 
         return consumed
 
-    def _associate_pending_comments_with_node(
-        self, node: DTNode, node_line: int
-    ) -> None:
+    def _associate_pending_comments_with_node(self, node: DTNode, node_line: int) -> None:
         """Associate pending comments with a node based on line proximity.
 
         Comments are associated if they appear immediately before the node
@@ -618,10 +612,7 @@ class DTParser:
                 # (no other comments between this one and the node)
                 is_closest = True
                 for other_comment in self.comments:
-                    if (
-                        comment.line < other_comment.line < node_line
-                        and other_comment not in associated_comments
-                    ):
+                    if comment.line < other_comment.line < node_line and other_comment not in associated_comments:
                         is_closest = False
                         break
 
@@ -639,9 +630,7 @@ class DTParser:
                 if comment in self.comments:
                     self.comments.remove(comment)
 
-    def _associate_pending_comments_with_property(
-        self, prop: DTProperty, prop_line: int
-    ) -> None:
+    def _associate_pending_comments_with_property(self, prop: DTProperty, prop_line: int) -> None:
         """Associate pending comments with a property based on line proximity.
 
         Args:
@@ -681,11 +670,7 @@ class DTParser:
         Returns:
             True if current token matches
         """
-        return (
-            not self._is_at_end()
-            and self.current_token is not None
-            and self.current_token.type == token_type
-        )
+        return not self._is_at_end() and self.current_token is not None and self.current_token.type == token_type
 
     def _advance(self) -> Token | None:
         """Advance to next token.
@@ -879,6 +864,7 @@ def parse_dt_lark(text: str) -> list[DTNode]:
     """
     try:
         from .lark_dt_parser import parse_dt_lark as _parse_dt_lark
+
         return _parse_dt_lark(text)
     except ImportError:
         # Fallback to regular parser if lark parser unavailable
@@ -896,6 +882,7 @@ def parse_dt_lark_safe(text: str) -> tuple[list[DTNode], list[str]]:
     """
     try:
         from .lark_dt_parser import parse_dt_lark_safe as _parse_dt_lark_safe
+
         return _parse_dt_lark_safe(text)
     except ImportError:
         # Fallback to regular parser if lark parser unavailable
