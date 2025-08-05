@@ -1,7 +1,7 @@
 """Layout metadata and data models."""
 
-from datetime import datetime
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from pydantic import (
     Field,
@@ -10,17 +10,19 @@ from pydantic import (
 )
 
 from .base import LayoutBaseModel
-from .behaviors import (
-    CapsWordBehavior,
-    ComboBehavior,
-    HoldTapBehavior,
-    InputListener,
-    MacroBehavior,
-    ModMorphBehavior,
-    StickyKeyBehavior,
-    TapDanceBehavior,
-)
 from .types import ConfigValue, LayerBindings
+
+if TYPE_CHECKING:
+    from .behaviors import (
+        CapsWordBehavior,
+        ComboBehavior,
+        HoldTapBehavior,
+        InputListener,
+        MacroBehavior,
+        ModMorphBehavior,
+        StickyKeyBehavior,
+        TapDanceBehavior,
+    )
 
 
 class ConfigParameter(LayoutBaseModel):
@@ -75,14 +77,14 @@ class LayoutData(LayoutMetadata):
     """Complete layout data model following Moergo API field names with aliases."""
 
     # User behavior definitions
-    hold_taps: list[HoldTapBehavior] = Field(default_factory=list, alias="holdTaps")
-    combos: list[ComboBehavior] = Field(default_factory=list)
-    macros: list[MacroBehavior] = Field(default_factory=list)
-    tap_dances: list[TapDanceBehavior] = Field(default_factory=list, alias="tapDances")
-    sticky_keys: list[StickyKeyBehavior] = Field(default_factory=list, alias="stickyKeys")
-    caps_words: list[CapsWordBehavior] = Field(default_factory=list, alias="capsWords")
-    mod_morphs: list[ModMorphBehavior] = Field(default_factory=list, alias="modMorphs")
-    input_listeners: list[InputListener] | None = Field(default=None, alias="inputListeners")
+    hold_taps: list["HoldTapBehavior"] = Field(default_factory=list, alias="holdTaps")
+    combos: list["ComboBehavior"] = Field(default_factory=list)
+    macros: list["MacroBehavior"] = Field(default_factory=list)
+    tap_dances: list["TapDanceBehavior"] = Field(default_factory=list, alias="tapDances")
+    sticky_keys: list["StickyKeyBehavior"] = Field(default_factory=list, alias="stickyKeys")
+    caps_words: list["CapsWordBehavior"] = Field(default_factory=list, alias="capsWords")
+    mod_morphs: list["ModMorphBehavior"] = Field(default_factory=list, alias="modMorphs")
+    input_listeners: list["InputListener"] | None = Field(default=None, alias="inputListeners")
 
     # Essential structure fields
     layers: list[LayerBindings] = Field(default_factory=list)
@@ -93,20 +95,30 @@ class LayoutData(LayoutMetadata):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_data_structure(cls, data: Any, info: Any = None) -> Any:
-        """Basic validation without template processing.
+    def validate_data_structure(
+        cls,
+        data: dict[str, Any] | Any,
+        _info: Any = None,
+    ) -> dict[str, Any] | Any:
+        """Validate basic data structure without template processing.
 
         This only handles basic data structure validation like date conversion.
         Template processing is handled separately by external providers.
+
+        Args:
+            data: Input data to validate
+            _info: Pydantic validation info (unused)
+
+        Returns:
+            Validated data structure
+
         """
         if not isinstance(data, dict):
             return data
 
         # Convert integer timestamps to datetime objects for date fields
         if "date" in data and isinstance(data["date"], int):
-            from datetime import datetime
-
-            data["date"] = datetime.fromtimestamp(data["date"])
+            data["date"] = datetime.fromtimestamp(data["date"], tz=UTC)
 
         return data
 
@@ -118,15 +130,16 @@ class LayoutData(LayoutMetadata):
 
         Returns:
             True if template syntax is detected
+
         """
         template_patterns = ["{{", "}}", "{%", "%}", "${", "}"]
 
-        def check_value(value: Any) -> bool:
+        def check_value(value: dict[str, Any] | list[Any] | str | Any) -> bool:
             if isinstance(value, str):
                 return any(pattern in value for pattern in template_patterns)
-            elif isinstance(value, dict):
+            if isinstance(value, dict):
                 return any(check_value(v) for v in value.values())
-            elif isinstance(value, list):
+            if isinstance(value, list):
                 return any(check_value(item) for item in value)
             return False
 

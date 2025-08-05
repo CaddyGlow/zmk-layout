@@ -32,18 +32,18 @@ __all__ = [
     "__version__",
     # Core models
     "LayoutBaseModel",
-    "LayoutParam", 
+    "LayoutParam",
     "LayoutBinding",
     "LayoutLayer",
     "LayoutData",
     # Behavior models
     "HoldTapBehavior",
-    "ComboBehavior", 
+    "ComboBehavior",
     "MacroBehavior",
     # Provider interfaces
     "ConfigurationProvider",
     "TemplateProvider",
-    "LayoutLogger", 
+    "LayoutLogger",
     "FileProvider",
     "LayoutProviders",
     # Factory functions

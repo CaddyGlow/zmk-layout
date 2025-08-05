@@ -1,6 +1,6 @@
 """Core layout models for keyboard layouts."""
 
-from typing import Any
+from typing import Any, Union
 
 from pydantic import Field, field_validator
 
@@ -43,25 +43,29 @@ class LayoutBinding(LayoutBaseModel):
         Raises:
             ValueError: If behavior string is invalid or malformed
 
+
         Examples:
             "&kp Q" -> LayoutBinding(value="&kp", params=[LayoutParam(value="Q")])
             "&trans" -> LayoutBinding(value="&trans", params=[])
             "&mt LCTRL A" -> LayoutBinding(value="&mt", params=[LayoutParam(value="LCTRL"), LayoutParam(value="A")])
             "&kp LC(X)" -> LayoutBinding(value="&kp", params=[LayoutParam(value="LC", params=[LayoutParam(value="X")])])
+
         """
         # Handle empty or whitespace-only strings
         if not behavior_str or not behavior_str.strip():
-            raise ValueError("Behavior string cannot be empty")
+            msg = "Behavior string cannot be empty"
+            raise ValueError(msg)
 
         # Try nested parameter parsing first (handles both simple and complex cases)
         try:
             return cls._parse_nested_binding(behavior_str.strip())
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             # Fall back to simple parsing for quote handling compatibility
             try:
                 return cls._parse_simple_binding(behavior_str.strip())
-            except Exception:
-                raise ValueError(f"Invalid behavior string: {behavior_str}") from e
+            except Exception:  # noqa: BLE001
+                msg = f"Invalid behavior string: {behavior_str}"
+                raise ValueError(msg) from e
 
     @staticmethod
     def _parse_behavior_parts(behavior_str: str) -> list[str]:
@@ -72,6 +76,7 @@ class LayoutBinding(LayoutBaseModel):
 
         Returns:
             List of string parts (behavior + parameters)
+
         """
         parts = []
         current_part = ""
@@ -116,6 +121,7 @@ class LayoutBinding(LayoutBaseModel):
 
         Returns:
             ParamValue (str or int)
+
         """
         # Remove quotes if present
         if (param_str.startswith('"') and param_str.endswith('"')) or (
@@ -145,6 +151,7 @@ class LayoutBinding(LayoutBaseModel):
 
         Returns:
             LayoutBinding with nested parameter structure
+
         """
         if not binding_str.strip():
             return LayoutBinding(value="&none", params=[])
@@ -163,60 +170,58 @@ class LayoutBinding(LayoutBaseModel):
         if len(tokens) == 1:
             # No parameters
             return cls(value=behavior, params=[])
-        elif len(tokens) == 2:
+        if len(tokens) == 2:
             # Single parameter - could be nested or simple
             param, _ = cls._parse_nested_parameter(tokens, 1)
             return cls(value=behavior, params=[param] if param else [])
-        else:
-            # Multiple parameters - create nested chain
-            # For "&kp LC X", create LC containing X
-            # For "&mt LCTRL A", create LCTRL and A as separate params
-            params = []
+        # Multiple parameters - create nested chain
+        # For "&kp LC X", create LC containing X
+        # For "&mt LCTRL A", create LCTRL and A as separate params
+        params = []
 
-            # Check behavior type to determine parameter structure
-            behavior_name = behavior.lower()
+        # Check behavior type to determine parameter structure
+        behavior_name = behavior.lower()
 
-            # Behaviors that should have flat parameters (multiple separate params)
-            flat_param_behaviors: tuple[str, ...] = ("&mt", "&lt", "&caps_word")
-            # Add HRM behaviors and other custom behaviors that expect flat params
-            if any(hrm in behavior_name for hrm in ("&hrm_", "&caps", "&thumb", "&space")):
-                flat_param_behaviors = flat_param_behaviors + (behavior_name,)
+        # Behaviors that should have flat parameters (multiple separate params)
+        flat_param_behaviors: tuple[str, ...] = ("&mt", "&lt", "&caps_word")
+        # Add HRM behaviors and other custom behaviors that expect flat params
+        if any(hrm in behavior_name for hrm in ("&hrm_", "&caps", "&thumb", "&space")):
+            flat_param_behaviors = (*flat_param_behaviors, behavior_name)
 
-            if behavior_name in flat_param_behaviors:
-                # These behaviors expect flat parameters
-                for i in range(1, len(tokens)):
-                    param_value = cls._parse_param_value(tokens[i])
-                    params.append(LayoutParam(value=param_value, params=[]))
-            elif behavior_name in ("&kp", "&key_repeat") and not any("(" in token for token in tokens[1:]):
-                # These behaviors use nested structure for modifier patterns
-                # Check if this is a modifier chain (LC, LS, G -> LC(LS(G)))
-                modifier_commands = ("lc", "la", "lg", "ls", "rc", "ra", "rg", "rs")
-                param_tokens = tokens[1:]
+        if behavior_name in flat_param_behaviors:
+            # These behaviors expect flat parameters
+            for i in range(1, len(tokens)):
+                param_value = cls._parse_param_value(tokens[i])
+                params.append(LayoutParam(value=param_value, params=[]))
+        elif behavior_name in ("&kp", "&key_repeat") and not any("(" in token for token in tokens[1:]):
+            # These behaviors use nested structure for modifier patterns
+            # Check if this is a modifier chain (LC, LS, G -> LC(LS(G)))
+            modifier_commands = ("lc", "la", "lg", "ls", "rc", "ra", "rg", "rs")
+            param_tokens = tokens[1:]
 
-                # Check if all parameters are modifiers or if first parameter is a modifier
-                if param_tokens and param_tokens[0].lower() in modifier_commands:
-                    # Create nested modifier chain for any length
-                    params.append(cls._create_modifier_chain(param_tokens))
-                else:
-                    # Single parameter for non-modifier cases
-                    param_value = cls._parse_param_value(tokens[1])
-                    params.append(LayoutParam(value=param_value, params=[]))
+            # Check if all parameters are modifiers or if first parameter is a modifier
+            if param_tokens and param_tokens[0].lower() in modifier_commands:
+                # Create nested modifier chain for any length
+                params.append(cls._create_modifier_chain(param_tokens))
             else:
-                # Handle complex cases with parentheses or other behaviors
-                if any("(" in token for token in tokens[1:]):
-                    # Use the existing nested parameter parsing for complex parenthetical structures
-                    i = 1
-                    while i < len(tokens):
-                        param, i = cls._parse_nested_parameter(tokens, i)
-                        if param:
-                            params.append(param)
-                else:
-                    # Default: most other behaviors with 2+ parameters expect flat structure
-                    for i in range(1, len(tokens)):
-                        param_value = cls._parse_param_value(tokens[i])
-                        params.append(LayoutParam(value=param_value, params=[]))
+                # Single parameter for non-modifier cases
+                param_value = cls._parse_param_value(tokens[1])
+                params.append(LayoutParam(value=param_value, params=[]))
+        # Handle complex cases with parentheses or other behaviors
+        elif any("(" in token for token in tokens[1:]):
+            # Use the existing nested parameter parsing for complex parenthetical structures
+            i = 1
+            while i < len(tokens):
+                param, i = cls._parse_nested_parameter(tokens, i)
+                if param:
+                    params.append(param)
+        else:
+            # Default: most other behaviors with 2+ parameters expect flat structure
+            for i in range(1, len(tokens)):
+                param_value = cls._parse_param_value(tokens[i])
+                params.append(LayoutParam(value=param_value, params=[]))
 
-            return cls(value=behavior, params=params)
+        return cls(value=behavior, params=params)
 
     @classmethod
     def _create_modifier_chain(cls, param_tokens: list[str]) -> LayoutParam:
@@ -229,6 +234,7 @@ class LayoutBinding(LayoutBaseModel):
 
         Returns:
             LayoutParam with nested modifier structure
+
         """
         if not param_tokens:
             return LayoutParam(value="", params=[])
@@ -261,6 +267,7 @@ class LayoutBinding(LayoutBaseModel):
 
         Returns:
             List of tokens
+
         """
         tokens = []
         current_token = ""
@@ -295,7 +302,7 @@ class LayoutBinding(LayoutBaseModel):
         return tokens
 
     @classmethod
-    def _parse_nested_parameter(cls, tokens: list[str], start_index: int) -> tuple[LayoutParam | None, int]:
+    def _parse_nested_parameter(cls, tokens: list[str], start_index: int) -> tuple[Union["LayoutParam", None], int]:
         """Parse a single parameter which may contain nested sub-parameters.
 
         Handles tokens like:
@@ -308,6 +315,7 @@ class LayoutBinding(LayoutBaseModel):
 
         Returns:
             Tuple of (LayoutParam or None, next_index)
+
         """
         if start_index >= len(tokens):
             return None, start_index
@@ -357,10 +365,9 @@ class LayoutBinding(LayoutBaseModel):
                     sub_params.append(sub_param)
 
             return LayoutParam(value=param_value, params=sub_params), start_index + 1
-        else:
-            # Simple parameter without nesting
-            param_value = cls._parse_param_value(token)
-            return LayoutParam(value=param_value, params=[]), start_index + 1
+        # Simple parameter without nesting
+        param_value = cls._parse_param_value(token)
+        return LayoutParam(value=param_value, params=[]), start_index + 1
 
     @classmethod
     def _parse_simple_binding(cls, binding_str: str) -> "LayoutBinding":
@@ -374,6 +381,7 @@ class LayoutBinding(LayoutBaseModel):
 
         Returns:
             LayoutBinding with simple parameter structure
+
         """
         if not binding_str.strip():
             return LayoutBinding(value="&none", params=[])
@@ -405,7 +413,9 @@ class LayoutLayer(LayoutBaseModel):
 
     @field_validator("bindings", mode="before")
     @classmethod
-    def convert_string_bindings(cls, v: list[str | LayoutBinding | dict[str, Any]] | Any) -> list[LayoutBinding]:
+    def convert_string_bindings(
+        cls, v: list[Union[str, "LayoutBinding", dict[str, Any]]] | Any
+    ) -> list["LayoutBinding"]:
         """Convert string bindings to LayoutBinding objects.
 
         Supports mixed input types:
@@ -419,16 +429,23 @@ class LayoutLayer(LayoutBaseModel):
         Returns:
             List of LayoutBinding objects
 
+
+
         Raises:
             ValueError: If input format is invalid or conversion fails
+
         """
         if not isinstance(v, list):
-            raise ValueError(f"Bindings must be a list, got {type(v)}")
+            msg = f"Bindings must be a list, got {type(v)}"
+            raise TypeError(msg)
 
         converted_bindings = []
 
         for i, binding in enumerate(v):
             try:
+                # Import here to avoid circular imports
+                from .core import LayoutBinding  # noqa: PLC0415
+
                 if isinstance(binding, LayoutBinding):
                     # Already a LayoutBinding object, use as-is
                     converted_bindings.append(binding)
@@ -438,7 +455,8 @@ class LayoutLayer(LayoutBaseModel):
                 elif isinstance(binding, dict):
                     # Dictionary format - validate and convert
                     if "value" not in binding:
-                        raise ValueError("Binding dict must have 'value' field")
+                        msg = "Binding dict must have 'value' field"
+                        raise ValueError(msg)
                     converted_bindings.append(LayoutBinding.model_validate(binding))
                 else:
                     # Unknown format - try to convert to string first
@@ -446,6 +464,11 @@ class LayoutLayer(LayoutBaseModel):
                     converted_bindings.append(LayoutBinding.from_str(str_binding))
 
             except Exception as e:
-                raise ValueError(f"Invalid binding at position {i}: {binding}. Error: {e}") from e
+                msg = f"Invalid binding at position {i}: {binding}. Error: {e}"
+                raise ValueError(msg) from e
 
         return converted_bindings
+
+
+# Type alias for layer bindings
+LayerBindings = list[LayoutBinding]

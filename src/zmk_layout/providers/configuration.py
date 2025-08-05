@@ -1,19 +1,22 @@
 """Configuration provider protocol for layout domain abstraction."""
 
-from typing import Any, Protocol
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Protocol
 
 
 class SystemBehavior:
     """Simplified system behavior representation for standalone library.
-    
+
     This is a minimal implementation to avoid circular dependencies.
     External implementations should provide their own SystemBehavior classes.
     """
-    
-    def __init__(self, name: str, description: str = "", **kwargs: Any):
+
+    def __init__(self, name: str, description: str = "", **kwargs: str | int | bool | None) -> None:
         self.name = name
         self.description = description
-        self.properties = kwargs
+        self.properties: dict[str, str | int | bool | None] = kwargs
 
 
 class ConfigurationProvider(Protocol):
@@ -39,7 +42,7 @@ class ConfigurationProvider(Protocol):
         """
         ...
 
-    def get_validation_rules(self) -> dict[str, Any]:
+    def get_validation_rules(self) -> dict[str, int | list[int] | list[str]]:
         """Get keyboard-specific validation rules and constraints.
 
         Returns:
@@ -50,7 +53,7 @@ class ConfigurationProvider(Protocol):
         """
         ...
 
-    def get_template_context(self) -> dict[str, Any]:
+    def get_template_context(self) -> dict[str, str | int | float | bool | None]:
         """Get context data for template processing during generation.
 
         Returns:
@@ -62,7 +65,7 @@ class ConfigurationProvider(Protocol):
         """
         ...
 
-    def get_kconfig_options(self) -> dict[str, Any]:
+    def get_kconfig_options(self) -> dict[str, str | int | float | bool | None]:
         """Get available kconfig options for configuration generation.
 
         Returns:
@@ -70,7 +73,7 @@ class ConfigurationProvider(Protocol):
         """
         ...
 
-    def get_formatting_config(self) -> dict[str, Any]:
+    def get_formatting_config(self) -> dict[str, int | list[str]]:
         """Get formatting preferences for generated files.
 
         Returns:
@@ -78,5 +81,13 @@ class ConfigurationProvider(Protocol):
             - key_gap: Spacing between keys in keymap
             - base_indent: Base indentation for generated content
             - rows: Row configuration for keymap formatting
+        """
+        ...
+
+    def get_search_paths(self) -> list[Path]:
+        """Get search paths for resolving template and configuration files.
+
+        Returns:
+            List of Path objects representing directories to search for files
         """
         ...

@@ -1,5 +1,7 @@
 """File provider protocol for layout domain abstraction."""
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Protocol
 
@@ -27,9 +29,7 @@ class FileProvider(Protocol):
         """
         ...
 
-    def write_text(
-        self, path: Path | str, content: str, encoding: str = "utf-8"
-    ) -> None:
+    def write_text(self, path: Path | str, content: str, encoding: str = "utf-8") -> None:
         """Write text content to a file.
 
         Args:

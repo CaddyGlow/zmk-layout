@@ -13,8 +13,8 @@ from .template import TemplateProvider
 
 __all__ = [
     "ConfigurationProvider",
-    "TemplateProvider", 
-    "LayoutLogger",
     "FileProvider",
+    "LayoutLogger",
     "LayoutProviders",
+    "TemplateProvider",
 ]

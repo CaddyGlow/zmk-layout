@@ -29,40 +29,40 @@ from .metadata import (
 )
 from .types import ConfigValue, LayerBindings, LayerIndex, ParamValue, TemplateNumeric
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # Base and core models
     "LayoutBaseModel",
-    "LayoutParam",
     "LayoutBinding",
     "LayoutLayer",
-    # Type definitions
-    "ParamValue",
-    "ConfigValue",
-    "LayerIndex",
-    "TemplateNumeric",
-    "LayerBindings",
+    "LayoutParam",
     # Behavior models
-    "HoldTapBehavior",
-    "ComboBehavior",
-    "MacroBehavior",
-    "TapDanceBehavior",
-    "StickyKeyBehavior",
-    "CapsWordBehavior",
-    "ModMorphBehavior",
-    "InputProcessor",
-    "InputListenerNode",
-    "InputListener",
     "BehaviorList",
+    "CapsWordBehavior",
+    "ComboBehavior",
+    "HoldTapBehavior",
+    "InputListener",
+    "InputListenerNode",
+    "InputProcessor",
+    "MacroBehavior",
+    "ModMorphBehavior",
+    "StickyKeyBehavior",
+    "TapDanceBehavior",
     # Keymap models
-    "KeymapComment",
-    "KeymapInclude",
     "ConfigDirective",
     "DependencyInfo",
+    "KeymapComment",
+    "KeymapInclude",
     "KeymapMetadata",
     # Metadata models
     "ConfigParameter",
-    "LayoutMetadata",
     "LayoutData",
+    "LayoutMetadata",
+    # Type definitions
+    "ConfigValue",
+    "LayerBindings",
+    "LayerIndex",
+    "ParamValue",
+    "TemplateNumeric",
 ]
 
 # Rebuild models to resolve forward references after all imports

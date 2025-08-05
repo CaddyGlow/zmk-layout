@@ -1,6 +1,8 @@
 """Logger provider protocol for layout domain abstraction."""
 
-from typing import Any, Protocol
+from __future__ import annotations
+
+from typing import Protocol
 
 
 class LayoutLogger(Protocol):
@@ -10,7 +12,7 @@ class LayoutLogger(Protocol):
     of the specific logging system implementation (structured logging, etc.).
     """
 
-    def info(self, message: str, **kwargs: Any) -> None:
+    def info(self, message: str, **kwargs: str | int | float | bool | None) -> None:
         """Log an informational message.
 
         Args:
@@ -19,7 +21,7 @@ class LayoutLogger(Protocol):
         """
         ...
 
-    def error(self, message: str, exc_info: bool = False, **kwargs: Any) -> None:
+    def error(self, message: str, exc_info: bool = False, **kwargs: str | int | float | bool | None) -> None:
         """Log an error message.
 
         Args:
@@ -29,7 +31,7 @@ class LayoutLogger(Protocol):
         """
         ...
 
-    def warning(self, message: str, **kwargs: Any) -> None:
+    def warning(self, message: str, **kwargs: str | int | float | bool | None) -> None:
         """Log a warning message.
 
         Args:
@@ -38,7 +40,7 @@ class LayoutLogger(Protocol):
         """
         ...
 
-    def debug(self, message: str, **kwargs: Any) -> None:
+    def debug(self, message: str, **kwargs: str | int | float | bool | None) -> None:
         """Log a debug message.
 
         Args:
@@ -47,7 +49,7 @@ class LayoutLogger(Protocol):
         """
         ...
 
-    def exception(self, message: str, **kwargs: Any) -> None:
+    def exception(self, message: str, **kwargs: str | int | float | bool | None) -> None:
         """Log an exception with traceback.
 
         Args:

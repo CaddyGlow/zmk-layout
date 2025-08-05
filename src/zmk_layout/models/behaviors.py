@@ -1,10 +1,14 @@
 """User behavior models for keyboard layouts."""
 
+from typing import TYPE_CHECKING
+
 from pydantic import Field, field_validator
 
 from .base import LayoutBaseModel
-from .core import LayoutBinding
 from .types import LayerIndex, ParamValue, TemplateNumeric
+
+if TYPE_CHECKING:
+    from .core import LayoutBinding
 
 
 class HoldTapBehavior(LayoutBaseModel):
@@ -35,15 +39,18 @@ class HoldTapBehavior(LayoutBaseModel):
                 "tap-unless-interrupted",
             ]
             if v not in valid_flavors:
-                raise ValueError(f"Invalid flavor: {v}. Must be one of {valid_flavors}") from None
+                msg = f"Invalid flavor: {v}. Must be one of {valid_flavors}"
+                raise ValueError(msg) from None
         return v
 
     @field_validator("bindings")
     @classmethod
     def validate_bindings_count(cls, v: list[str]) -> list[str]:
         """Validate that hold-tap has exactly 2 bindings."""
-        if len(v) != 2:
-            raise ValueError(f"Hold-tap behavior requires exactly 2 bindings, found {len(v)}") from None
+        expected_bindings_count = 2
+        if len(v) != expected_bindings_count:
+            msg = f"Hold-tap behavior requires exactly {expected_bindings_count} bindings, found {len(v)}"
+            raise ValueError(msg) from None
         return v
 
 
@@ -55,7 +62,7 @@ class ComboBehavior(LayoutBaseModel):
     timeout_ms: TemplateNumeric = Field(default=None, alias="timeoutMs")
     key_positions: list[int] = Field(alias="keyPositions")
     layers: list[LayerIndex] | None = None
-    binding: LayoutBinding = Field()
+    binding: "LayoutBinding" = Field()
     behavior: str | None = Field(default=None, alias="behavior")
 
     @field_validator("key_positions")
@@ -63,10 +70,12 @@ class ComboBehavior(LayoutBaseModel):
     def validate_key_positions(cls, v: list[int]) -> list[int]:
         """Validate key positions are valid."""
         if not v:
-            raise ValueError("Combo must have at least one key position") from None
+            msg = "Combo must have at least one key position"
+            raise ValueError(msg) from None
         for pos in v:
             if not isinstance(pos, int) or pos < 0:
-                raise ValueError(f"Invalid key position: {pos}") from None
+                msg = f"Invalid key position: {pos}"
+                raise ValueError(msg) from None
         return v
 
 
@@ -77,15 +86,17 @@ class MacroBehavior(LayoutBaseModel):
     description: str | None = ""
     wait_ms: TemplateNumeric = Field(default=None, alias="waitMs")
     tap_ms: TemplateNumeric = Field(default=None, alias="tapMs")
-    bindings: list[LayoutBinding] = Field(default_factory=list)
+    bindings: list["LayoutBinding"] = Field(default_factory=list)
     params: list[ParamValue] | None = None
 
     @field_validator("params")
     @classmethod
     def validate_params_count(cls, v: list[ParamValue] | None) -> list[ParamValue] | None:
         """Validate macro parameter count."""
-        if v is not None and len(v) > 2:
-            raise ValueError(f"Macro cannot have more than 2 parameters, found {len(v)}") from None
+        max_params = 2
+        if v is not None and len(v) > max_params:
+            msg = f"Macro cannot have more than {max_params} parameters, found {len(v)}"
+            raise ValueError(msg) from None
         return v
 
 
@@ -95,16 +106,20 @@ class TapDanceBehavior(LayoutBaseModel):
     name: str
     description: str | None = ""
     tapping_term_ms: TemplateNumeric = Field(default=None, alias="tappingTermMs")
-    bindings: list[LayoutBinding] = Field(default_factory=list)
+    bindings: list["LayoutBinding"] = Field(default_factory=list)
 
     @field_validator("bindings")
     @classmethod
-    def validate_bindings_count(cls, v: list[LayoutBinding]) -> list[LayoutBinding]:
+    def validate_bindings_count(cls, v: list["LayoutBinding"]) -> list["LayoutBinding"]:
         """Validate tap-dance bindings count."""
-        if len(v) < 2:
-            raise ValueError("Tap-dance must have at least 2 bindings") from None
-        if len(v) > 5:
-            raise ValueError("Tap-dance cannot have more than 5 bindings") from None
+        min_bindings = 2
+        max_bindings = 5
+        if len(v) < min_bindings:
+            msg = f"Tap-dance must have at least {min_bindings} bindings"
+            raise ValueError(msg) from None
+        if len(v) > max_bindings:
+            msg = f"Tap-dance cannot have more than {max_bindings} bindings"
+            raise ValueError(msg) from None
         return v
 
 
@@ -117,7 +132,7 @@ class StickyKeyBehavior(LayoutBaseModel):
     quick_release: bool = Field(default=False, alias="quickRelease")
     lazy: bool = Field(default=False)
     ignore_modifiers: bool = Field(default=False, alias="ignoreModifiers")
-    bindings: list[LayoutBinding] = Field(default_factory=list)
+    bindings: list["LayoutBinding"] = Field(default_factory=list)
 
 
 class CapsWordBehavior(LayoutBaseModel):
@@ -135,15 +150,17 @@ class ModMorphBehavior(LayoutBaseModel):
     name: str
     description: str | None = ""
     mods: int
-    bindings: list[LayoutBinding] = Field(default_factory=list)
+    bindings: list["LayoutBinding"] = Field(default_factory=list)
     keep_mods: int | None = Field(default=None, alias="keepMods")
 
     @field_validator("bindings")
     @classmethod
-    def validate_bindings_count(cls, v: list[LayoutBinding]) -> list[LayoutBinding]:
+    def validate_bindings_count(cls, v: list["LayoutBinding"]) -> list["LayoutBinding"]:
         """Validate mod-morph bindings count."""
-        if len(v) != 2:
-            raise ValueError("Mod-morph must have exactly 2 bindings") from None
+        expected_bindings_count = 2
+        if len(v) != expected_bindings_count:
+            msg = f"Mod-morph must have exactly {expected_bindings_count} bindings"
+            raise ValueError(msg) from None
         return v
 
 
@@ -171,6 +188,17 @@ class InputListener(LayoutBaseModel):
     nodes: list[InputListenerNode] = Field(default_factory=list)
 
 
+class SystemBehavior(LayoutBaseModel):
+    """Model for system-defined behaviors."""
+
+    code: str
+    name: str
+    description: str | None = ""
+    expected_params: int = 0
+    origin: str = "system"
+    params: list[ParamValue] = Field(default_factory=list)
+
+
 # Type alias for collections of behaviors
 BehaviorList = list[
     HoldTapBehavior
@@ -180,4 +208,5 @@ BehaviorList = list[
     | StickyKeyBehavior
     | CapsWordBehavior
     | ModMorphBehavior
+    | SystemBehavior
 ]

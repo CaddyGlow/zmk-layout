@@ -1,6 +1,8 @@
 """Template provider protocol for layout domain abstraction."""
 
-from typing import Any, Protocol
+from __future__ import annotations
+
+from typing import Protocol
 
 
 class TemplateProvider(Protocol):
@@ -10,7 +12,7 @@ class TemplateProvider(Protocol):
     of the specific template engine implementation (Jinja2, etc.).
     """
 
-    def render_string(self, template: str, context: dict[str, Any]) -> str:
+    def render_string(self, template: str, context: dict[str, str | int | float | bool | None]) -> str:
         """Render a template string with given context.
 
         Args:
