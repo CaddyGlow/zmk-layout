@@ -58,3 +58,11 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.17.1",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "ruff>=0.12.7",
+]
