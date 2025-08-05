@@ -1,6 +1,6 @@
 """Type definitions for ZMK layout models."""
 
-from typing import TYPE_CHECKING, TypeAlias, Union
+from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from .core import LayoutBinding
