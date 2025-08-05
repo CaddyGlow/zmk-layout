@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from typing import Any
 
 from zmk_layout.models import LayoutData
+from zmk_layout.models.metadata import LayoutResult
 from zmk_layout.providers import FileProvider
 
 # Type aliases for placeholder types
@@ -356,8 +357,8 @@ def generate_keymap_file_with_result(
 
         # Create stub dtsi_generator and behavior components
         class StubDtsiGenerator:
-            def __init__(self):
-                self._behavior_registry = {}
+            def __init__(self) -> None:
+                self._behavior_registry: dict[str, Any] = {}
                 
         dtsi_generator = StubDtsiGenerator()
 

@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from zmk_layout.models import (  # type: ignore
+from zmk_layout.models import (
     ComboBehavior,
     HoldTapBehavior,
     LayoutBaseModel,
@@ -21,7 +21,7 @@ class TestLayoutBaseModel:
     def test_create_instance(self) -> None:
         """Test creating a base model instance."""
 
-        class TestModel(LayoutBaseModel):  # type: ignore
+        class TestModel(LayoutBaseModel):
             name: str
             value: int
 
@@ -32,7 +32,7 @@ class TestLayoutBaseModel:
     def test_to_dict(self) -> None:
         """Test dictionary conversion."""
 
-        class TestModel(LayoutBaseModel):  # type: ignore
+        class TestModel(LayoutBaseModel):
             name: str
             value: int
 
@@ -43,7 +43,7 @@ class TestLayoutBaseModel:
     def test_from_dict(self) -> None:
         """Test creating from dictionary."""
 
-        class TestModel(LayoutBaseModel):  # type: ignore
+        class TestModel(LayoutBaseModel):
             name: str
             value: int
 
@@ -132,7 +132,7 @@ class TestLayoutLayer:
 
     def test_convert_string_bindings(self) -> None:
         """Test automatic conversion of string bindings."""
-        layer = LayoutLayer(name="test", bindings=["&kp Q", "&kp W"])
+        layer = LayoutLayer(name="test", bindings=["&kp Q", "&kp W"])  # type: ignore[list-item]
         assert len(layer.bindings) == 2
         assert isinstance(layer.bindings[0], LayoutBinding)
         assert layer.bindings[0].value == "&kp"
@@ -143,7 +143,7 @@ class TestHoldTapBehavior:
 
     def test_create_hold_tap(self) -> None:
         """Test creating hold-tap behavior."""
-        ht = HoldTapBehavior(name="test_ht", bindings=["&kp", "&mt"], tapping_term_ms=200, flavor="balanced")
+        ht = HoldTapBehavior(name="test_ht", bindings=["&kp", "&mt"], tappingTermMs=200, flavor="balanced")
         assert ht.name == "test_ht"
         assert ht.bindings == ["&kp", "&mt"]
         assert ht.tapping_term_ms == 200
@@ -175,7 +175,7 @@ class TestComboBehavior:
 
     def test_create_combo(self) -> None:
         """Test creating combo behavior."""
-        combo = ComboBehavior(name="test_combo", key_positions=[0, 1], binding=LayoutBinding.from_str("&kp ESC"))
+        combo = ComboBehavior(name="test_combo", keyPositions=[0, 1], binding=LayoutBinding.from_str("&kp ESC"))
         assert combo.name == "test_combo"
         assert combo.key_positions == [0, 1]
         assert combo.binding.value == "&kp"
@@ -183,12 +183,12 @@ class TestComboBehavior:
     def test_validate_key_positions_empty(self) -> None:
         """Test that empty key positions raise error."""
         with pytest.raises(ValueError, match="at least one key position"):
-            ComboBehavior(name="test", key_positions=[], binding=LayoutBinding.from_str("&kp ESC"))
+            ComboBehavior(name="test", keyPositions=[], binding=LayoutBinding.from_str("&kp ESC"))
 
     def test_validate_key_positions_negative(self) -> None:
         """Test that negative key positions raise error."""
         with pytest.raises(ValueError, match="Invalid key position"):
-            ComboBehavior(name="test", key_positions=[-1, 0], binding=LayoutBinding.from_str("&kp ESC"))
+            ComboBehavior(name="test", keyPositions=[-1, 0], binding=LayoutBinding.from_str("&kp ESC"))
 
 
 class TestLayoutData:
@@ -196,7 +196,7 @@ class TestLayoutData:
 
     def test_create_layout_data(self) -> None:
         """Test creating complete layout data."""
-        data = LayoutData(keyboard="test_keyboard", title="Test Layout", layers=[], hold_taps=[], combos=[])
+        data = LayoutData(keyboard="test_keyboard", title="Test Layout", layers=[], holdTaps=[], combos=[])
         assert data.keyboard == "test_keyboard"
         assert data.title == "Test Layout"
         assert isinstance(data.date, datetime)

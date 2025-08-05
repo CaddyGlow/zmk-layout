@@ -1,6 +1,7 @@
 """Base model for ZMK layout library."""
 
 from typing import Any, Literal
+from typing_extensions import Self
 
 from pydantic import BaseModel, ConfigDict
 
@@ -79,7 +80,7 @@ class LayoutBaseModel(BaseModel):
         return json.dumps(self.to_dict(), indent=2)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "LayoutBaseModel":
+    def from_dict(cls, data: dict[str, Any]) -> Self:
         """Create instance from dictionary."""
         return cls.model_validate(data)
 

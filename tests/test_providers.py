@@ -2,14 +2,14 @@
 
 from pathlib import Path
 
-from zmk_layout.providers import (  # type: ignore
+from zmk_layout.providers import (
     ConfigurationProvider,
     FileProvider,
     LayoutLogger,
     LayoutProviders,
     TemplateProvider,
 )
-from zmk_layout.providers.factory import (  # type: ignore
+from zmk_layout.providers.factory import (
     DefaultConfigurationProvider,
     DefaultFileProvider,
     DefaultLogger,

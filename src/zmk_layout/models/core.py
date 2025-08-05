@@ -1,6 +1,7 @@
 """Core layout models for keyboard layouts."""
 
 from typing import Any, Union
+from typing_extensions import Annotated
 
 from pydantic import Field, field_validator
 

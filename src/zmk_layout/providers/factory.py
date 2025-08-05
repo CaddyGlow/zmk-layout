@@ -79,6 +79,9 @@ class DefaultFileProvider:
     def exists(self, path: Path | str) -> bool:
         return Path(path).exists()
 
+    def is_file(self, path: Path | str) -> bool:
+        return Path(path).is_file()
+
     def mkdir(self, path: Path | str, parents: bool = False, exist_ok: bool = False) -> None:
         Path(path).mkdir(parents=parents, exist_ok=exist_ok)
 
