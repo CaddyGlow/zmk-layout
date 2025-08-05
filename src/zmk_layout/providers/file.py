@@ -53,6 +53,17 @@ class FileProvider(Protocol):
         """
         ...
 
+    def is_file(self, path: Path | str) -> bool:
+        """Check if a path is a file.
+
+        Args:
+            path: Path to check
+
+        Returns:
+            True if the path is a file, False otherwise
+        """
+        ...
+
     def mkdir(self, path: Path | str, parents: bool = False, exist_ok: bool = False) -> None:
         """Create a directory.
 

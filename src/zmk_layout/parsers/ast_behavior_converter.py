@@ -6,9 +6,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from ..providers import LayoutLogger
 
-# TODO: Extract AST nodes from glovebox
-from glovebox.layout.parsers.ast_nodes import DTNode, DTProperty, DTValueType
-
 from ..models import (
     CapsWordBehavior,
     ComboBehavior,
@@ -19,6 +16,7 @@ from ..models import (
     StickyKeyBehavior,
     TapDanceBehavior,
 )
+from .ast_nodes import DTNode, DTProperty, DTValueType
 
 
 class ASTBehaviorConverter:
@@ -518,7 +516,7 @@ class ASTBehaviorConverter:
         ):
             return str(prop.value.value)
         else:
-            return prop.value.raw
+            return str(prop.value.raw)
 
     def _extract_int_from_property(self, prop: DTProperty) -> int | None:
         """Extract integer value from device tree property.
@@ -958,7 +956,7 @@ class ASTBehaviorConverter:
             InputListener instance or None if conversion fails
         """
         try:
-            from glovebox.layout.models.behaviors import (
+            from ..models.behaviors import (
                 InputListener,
             )
 
@@ -1001,7 +999,7 @@ class ASTBehaviorConverter:
             InputListenerNode instance or None if conversion fails
         """
         try:
-            from glovebox.layout.models.behaviors import (
+            from ..models.behaviors import (
                 InputListenerNode,
             )
 
@@ -1059,7 +1057,7 @@ class ASTBehaviorConverter:
             return processors
 
         try:
-            from glovebox.layout.models.behaviors import InputProcessor
+            from ..models.behaviors import InputProcessor
 
             # Handle array values
             if prop.value.type == DTValueType.ARRAY:

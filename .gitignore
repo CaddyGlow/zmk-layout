@@ -65,3 +65,4 @@ build
 
 workspace/
 site/
+src/zmk_layout/models/__pycache__

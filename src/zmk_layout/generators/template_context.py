@@ -6,11 +6,10 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 if TYPE_CHECKING:
     pass
 
-from glovebox.adapters.template_adapter import TemplateAdapter
-from glovebox.layout.models import LayoutData
-from glovebox.layout.providers import LayoutProviders
-from glovebox.protocols.layout_protocols import TemplateServiceProtocol
-from glovebox.services.base_service import BaseService
+from typing import Protocol
+
+from zmk_layout.models import LayoutData
+from zmk_layout.providers import LayoutProviders
 
 # Type aliases for better readability
 TemplateContext: TypeAlias = dict[str, Any]
@@ -25,7 +24,19 @@ class CircularReferenceError(TemplateError):
     """Exception raised when circular template dependencies are detected."""
 
 
-class TemplateService(BaseService):
+class TemplateServiceProtocol(Protocol):
+    """Protocol for template service capabilities."""
+    
+    def process_layout_data(self, layout_data: LayoutData) -> LayoutData:
+        """Process layout data with template resolution."""
+        ...
+    
+    def validate_template_syntax(self, layout_data: LayoutData) -> list[str]:
+        """Validate template syntax in layout data."""
+        ...
+
+
+class TemplateService:
     """Service for processing Jinja2 templates in layout data.
 
     This service handles multi-pass template resolution to properly handle
@@ -38,7 +49,6 @@ class TemplateService(BaseService):
         Args:
             providers: Layout providers for configuration, template, logger, and file operations
         """
-        super().__init__(service_name="TemplateService", service_version="1.0.0")
         self.providers = providers
         self._resolution_cache: dict[str, Any] = {}
 
@@ -436,29 +446,9 @@ def create_jinja2_template_service() -> TemplateServiceProtocol:
     Returns:
         TemplateService instance with default TemplateAdapter
     """
-    from unittest.mock import Mock
-
-    from glovebox.adapters import create_file_adapter
-    from glovebox.layout.providers import create_glovebox_providers
-
-    template_adapter = TemplateAdapter(
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
-
-    file_adapter = create_file_adapter()
-
-    # Ensure file_adapter has required methods for protocol validation
-    if not hasattr(file_adapter, "read_file"):
-        file_adapter.read_file = Mock()
-    if not hasattr(file_adapter, "write_file"):
-        file_adapter.write_file = Mock()
-
-    providers = create_glovebox_providers(
-        profile=None,  # Use placeholder for this convenience factory
-        file_adapter=file_adapter,
-        template_adapter=template_adapter,
-        logger_name="template_service",
-    )
-
+    # Use the default providers from the factory
+    from zmk_layout.providers.factory import create_default_providers
+    
+    providers = create_default_providers()
+    
     return create_template_service(providers)

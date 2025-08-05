@@ -29,7 +29,7 @@ def create_full_keymap_processor() -> "ProcessorProtocol":
         def process(self, context: "ParsingContext") -> LayoutData | None:
             return None
 
-    return StubProcessor()  # type: ignore
+    return StubProcessor()
 
 
 def create_template_aware_processor() -> "ProcessorProtocol":
@@ -39,7 +39,7 @@ def create_template_aware_processor() -> "ProcessorProtocol":
         def process(self, context: "ParsingContext") -> LayoutData | None:
             return None
 
-    return StubProcessor()  # type: ignore
+    return StubProcessor()
 
 
 if TYPE_CHECKING:
@@ -51,23 +51,53 @@ if TYPE_CHECKING:
 
     class KeyboardProfile:
         """Placeholder for KeyboardProfile until extracted."""
-
-        pass
+        
+        def __init__(self) -> None:
+            self.name: str = "unknown"
+        
+        @property 
+        def keyboard_name(self) -> str:
+            return self.name
 
     class ParsingContext:
         """Placeholder for ParsingContext until extracted."""
-
-        pass
+        
+        def __init__(
+            self,
+            keymap_content: str,
+            title: str,
+            keyboard_name: str,
+            extraction_config: list["ExtractionConfig"],
+        ) -> None:
+            self.keymap_content = keymap_content
+            self.title = title
+            self.keyboard_name = keyboard_name
+            self.extraction_config = extraction_config
+            self.errors: list[str] = []
+            self.warnings: list[str] = []
 
     class ExtractionConfig:
         """Placeholder for ExtractionConfig until extracted."""
-
         pass
 
     class ModelFactory:
         """Placeholder for ModelFactory until extracted."""
-
-        pass
+        
+        def create_comment(self, comment_dict: dict[str, object]) -> "KeymapComment":
+            """Create KeymapComment from dictionary."""
+            # Import here to avoid circular imports
+            from zmk_layout.models.keymap import KeymapComment
+            return KeymapComment(**comment_dict)  # type: ignore[arg-type]
+            
+        def create_include(self, include_dict: dict[str, object]) -> "KeymapInclude":
+            """Create KeymapInclude from dictionary."""
+            from zmk_layout.models.keymap import KeymapInclude
+            return KeymapInclude(**include_dict)  # type: ignore[arg-type]
+            
+        def create_directive(self, directive_dict: dict[str, object]) -> "ConfigDirective":
+            """Create ConfigDirective from dictionary."""
+            from zmk_layout.models.keymap import ConfigDirective
+            return ConfigDirective(**directive_dict)  # type: ignore[arg-type]
 
     class ProcessorProtocol(Protocol):
         def process(self, context: "ParsingContext") -> LayoutData | None: ...
@@ -123,7 +153,7 @@ class ZMKKeymapParser:
         super().__init__()
         # TODO: Add ModelFactory when available
         # self.model_factory = ModelFactory()
-        self.model_factory = None
+        self.model_factory: ModelFactory | None = ModelFactory() if TYPE_CHECKING else None
         self.defines: dict[str, str] = {}
         self.configuration_provider = configuration_provider
         self.logger = logger
@@ -269,7 +299,7 @@ class ZMKKeymapParser:
 
         # Return default configuration
         # TODO: Extract default extraction config when parsing models are available
-        return {}  # get_default_extraction_config()
+        return []  # get_default_extraction_config()
 
     def _get_template_path(self, profile: "KeyboardProfile") -> Path | None:
         """Get template file path from keyboard profile.
@@ -580,6 +610,8 @@ class ZMKKeymapParser:
         Returns:
             KeymapComment model instance
         """
+        if self.model_factory is None:
+            raise RuntimeError("ModelFactory not initialized")
         return self.model_factory.create_comment(comment_dict)
 
     def _convert_include_to_model(self, include_dict: dict[str, object]) -> "KeymapInclude":
@@ -591,6 +623,8 @@ class ZMKKeymapParser:
         Returns:
             KeymapInclude model instance
         """
+        if self.model_factory is None:
+            raise RuntimeError("ModelFactory not initialized")
         return self.model_factory.create_include(include_dict)
 
     def _convert_directive_to_model(self, directive_dict: dict[str, object]) -> "ConfigDirective":
@@ -602,6 +636,8 @@ class ZMKKeymapParser:
         Returns:
             ConfigDirective model instance
         """
+        if self.model_factory is None:
+            raise RuntimeError("ModelFactory not initialized")
         return self.model_factory.create_directive(directive_dict)
 
     def _preprocess_moergo_binding_edge_cases(self, binding_str: str) -> str:

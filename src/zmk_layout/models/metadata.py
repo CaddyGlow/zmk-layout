@@ -144,3 +144,21 @@ class LayoutData(LayoutMetadata):
             return False
 
         return check_value(data)
+
+
+class LayoutResult(LayoutBaseModel):
+    """Result model for layout operations."""
+    
+    success: bool = False
+    messages: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    keymap_path: str | None = None
+    conf_path: str | None = None
+    
+    def add_message(self, message: str) -> None:
+        """Add a success message."""
+        self.messages.append(message)
+    
+    def add_error(self, error: str) -> None:
+        """Add an error message."""
+        self.errors.append(error)

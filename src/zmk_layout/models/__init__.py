@@ -26,6 +26,7 @@ from .metadata import (
     ConfigParameter,
     LayoutData,
     LayoutMetadata,
+    LayoutResult,
 )
 from .types import ConfigValue, LayerBindings, LayerIndex, ParamValue, TemplateNumeric
 
@@ -57,6 +58,7 @@ __all__ = [  # noqa: RUF022
     "ConfigParameter",
     "LayoutData",
     "LayoutMetadata",
+    "LayoutResult",
     # Type definitions
     "ConfigValue",
     "LayerBindings",
@@ -74,3 +76,4 @@ TapDanceBehavior.model_rebuild()
 StickyKeyBehavior.model_rebuild()
 ModMorphBehavior.model_rebuild()
 LayoutData.model_rebuild()
+LayoutResult.model_rebuild()

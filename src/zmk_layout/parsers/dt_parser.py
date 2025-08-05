@@ -865,7 +865,8 @@ def parse_dt_lark(text: str) -> list[DTNode]:
     try:
         from .lark_dt_parser import parse_dt_lark as _parse_dt_lark
 
-        return _parse_dt_lark(text)
+        nodes: list[DTNode] = _parse_dt_lark(text)
+        return nodes
     except ImportError:
         # Fallback to regular parser if lark parser unavailable
         return [parse_dt(text)]
@@ -883,7 +884,8 @@ def parse_dt_lark_safe(text: str) -> tuple[list[DTNode], list[str]]:
     try:
         from .lark_dt_parser import parse_dt_lark_safe as _parse_dt_lark_safe
 
-        return _parse_dt_lark_safe(text)
+        result: tuple[list[DTNode], list[str]] = _parse_dt_lark_safe(text)
+        return result
     except ImportError:
         # Fallback to regular parser if lark parser unavailable
         try:
