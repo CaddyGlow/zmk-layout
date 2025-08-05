@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "zmk-layout"
+version = "0.1.0"
+description = "ZMK keyboard layout manipulation library with fluent API"
+authors = [{name = "ZMK Layout Library Contributors", email = "developers@example.com"}]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.11.0",
+    "typing-extensions>=4.0.0",
+]
+
+[project.optional-dependencies]
+full = ["jinja2>=3.0", "rich>=13.0", "lark>=1.1", "jsonpatch>=1.32"]
+templating = ["jinja2>=3.0"]
+display = ["rich>=13.0"] 
+parsing = ["lark>=1.1"]
+dev = ["pytest>=8.0", "pytest-cov>=4.0", "ruff>=0.11", "mypy>=1.15"]
+
+[project.urls]
+Homepage = "https://github.com/zmk-layout/zmk-layout"
+Documentation = "https://zmk-layout.readthedocs.io"
+Repository = "https://github.com/zmk-layout/zmk-layout"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "README.md",
+    "LICENSE",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zmk_layout"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "B", "SIM", "I"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
