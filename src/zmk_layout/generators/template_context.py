@@ -376,6 +376,13 @@ class TemplateService:
 
     def _convert_to_appropriate_type(self, value: str) -> Any:
         """Convert string value to appropriate type (int, bool, float, str)."""
+        # Try bool conversion first (before int conversion to handle "1" and "0" as booleans)
+        lower_value = value.lower()
+        if lower_value in ("true", "yes", "1"):
+            return True
+        elif lower_value in ("false", "no", "0"):
+            return False
+
         # Try int conversion
         try:
             return int(value)
@@ -387,13 +394,6 @@ class TemplateService:
             return float(value)
         except ValueError:
             pass
-
-        # Try bool conversion
-        lower_value = value.lower()
-        if lower_value in ("true", "yes", "1"):
-            return True
-        elif lower_value in ("false", "no", "0"):
-            return False
 
         # Return as string
         return value

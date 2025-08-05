@@ -94,7 +94,7 @@ class TestTemplateServiceBasicFunctionality:
             title="{{variables.custom_title}}",
             keyboard="test_keyboard",
             layer_names=["base"],
-            layers=[[LayoutBinding(value="&kp", params=["{{variables.custom_key}}"])]],
+            layers=[[LayoutBinding(value="&kp", params=[LayoutParam(value="{{variables.custom_key}}")])]],
             variables={"custom_title": "My Layout", "custom_key": "Q"},
         )
         
@@ -280,13 +280,18 @@ class TestTemplateServiceValidation:
             layers=[[]],
         )
         
-        # Configure template provider to raise error
-        mock_providers.template.should_raise = RuntimeError("Invalid syntax")
+        # Configure template provider to raise error on render_string
+        def error_render(template, context):
+            if "invalid_template" in template:
+                raise RuntimeError("Invalid syntax")
+            return template
+        
+        mock_providers.template.render_string = error_render
         
         errors = template_service.validate_template_syntax(layout_data)
         
         assert len(errors) > 0
-        assert any("Validation error" in error for error in errors)
+        assert any("Invalid template syntax" in error for error in errors)
 
     def test_validate_template_syntax_no_templates(self, template_service):
         """Test validation when no templates are present."""
@@ -307,13 +312,15 @@ class TestTemplateServiceMultiPassResolution:
 
     def test_multipass_resolution_order(self, template_service, mock_providers):
         """Test that multi-pass resolution follows correct order."""
+        from zmk_layout.models.behaviors import HoldTapBehavior
+        
         layout_data = LayoutData(
             title="{{variables.title}}",
             keyboard="test_keyboard",
             layer_names=["base"],
             layers=[[]],
-            variables={"title": "Test"},
-            holdTaps=[{"name": "{{variables.ht_name}}"}],
+            variables={"title": "Test", "ht_name": "custom_ht"},
+            hold_taps=[HoldTapBehavior(name="{{variables.ht_name}}", bindings=["&kp", "&mo"])],
         )
         
         mock_providers.template.render_responses = {
@@ -558,12 +565,10 @@ class TestTemplateServiceFactories:
 
     def test_create_jinja2_template_service(self):
         """Test Jinja2 template service factory."""
-        mock_providers = MockProviders()
-        
-        service = create_jinja2_template_service(mock_providers)
+        service = create_jinja2_template_service()
         
         assert isinstance(service, TemplateService)
-        assert service.providers == mock_providers
+        assert service.providers is not None
 
 
 class TestTemplateServiceErrorHandling:
