@@ -5,7 +5,7 @@ import re
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 from zmk_layout.models.base import LayoutBaseModel
 from zmk_layout.models.core import LayoutBinding
@@ -13,55 +13,40 @@ from zmk_layout.models.metadata import LayoutData
 
 from .ast_nodes import DTNode, DTValue
 
-# TODO: These imports need extraction in subsequent tasks
-# from .keymap_converters import ModelFactory
-# from .keymap_processors import (
-#     create_full_keymap_processor,
-#     create_template_aware_processor,
-# )
-# from .parsing_models import ParsingContext, get_default_extraction_config
+# Import actual implementations
+from .keymap_processors import FullKeymapProcessor, TemplateAwareProcessor
+from .parsing_models import ParsingContext, get_default_extraction_config
 
 
 def create_full_keymap_processor() -> "ProcessorProtocol":
-    """Placeholder function - TODO: Extract full keymap processor."""
-
-    class StubProcessor:
-        def process(self, context: "ParsingContext") -> LayoutData | None:
-            return None
-
-    return StubProcessor()
+    """Create a full keymap processor with all features."""
+    return FullKeymapProcessor()
 
 
 def create_template_aware_processor() -> "ProcessorProtocol":
-    """Placeholder function - TODO: Extract template aware processor."""
-
-    class StubProcessor:
-        def process(self, context: "ParsingContext") -> LayoutData | None:
-            return None
-
-    return StubProcessor()
+    """Create a template-aware keymap processor."""
+    return TemplateAwareProcessor()
 
 
 if TYPE_CHECKING:
     from zmk_layout.models.keymap import ConfigDirective, KeymapComment, KeymapInclude
     from zmk_layout.providers import ConfigurationProvider, LayoutLogger
 
-    # from .parsing_models import ExtractionConfig  # TODO: Extract parsing models
-    # from .parsing_models import ParsingContext  # TODO: Extract parsing models
+    from .parsing_models import ExtractionConfig
 
     class KeyboardProfile:
         """Placeholder for KeyboardProfile until extracted."""
-        
+
         def __init__(self) -> None:
             self.name: str = "unknown"
-        
-        @property 
+
+        @property
         def keyboard_name(self) -> str:
             return self.name
 
     class ParsingContext:
         """Placeholder for ParsingContext until extracted."""
-        
+
         def __init__(
             self,
             keymap_content: str,
@@ -76,31 +61,41 @@ if TYPE_CHECKING:
             self.errors: list[str] = []
             self.warnings: list[str] = []
 
-    class ExtractionConfig:
-        """Placeholder for ExtractionConfig until extracted."""
-        pass
-
-    class ModelFactory:
-        """Placeholder for ModelFactory until extracted."""
-        
-        def create_comment(self, comment_dict: dict[str, object]) -> "KeymapComment":
-            """Create KeymapComment from dictionary."""
-            # Import here to avoid circular imports
-            from zmk_layout.models.keymap import KeymapComment
-            return KeymapComment(**comment_dict)  # type: ignore[arg-type]
-            
-        def create_include(self, include_dict: dict[str, object]) -> "KeymapInclude":
-            """Create KeymapInclude from dictionary."""
-            from zmk_layout.models.keymap import KeymapInclude
-            return KeymapInclude(**include_dict)  # type: ignore[arg-type]
-            
-        def create_directive(self, directive_dict: dict[str, object]) -> "ConfigDirective":
-            """Create ConfigDirective from dictionary."""
-            from zmk_layout.models.keymap import ConfigDirective
-            return ConfigDirective(**directive_dict)  # type: ignore[arg-type]
-
     class ProcessorProtocol(Protocol):
         def process(self, context: "ParsingContext") -> LayoutData | None: ...
+
+
+class ModelFactory:
+    """Factory for creating keymap model instances."""
+
+    def create_comment(self, comment_dict: dict[str, object]) -> Any:
+        """Create KeymapComment from dictionary."""
+        # Import here to avoid circular imports
+        try:
+            from zmk_layout.models.keymap import KeymapComment
+
+            return KeymapComment(**comment_dict)  # type: ignore[arg-type]
+        except ImportError:
+            # Fallback to basic dict if keymap models not available
+            return comment_dict
+
+    def create_include(self, include_dict: dict[str, object]) -> Any:
+        """Create KeymapInclude from dictionary."""
+        try:
+            from zmk_layout.models.keymap import KeymapInclude
+
+            return KeymapInclude(**include_dict)  # type: ignore[arg-type]
+        except ImportError:
+            return include_dict
+
+    def create_directive(self, directive_dict: dict[str, object]) -> Any:
+        """Create ConfigDirective from dictionary."""
+        try:
+            from zmk_layout.models.keymap import ConfigDirective
+
+            return ConfigDirective(**directive_dict)  # type: ignore[arg-type]
+        except ImportError:
+            return directive_dict
 
 
 class ParsingMode(str, Enum):
@@ -151,20 +146,16 @@ class ZMKKeymapParser:
             processors: Dictionary of parsing mode to processor instances
         """
         super().__init__()
-        # TODO: Add ModelFactory when available
-        # self.model_factory = ModelFactory()
-        self.model_factory: ModelFactory | None = ModelFactory() if TYPE_CHECKING else None
+        self.model_factory = ModelFactory()
         self.defines: dict[str, str] = {}
         self.configuration_provider = configuration_provider
         self.logger = logger
 
         # Initialize processors for different parsing modes
-        # TODO: Add processors when available
-        # self.processors = processors or {
-        #     ParsingMode.FULL: create_full_keymap_processor(),
-        #     ParsingMode.TEMPLATE_AWARE: create_template_aware_processor(),
-        # }
-        self.processors = processors or {}
+        self.processors = processors or {
+            ParsingMode.FULL: create_full_keymap_processor(),
+            ParsingMode.TEMPLATE_AWARE: create_template_aware_processor(),
+        }
 
     def _resolve_binding_string(self, binding_str: str) -> str:
         """Resolve defines in a binding string.
@@ -298,8 +289,7 @@ class ZMKKeymapParser:
                     )
 
         # Return default configuration
-        # TODO: Extract default extraction config when parsing models are available
-        return []  # get_default_extraction_config()
+        return get_default_extraction_config()
 
     def _get_template_path(self, profile: "KeyboardProfile") -> Path | None:
         """Get template file path from keyboard profile.

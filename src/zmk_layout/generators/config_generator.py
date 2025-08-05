@@ -14,10 +14,11 @@ from zmk_layout.providers import FileProvider
 
 # Type aliases for placeholder types
 KeyboardProfile = Any
-BehaviorManagementService = Any  
+BehaviorManagementService = Any
 ZmkFileContentGenerator = Any
 
 logger = logging.getLogger(__name__)
+
 
 # Stub function until analysis module is implemented
 def get_required_includes_for_layout(profile: "KeyboardProfile", keymap_data: LayoutData) -> list[str]:
@@ -83,9 +84,13 @@ def build_template_context(
 
     # Get resolved includes from the profile and format them as #include <>
     resolved_includes = []
-    if hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "keymap") and (
-        hasattr(profile.keyboard_config.keymap, "header_includes")
-        and profile.keyboard_config.keymap.header_includes is not None
+    if (
+        hasattr(profile, "keyboard_config")
+        and hasattr(profile.keyboard_config, "keymap")
+        and (
+            hasattr(profile.keyboard_config.keymap, "header_includes")
+            and profile.keyboard_config.keymap.header_includes is not None
+        )
     ):
         # Format bare header names as #include <header_name>
         resolved_includes = [f"#include <{include}>" for include in profile.keyboard_config.keymap.header_includes]
@@ -99,15 +104,16 @@ def build_template_context(
         class StubBehaviorManager:
             def prepare_behaviors(self, profile: Any, keymap_data: LayoutData) -> None:
                 pass
+
             def get_behavior_registry(self) -> dict[str, Any]:
                 return {}
-        
+
         behavior_manager = StubBehaviorManager()
 
     behavior_manager.prepare_behaviors(profile, keymap_data)
 
     # Update the dtsi_generator's behavior registry to use the managed registry
-    if hasattr(dtsi_generator, '_behavior_registry'):
+    if hasattr(dtsi_generator, "_behavior_registry"):
         dtsi_generator._behavior_registry = behavior_manager.get_behavior_registry()
 
     # Generate DTSI components - stub implementations
@@ -121,7 +127,7 @@ def build_template_context(
     # Get template elements from the keyboard profile - with safe access
     key_position_header = ""
     system_behaviors_dts = ""
-    
+
     if hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "keymap"):
         if hasattr(profile.keyboard_config.keymap, "key_position_header"):
             key_position_header = profile.keyboard_config.keymap.key_position_header or ""
@@ -131,7 +137,7 @@ def build_template_context(
     # Profile identifiers - with safe access
     profile_name = "unknown"
     firmware_version = "unknown"
-    
+
     if hasattr(profile, "keyboard_name") and hasattr(profile, "firmware_version"):
         profile_name = f"{profile.keyboard_name}/{profile.firmware_version}"
         firmware_version = profile.firmware_version
@@ -177,7 +183,7 @@ def generate_kconfig_conf(
     kconfig_options = {}
     if hasattr(profile, "kconfig_options"):
         kconfig_options = profile.kconfig_options
-    
+
     user_options: dict[str, str | int] = {}
 
     lines = []
@@ -192,9 +198,9 @@ def generate_kconfig_conf(
         if opt.param_name in kconfig_options:
             # Supported option - get the real option name
             option_config = kconfig_options[opt.param_name]
-            name = option_config.name if hasattr(option_config, 'name') else opt.param_name
-            default_value = option_config.default if hasattr(option_config, 'default') else None
-            
+            name = option_config.name if hasattr(option_config, "name") else opt.param_name
+            default_value = option_config.default if hasattr(option_config, "default") else None
+
             if opt.value == default_value:
                 # User is setting same value as default
                 # Comment it out to allow easier firmware switching
@@ -215,10 +221,13 @@ def generate_kconfig_conf(
             name = opt.param_name
             # Add kconfig prefix if needed
             kconfig_prefix = "CONFIG_ZMK_"  # Default prefix
-            if (hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "zmk") 
-                and hasattr(profile.keyboard_config.zmk, "patterns")):
-                    kconfig_prefix = profile.keyboard_config.zmk.patterns.kconfig_prefix
-            
+            if (
+                hasattr(profile, "keyboard_config")
+                and hasattr(profile.keyboard_config, "zmk")
+                and hasattr(profile.keyboard_config.zmk, "patterns")
+            ):
+                kconfig_prefix = profile.keyboard_config.zmk.patterns.kconfig_prefix
+
             if not name.startswith(kconfig_prefix):
                 name = kconfig_prefix + name
 
@@ -355,7 +364,7 @@ def generate_keymap_file_with_result(
         class StubDtsiGenerator:
             def __init__(self) -> None:
                 self._behavior_registry: dict[str, Any] = {}
-                
+
         dtsi_generator = StubDtsiGenerator()
 
         # Use the existing generate_keymap_file function

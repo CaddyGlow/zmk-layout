@@ -3,6 +3,7 @@
 This module provides core functionality for the zmk-layout library.
 """
 
+from .layout import Layout
 from .optional_deps import (
     get_display_provider,
     get_parser_provider,
@@ -13,6 +14,7 @@ from .optional_deps import (
 )
 
 __all__ = [
+    "Layout",
     "has_jinja2",
     "has_lark",
     "has_rich",

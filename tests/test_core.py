@@ -184,24 +184,18 @@ class TestFeatureAvailability:
         """Test display feature availability.""" 
         has_rich()
         
-        # Get display provider (returns None as fallback)
+        # Get display provider (always returns fallback)
         provider = get_display_provider()
-        # Provider is None (fallback implementation)
-        assert provider is None
+        # Provider is not None (fallback implementation)
+        assert provider is not None
 
     def test_parsing_features(self) -> None:
         """Test advanced parsing feature availability."""
         lark_available = has_lark()
         
-        if lark_available:
-            # If lark is available, we should be able to get parser provider
-            provider = get_parser_provider()
-            # Provider might still be None if creation fails
-            assert provider is not None or provider is None
-        else:
-            # If lark is not available, should get None
-            provider = get_parser_provider()
-            assert provider is None
+        # Parser provider always returns fallback implementation
+        provider = get_parser_provider()
+        assert provider is not None
 
     def test_feature_compatibility_matrix(self) -> None:
         """Test feature compatibility combinations."""
@@ -241,10 +235,10 @@ class TestErrorHandling:
             assert has_rich() is False
             assert has_lark() is False
             
-            # Template provider returns fallback, others return None
+            # All providers return fallback implementations
             assert get_template_provider() is not None  # Returns fallback
-            assert get_display_provider() is None
-            assert get_parser_provider() is None
+            assert get_display_provider() is not None   # Returns fallback
+            assert get_parser_provider() is not None    # Returns fallback
 
     def test_partial_import_failure(self) -> None:
         """Test handling of partial import failures."""

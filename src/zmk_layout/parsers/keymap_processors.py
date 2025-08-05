@@ -28,9 +28,7 @@ class BaseKeymapProcessor:
             section_extractor: Optional section extractor
         """
         self.logger = logger
-        # TODO: Uncomment when section extractor is available
-        # self.section_extractor = section_extractor or create_section_extractor()
-        self.section_extractor = section_extractor
+        self.section_extractor = section_extractor or create_section_extractor()
 
     def process(self, context: "ParsingContext") -> LayoutData | None:
         """Process keymap content according to parsing strategy."""
@@ -280,6 +278,7 @@ class FullKeymapProcessor(BaseKeymapProcessor):
                 from typing import cast
 
                 from zmk_layout.models.core import LayoutBinding
+
                 layout_data.layer_names = cast(list[str], layers_data["layer_names"])
                 layout_data.layers = cast(list[list[LayoutBinding]], layers_data["layers"])
 
@@ -339,15 +338,15 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
             layout_data = self._create_base_layout_data(context)
 
             # Use configured extraction or default
-            extraction_config = (
-                context.extraction_config or get_default_extraction_config()
-            )
+            extraction_config = context.extraction_config or get_default_extraction_config()
 
             # Extract sections using template-aware approach (only user content)
             if self.section_extractor is None:
                 extracted_sections = {}
             else:
-                extracted_sections = self.section_extractor.extract_sections(context.keymap_content, [extraction_config])
+                extracted_sections = self.section_extractor.extract_sections(
+                    context.keymap_content, [extraction_config]
+                )
 
             # Apply transformation to extracted sections BEFORE processing
             transformed_sections = {}
@@ -405,6 +404,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
             from typing import cast
 
             from zmk_layout.models.core import LayoutBinding
+
             layout_data.layer_names = cast(list[str], layers["layer_names"])
             layout_data.layers = cast(list[list[LayoutBinding]], layers["layers"])
 
@@ -511,7 +511,9 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
             if self.section_extractor is None:
                 behavior_models = {}
             else:
-                behavior_models = self.section_extractor.behavior_extractor.extract_behaviors_as_models(roots, dtsi_content)
+                behavior_models = self.section_extractor.behavior_extractor.extract_behaviors_as_models(
+                    roots, dtsi_content
+                )
 
             # Extract input listeners from behavior models
             if behavior_models.get("input_listeners"):

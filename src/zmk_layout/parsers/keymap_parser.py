@@ -12,19 +12,19 @@ if TYPE_CHECKING:
 
 class ZmkKeymapParser:
     """Stub implementation of ZMK keymap parser."""
-    
+
     def __init__(self) -> None:
         """Initialize the parser."""
         self.defines: dict[str, Any] = {}
-    
+
     def _extract_layers_from_ast(self, root: "DTNode") -> dict[str, Any] | None:
         """Extract layer information from AST.
-        
+
         This is a stub implementation.
-        
+
         Args:
             root: The root DTNode to extract from
-            
+
         Returns:
             Dictionary containing layer information or None
         """

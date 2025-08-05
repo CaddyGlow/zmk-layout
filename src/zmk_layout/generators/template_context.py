@@ -26,11 +26,11 @@ class CircularReferenceError(TemplateError):
 
 class TemplateServiceProtocol(Protocol):
     """Protocol for template service capabilities."""
-    
+
     def process_layout_data(self, layout_data: LayoutData) -> LayoutData:
         """Process layout data with template resolution."""
         ...
-    
+
     def validate_template_syntax(self, layout_data: LayoutData) -> list[str]:
         """Validate template syntax in layout data."""
         ...
@@ -448,7 +448,7 @@ def create_jinja2_template_service() -> TemplateServiceProtocol:
     """
     # Use the default providers from the factory
     from zmk_layout.providers.factory import create_default_providers
-    
+
     providers = create_default_providers()
-    
+
     return create_template_service(providers)

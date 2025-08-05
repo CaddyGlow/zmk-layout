@@ -7,7 +7,7 @@ from zmk_layout.models.base import LayoutBaseModel
 
 class ParsingContext(LayoutBaseModel):
     """Context for parsing operations."""
-    
+
     keyboard_name: str = ""
     title: str = ""
     keymap_content: str = ""
@@ -20,7 +20,7 @@ class ParsingContext(LayoutBaseModel):
 
 class ExtractedSection(LayoutBaseModel):
     """Extracted section from keymap content."""
-    
+
     name: str
     content: str | dict[str, object] | list[object]
     raw_content: str
@@ -29,7 +29,7 @@ class ExtractedSection(LayoutBaseModel):
 
 class ExtractionConfig(LayoutBaseModel):
     """Configuration for extraction operations."""
-    
+
     name: str = ""
     enabled: bool = True
     settings: dict[str, Any] = {}
