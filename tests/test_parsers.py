@@ -16,10 +16,10 @@ class TestTokenizer:
 
     def test_tokenize_simple_property(self) -> None:
         """Test tokenizing a simple property."""
-        content = "property = \"value\";"
+        content = 'property = "value";'
         tokenizer = DTTokenizer(content)
         tokens = tokenizer.tokenize()
-        
+
         assert len(tokens) > 0
         # Should have identifier, equals, value tokens
         token_types = [token.type for token in tokens]
@@ -30,7 +30,7 @@ class TestTokenizer:
         content = "bindings = <&kp Q>, <&kp W>;"
         tokenizer = DTTokenizer(content)
         tokens = tokenizer.tokenize()
-        
+
         assert len(tokens) > 0
         # Should tokenize the array structure
         token_values = [token.value for token in tokens if token.value]
@@ -52,7 +52,7 @@ class TestTokenizer:
         """
         tokenizer = DTTokenizer(content)
         tokens = tokenizer.tokenize()
-        
+
         # Should have tokens for the property, comments might be filtered
         token_values = [token.value for token in tokens if token.value]
         assert "property" in token_values
@@ -111,42 +111,42 @@ class TestParserIntegration:
     def test_parser_with_providers(self) -> None:
         """Test that parsers can work with providers."""
         providers = create_default_providers()
-        
+
         # Mock a simple parser that uses providers
         class MockParser:
             def __init__(self, providers: LayoutProviders):
                 self.providers = providers
-                
+
             def parse(self, content: str) -> dict[str, Any]:
                 self.providers.logger.info("Parsing content", content_length=len(content))
                 return {"parsed": True, "content_length": len(content)}
-        
+
         parser = MockParser(providers)
         result = parser.parse("test content")
-        
+
         assert result["parsed"] is True
         assert result["content_length"] == 12
 
     def test_parser_error_handling(self) -> None:
         """Test parser error handling."""
         providers = create_default_providers()
-        
+
         class MockParser:
             def __init__(self, providers: LayoutProviders):
                 self.providers = providers
-                
+
             def parse(self, content: str) -> dict[str, bool]:
                 if not content.strip():
                     self.providers.logger.error("Empty content provided")
                     raise ValueError("Cannot parse empty content")
                 return {"parsed": True}
-        
+
         parser = MockParser(providers)
-        
+
         # Should work with valid content
         result = parser.parse("valid content")
         assert result["parsed"] is True
-        
+
         # Should raise error with empty content
         with pytest.raises(ValueError, match="Cannot parse empty content"):
             parser.parse("")
@@ -154,26 +154,26 @@ class TestParserIntegration:
     def test_parser_configuration_integration(self) -> None:
         """Test parser integration with configuration provider."""
         providers = create_default_providers()
-        
+
         # Mock configuration provider
         mock_config = Mock()
         behavior_definitions: list[dict[str, str]] = [
             {"name": "kp", "type": "key_press"},
-            {"name": "mt", "type": "mod_tap"}
+            {"name": "mt", "type": "mod_tap"},
         ]
         mock_config.get_behavior_definitions.return_value = behavior_definitions
         providers.configuration = mock_config
-        
+
         class MockParser:
             def __init__(self, providers: LayoutProviders):
                 self.providers = providers
-                
+
             def get_available_behaviors(self) -> list[dict[str, str]]:
                 return self.providers.configuration.get_behavior_definitions()  # type: ignore[return-value]
-        
+
         parser = MockParser(providers)
         behaviors = parser.get_available_behaviors()
-        
+
         assert len(behaviors) == 2
         assert behaviors[0]["name"] == "kp"
         assert behaviors[1]["name"] == "mt"
@@ -190,33 +190,21 @@ class TestParsingModels:
         assert result["success"] is True
         assert isinstance(result["data"], dict)
         assert isinstance(result["errors"], list)
-        
+
         # If parsing models don't exist yet, create a mock structure
-        parsing_result: dict[str, Any] = {
-            "success": True,
-            "ast": None,
-            "errors": [],
-            "warnings": []
-        }
+        parsing_result: dict[str, Any] = {"success": True, "ast": None, "errors": [], "warnings": []}
         assert parsing_result["success"] is True
         assert parsing_result["ast"] is None
 
     def test_section_extraction(self) -> None:
         """Test section extraction from content."""
         # Mock section extractor functionality
-        
+
         # Mock extraction
         sections = {
-            "keymap": {
-                "compatible": "zmk,keymap",
-                "layers": {
-                    "default_layer": {
-                        "bindings": ["&kp Q", "&kp W"]
-                    }
-                }
-            }
+            "keymap": {"compatible": "zmk,keymap", "layers": {"default_layer": {"bindings": ["&kp Q", "&kp W"]}}}
         }
-        
+
         assert "keymap" in sections
         assert sections["keymap"]["compatible"] == "zmk,keymap"
 
@@ -227,26 +215,22 @@ class TestDTParser:
     def test_dt_parser_basic_functionality(self) -> None:
         """Test basic DT parser functionality."""
         providers = create_default_providers()
-        
+
         # Mock DT parser behavior
         class MockDTParser:
             def __init__(self, providers: LayoutProviders):
                 self.providers = providers
-                
+
             def parse_property(self, line: str) -> dict[str, str]:
                 # Simple property parsing
                 if "=" in line:
                     key, value = line.split("=", 1)
-                    return {
-                        "type": "property",
-                        "key": key.strip(),
-                        "value": value.strip().strip(";")
-                    }
+                    return {"type": "property", "key": key.strip(), "value": value.strip().strip(";")}
                 return {"type": "unknown"}
-        
+
         parser = MockDTParser(providers)
-        result = parser.parse_property("compatible = \"zmk,keymap\";")
-        
+        result = parser.parse_property('compatible = "zmk,keymap";')
+
         assert result["type"] == "property"
         assert result["key"] == "compatible"
         assert "zmk,keymap" in result["value"]
@@ -254,11 +238,11 @@ class TestDTParser:
     def test_dt_parser_with_bindings(self) -> None:
         """Test DT parser handling of key bindings."""
         providers = create_default_providers()
-        
+
         class MockDTParser:
             def __init__(self, providers: LayoutProviders):
                 self.providers = providers
-                
+
             def parse_bindings(self, bindings_str: str) -> list[str]:
                 # Mock parsing of bindings
                 bindings = []
@@ -267,9 +251,9 @@ class TestDTParser:
                 if "Q" in bindings_str:
                     bindings.append("Q")
                 return bindings
-        
+
         parser = MockDTParser(providers)
         bindings = parser.parse_bindings("bindings = <&kp Q &kp W>;")
-        
+
         assert "&kp" in bindings
         assert "Q" in bindings

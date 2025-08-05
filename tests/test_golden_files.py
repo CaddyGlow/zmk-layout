@@ -30,28 +30,15 @@ class TestGoldenFiles:
                     LayoutBinding.from_str("&kp N2"),
                     LayoutBinding.from_str("&kp N3"),
                     LayoutBinding.from_str("&trans"),
-                ]
+                ],
             ],
-            holdTaps=[
-                HoldTapBehavior(
-                    name="mt",
-                    bindings=["&kp", "&kp"],
-                    tappingTermMs=200,
-                    flavor="balanced"
-                )
-            ],
-            combos=[
-                ComboBehavior(
-                    name="esc_combo",
-                    keyPositions=[0, 1],
-                    binding=LayoutBinding.from_str("&kp ESC")
-                )
-            ]
+            holdTaps=[HoldTapBehavior(name="mt", bindings=["&kp", "&kp"], tappingTermMs=200, flavor="balanced")],
+            combos=[ComboBehavior(name="esc_combo", keyPositions=[0, 1], binding=LayoutBinding.from_str("&kp ESC"))],
         )
 
         # Serialize to JSON
         json_data = original_data.model_dump(mode="json")
-        
+
         # Round-trip: JSON → Model → JSON
         parsed_data = LayoutData.model_validate(json_data)
         json_data_roundtrip = parsed_data.model_dump(mode="json")
@@ -66,36 +53,32 @@ class TestGoldenFiles:
 
         original_normalized = normalize_for_comparison(json_data)
         roundtrip_normalized = normalize_for_comparison(json_data_roundtrip)
-        
+
         assert original_normalized == roundtrip_normalized, "Round-trip serialization should be identical"
 
     def test_round_trip_complex_bindings(self) -> None:
         """Test round-trip with complex nested bindings."""
         # Create layout with complex bindings
         complex_bindings = [
-            "&kp LC(X)",      # Nested parameters
-            "&mt LCTRL A",    # Multiple parameters  
-            "&lt 1 SPACE",    # Layer tap
+            "&kp LC(X)",  # Nested parameters
+            "&mt LCTRL A",  # Multiple parameters
+            "&lt 1 SPACE",  # Layer tap
             "&kp LC(LS(Z))",  # Double nested
-            "&trans",         # No parameters
+            "&trans",  # No parameters
         ]
 
         layer_bindings = [LayoutBinding.from_str(binding) for binding in complex_bindings]
 
-        layout_data = LayoutData(
-            keyboard="complex_test",
-            title="Complex Bindings Test",
-            layers=[layer_bindings]
-        )
+        layout_data = LayoutData(keyboard="complex_test", title="Complex Bindings Test", layers=[layer_bindings])
 
         # Round-trip test
         json_data = layout_data.model_dump(mode="json")
         parsed_data = LayoutData.model_validate(json_data)
-        
+
         # Verify all bindings parsed correctly
         parsed_data.layers[0]
         assert len(parsed_data.layers[0]) == len(complex_bindings)
-        
+
         # Verify specific complex binding
         nested_binding = parsed_data.layers[0][0]  # "&kp LC(X)"
         assert nested_binding.value == "&kp"
@@ -106,10 +89,7 @@ class TestGoldenFiles:
 
     def test_round_trip_empty_layout(self) -> None:
         """Test round-trip with minimal layout."""
-        minimal_layout = LayoutData(
-            keyboard="minimal",
-            title="Minimal Layout"
-        )
+        minimal_layout = LayoutData(keyboard="minimal", title="Minimal Layout")
 
         # Round-trip test
         json_data = minimal_layout.model_dump(mode="json")
@@ -128,11 +108,7 @@ class TestGoldenFiles:
     def test_file_persistence(self) -> None:
         """Test saving and loading from actual files."""
         layout_data = LayoutData(
-            keyboard="file_test",
-            title="File Persistence Test",
-            layers=[
-                [LayoutBinding.from_str("&kp SPACE")]
-            ]
+            keyboard="file_test", title="File Persistence Test", layers=[[LayoutBinding.from_str("&kp SPACE")]]
         )
 
         # Test with temporary file
@@ -145,16 +121,16 @@ class TestGoldenFiles:
             # Load from file
             with open(tmp_path) as f:
                 loaded_data = json.load(f)
-            
+
             parsed_layout = LayoutData.model_validate(loaded_data)
-            
+
             # Verify data integrity
             assert parsed_layout.keyboard == "file_test"
             assert parsed_layout.title == "File Persistence Test"
             assert len(parsed_layout.layers) == 1
             assert len(parsed_layout.layers[0]) == 1
             assert parsed_layout.layers[0][0].value == "&kp"
-            
+
         finally:
             # Clean up
             tmp_path.unlink()
@@ -166,21 +142,13 @@ class TestGoldenFiles:
             keyboard="behavior_test",
             title="Behavior Validation Test",
             holdTaps=[
-                HoldTapBehavior(
-                    name="test_mt",
-                    bindings=["&kp", "&kp"],
-                    tappingTermMs=150,
-                    flavor="tap-preferred"
-                )
+                HoldTapBehavior(name="test_mt", bindings=["&kp", "&kp"], tappingTermMs=150, flavor="tap-preferred")
             ],
             combos=[
                 ComboBehavior(
-                    name="test_combo",
-                    keyPositions=[0, 1, 2],
-                    binding=LayoutBinding.from_str("&kp TAB"),
-                    timeoutMs=50
+                    name="test_combo", keyPositions=[0, 1, 2], binding=LayoutBinding.from_str("&kp TAB"), timeoutMs=50
                 )
-            ]
+            ],
         )
 
         # Round-trip should preserve all validation
@@ -196,7 +164,7 @@ class TestGoldenFiles:
 
         # Verify combo
         combo = parsed_data.combos[0]
-        assert combo.name == "test_combo" 
+        assert combo.name == "test_combo"
         assert combo.key_positions == [0, 1, 2]
         assert combo.timeout_ms == 50
         assert combo.binding.value == "&kp"
@@ -209,7 +177,7 @@ class TestProviderIntegration:
     def test_providers_with_layout_data(self) -> None:
         """Test that providers work with layout data."""
         providers = create_default_providers()
-        
+
         # Verify providers are created correctly
         assert providers.logger is not None
         assert providers.template is not None
@@ -218,9 +186,9 @@ class TestProviderIntegration:
 
         # Test basic provider functionality
         providers.logger.info("Test log message")
-        
+
         # Test template provider (using fallback behavior)
-        if hasattr(providers.template, 'render_string'):
+        if hasattr(providers.template, "render_string"):
             result = providers.template.render_string("Hello {{ name }}", {"name": "World"})
             # With fallback template provider, it returns the template as-is
             assert "Hello" in result  # Basic test that something was returned
