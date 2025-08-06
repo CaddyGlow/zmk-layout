@@ -4,6 +4,8 @@ import weakref
 from threading import RLock
 from typing import TYPE_CHECKING, Any, Self
 
+from zmk_layout.models.types import ParamValue
+
 if TYPE_CHECKING:
     from ..models.core import LayoutBinding
 
@@ -74,7 +76,7 @@ class LayoutBindingBuilder:
             modifiers=updates.get("modifiers", self._modifiers),
         )
 
-    def param(self, value: str | int) -> Self:
+    def param(self, value: ParamValue) -> Self:
         """Add simple parameter - returns new instance.
 
         Args:
@@ -108,7 +110,7 @@ class LayoutBindingBuilder:
         """
         return self._copy_with(modifiers=self._modifiers + (mod,))
 
-    def nested_param(self, parent: str, child: str | int) -> Self:
+    def nested_param(self, parent: str, child: ParamValue) -> Self:
         """Add nested parameter like LC(A) - returns new instance.
 
         Args:
@@ -160,7 +162,7 @@ class LayoutBindingBuilder:
             new_param = LayoutParam(value=key, params=[])
             return self._copy_with(params=self._params + (new_param,))
 
-    def hold_tap(self, hold: str, tap: str | int) -> Self:
+    def hold_tap(self, hold: ParamValue, tap: ParamValue) -> Self:
         """Add hold-tap parameters - returns new instance.
 
         Convenience method for mod-tap and layer-tap behaviors.

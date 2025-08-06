@@ -71,11 +71,11 @@ class TestLayoutBindingBuilder:
     def test_layer_tap_behavior(self) -> None:
         """Test creating layer-tap behaviors."""
         builder = LayoutBindingBuilder("&lt")
-        binding = builder.hold_tap("1", "SPACE").build()
+        binding = builder.hold_tap(1, "SPACE").build()
         
         assert binding.value == "&lt"
         assert len(binding.params) == 2
-        assert binding.params[0].value == "1"
+        assert binding.params[0].value == 1
         assert binding.params[1].value == "SPACE"
         assert binding.to_str() == "&lt 1 SPACE"
 
