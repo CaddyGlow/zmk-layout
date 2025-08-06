@@ -9,28 +9,20 @@ if TYPE_CHECKING:
 
 def has_jinja2() -> bool:
     """Check if jinja2 is available."""
-    try:
-        import jinja2  # type: ignore[import-not-found] # noqa: F401
-
-        return True
-    except ImportError:
-        return False
+    # jinja2 is a core dependency, always available
+    return True
 
 
 def has_lark() -> bool:
     """Check if lark parser is available."""
-    try:
-        import lark  # noqa: F401
-
-        return True
-    except ImportError:
-        return False
+    # lark is a core dependency, always available
+    return True
 
 
 def has_rich() -> bool:
     """Check if rich display library is available."""
     try:
-        import rich  # type: ignore[import-not-found] # noqa: F401
+        import rich  # noqa: F401
 
         return True
     except ImportError:
@@ -134,10 +126,10 @@ def get_display_provider() -> Any:
     """Get display provider with fallback."""
     if has_rich():
         try:
-            from rich.console import Console  # type: ignore[import-not-found]
-            from rich.panel import Panel  # type: ignore[import-not-found]
-            from rich.syntax import Syntax  # type: ignore[import-not-found]
-            from rich.table import Table  # type: ignore[import-not-found]
+            from rich.console import Console
+            from rich.panel import Panel
+            from rich.syntax import Syntax
+            from rich.table import Table
 
             class RichDisplayProvider:
                 def __init__(self) -> None:

@@ -388,9 +388,7 @@ class TestZMKKeymapParserIntegration:
         keymap_file.write_text("invalid content")
 
         # Configure processor to raise an exception
-        zmk_parser.processors[
-            ParsingMode.TEMPLATE_AWARE
-        ].process.side_effect = RuntimeError(  # type: ignore[attr-defined]
+        zmk_parser.processors[ParsingMode.TEMPLATE_AWARE].should_raise = RuntimeError(  # type: ignore[attr-defined]
             "Processing failed"
         )
 

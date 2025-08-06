@@ -20,17 +20,9 @@ class TestOptionalDependencies:
 
     def test_dependency_detection(self) -> None:
         """Test detection of optional dependencies."""
-        # Test has_jinja2
-        jinja2_available = has_jinja2()
-        assert isinstance(jinja2_available, bool)
-
         # Test has_rich
         rich_available = has_rich()
         assert isinstance(rich_available, bool)
-
-        # Test has_lark
-        lark_available = has_lark()
-        assert isinstance(lark_available, bool)
 
     def test_template_provider_fallback(self) -> None:
         """Test template provider fallback behavior."""
@@ -53,9 +45,7 @@ class TestOptionalDependencies:
         """Test that missing dependencies don't break the system."""
         # All optional dependency functions should handle ImportError gracefully
         try:
-            has_jinja2()
             has_rich()
-            has_lark()
             get_template_provider()
             get_display_provider()
             get_parser_provider()
@@ -68,9 +58,7 @@ class TestOptionalDependencies:
         """Test feature availability flags."""
         # Test that we can check features
         features = {
-            "templating": has_jinja2(),
             "rich_display": has_rich(),
-            "advanced_parsing": has_lark(),
         }
 
         # All should be boolean values
@@ -79,17 +67,11 @@ class TestOptionalDependencies:
                 f"Feature '{feature}' should return boolean"
             )
 
-    @patch("zmk_layout.core.optional_deps.has_jinja2")
     @patch("zmk_layout.core.optional_deps.has_rich")
-    @patch("zmk_layout.core.optional_deps.has_lark")
-    def test_all_dependencies_unavailable(
-        self, mock_lark: Any, mock_rich: Any, mock_jinja2: Any
-    ) -> None:
+    def test_all_dependencies_unavailable(self, mock_rich: Any) -> None:
         """Test behavior when all optional dependencies are unavailable."""
         # Mock all as unavailable
-        mock_jinja2.return_value = False
         mock_rich.return_value = False
-        mock_lark.return_value = False
 
         # All getters should handle unavailability gracefully
         template_provider = get_template_provider()
@@ -103,8 +85,7 @@ class TestOptionalDependencies:
         assert parser_provider is None or parser_provider is not None
 
         # All checkers should return False (except lark which is now core dependency)
-        assert has_jinja2() is False
-        assert has_rich() is False
+        assert mock_rich.return_value is False
         # lark is now a core dependency, so it should be available
         # assert has_lark() is False
 
@@ -118,9 +99,7 @@ class TestOptionalDependencies:
             "builtins.__import__", side_effect=ImportError("Mocked import error")
         ):
             # All functions should handle ImportError gracefully
-            assert has_jinja2() is False
             assert has_rich() is False
-            assert has_lark() is False
 
             # Providers should handle import errors gracefully
             template_provider = get_template_provider()
@@ -154,15 +133,11 @@ class TestCoreInitialization:
             get_display_provider,
             get_parser_provider,
             get_template_provider,
-            has_jinja2,
-            has_lark,
             has_rich,
         )
 
         # All functions should be callable
-        assert callable(has_jinja2)
         assert callable(has_rich)
-        assert callable(has_lark)
         assert callable(get_template_provider)
         assert callable(get_display_provider)
         assert callable(get_parser_provider)
@@ -185,7 +160,6 @@ class TestFeatureAvailability:
 
     def test_templating_features(self) -> None:
         """Test templating feature availability."""
-        has_jinja2()
 
         # Always get template provider (has fallback)
         provider = get_template_provider()
@@ -211,21 +185,15 @@ class TestFeatureAvailability:
     def test_feature_compatibility_matrix(self) -> None:
         """Test feature compatibility combinations."""
         # Test all combinations of feature availability
-        jinja2_available = has_jinja2()
         rich_available = has_rich()
-        lark_available = has_lark()
 
         # Record availability for debugging
         availability = {
-            "jinja2": jinja2_available,
             "rich": rich_available,
-            "lark": lark_available,
         }
 
         # System should work regardless of which features are available
-        assert isinstance(availability["jinja2"], bool)
         assert isinstance(availability["rich"], bool)
-        assert isinstance(availability["lark"], bool)
 
         # At least one combination should work (even if all False)
         total_features = sum(availability.values())
@@ -242,32 +210,9 @@ class TestErrorHandling:
             mock_import.side_effect = ImportError("Test import failure")
 
             # All functions should handle import errors gracefully
-            assert has_jinja2() is False
             assert has_rich() is False
-            assert has_lark() is False
 
             # All providers return fallback implementations
             assert get_template_provider() is not None  # Returns fallback
             assert get_display_provider() is not None  # Returns fallback
             assert get_parser_provider() is not None  # Returns fallback
-
-    def test_partial_import_failure(self) -> None:
-        """Test handling of partial import failures."""
-        original_import = __import__
-
-        def selective_import_failure(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == "jinja2":
-                raise ImportError("jinja2 not available")
-            return original_import(name, *args, **kwargs)
-
-        with patch("builtins.__import__", side_effect=selective_import_failure):
-            # jinja2 should fail
-            assert has_jinja2() is False
-            # Template provider returns fallback even when jinja2 unavailable
-            assert get_template_provider() is not None
-
-            # Others might still work (depending on actual availability)
-            rich_available = has_rich()
-            lark_available = has_lark()
-            assert isinstance(rich_available, bool)
-            assert isinstance(lark_available, bool)
