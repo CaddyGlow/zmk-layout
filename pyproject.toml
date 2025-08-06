@@ -58,6 +58,7 @@ timeout = 30
 [dependency-groups]
 dev = [
   "mypy>=1.17.1",
+  "psutil>=7.0.0",
   "pytest>=8.4.1",
   "pytest-cov>=6.2.1",
   "pytest-coverage>=0.0",

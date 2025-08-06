@@ -1,11 +1,14 @@
 """Core layout models for keyboard layouts."""
 
-from typing import Any, Union
+from typing import TYPE_CHECKING, Any, Self, Union
 
 from pydantic import Field, field_validator
 
 from .base import LayoutBaseModel
 from .types import ParamValue
+
+if TYPE_CHECKING:
+    from ..builders.binding import LayoutBindingBuilder
 
 
 class LayoutParam(LayoutBaseModel):
@@ -422,6 +425,104 @@ class LayoutBinding(LayoutBaseModel):
 
         param_strs = [param_to_str(p) for p in self.params]
         return f"{self.value} {' '.join(param_strs)}"
+
+    # Fluent API methods
+    @classmethod
+    def builder(cls, behavior: str) -> "LayoutBindingBuilder":
+        """Create fluent builder for complex bindings.
+        
+        Args:
+            behavior: The ZMK behavior (e.g., "kp", "&kp", "mt")
+            
+        Returns:
+            LayoutBindingBuilder instance for chaining
+            
+        Examples:
+            >>> binding = LayoutBinding.builder("&kp").modifier("LC").key("A").build()
+            >>> binding = LayoutBinding.builder("mt").param("LCTRL").param("ESC").build()
+        """
+        from ..builders.binding import LayoutBindingBuilder
+
+        return LayoutBindingBuilder(behavior)
+
+    def with_param(self, param: str | int) -> Self:
+        """Add parameter and return new instance (immutable).
+        
+        Args:
+            param: Parameter value to add
+            
+        Returns:
+            New LayoutBinding instance with added parameter
+            
+        Examples:
+            >>> binding = LayoutBinding.from_str("&kp").with_param("A")
+        """
+        new_params = self.params + [LayoutParam(value=param, params=[])]
+        return self.model_copy(update={"params": new_params})
+
+    def with_modifier(self, modifier: str) -> Self:
+        """Wrap in modifier chain (immutable).
+        
+        Args:
+            modifier: Modifier to wrap around existing parameters
+            
+        Returns:
+            New LayoutBinding instance with modifier applied
+            
+        Examples:
+            >>> binding = LayoutBinding.from_str("&kp A").with_modifier("LC")
+            >>> # Result: &kp LC(A)
+        """
+        if self.params:
+            # Wrap existing params in modifier
+            modified_param = LayoutParam(value=modifier, params=self.params)
+            return self.model_copy(update={"params": [modified_param]})
+        return self
+
+    def as_hold_tap(self, hold_behavior: str, tapping_term: int | None = None) -> Self:
+        """Convert to hold-tap behavior (immutable).
+        
+        Args:
+            hold_behavior: Behavior or layer for hold action
+            tapping_term: Optional tapping term (not used in binding, for reference)
+            
+        Returns:
+            New LayoutBinding as mod-tap behavior
+            
+        Examples:
+            >>> binding = LayoutBinding.from_str("&kp ESC").as_hold_tap("LCTRL")
+            >>> # Result: &mt LCTRL ESC
+        """
+        return LayoutBinding(
+            value="&mt",
+            params=[
+                LayoutParam(value=hold_behavior, params=[]),
+                LayoutParam(value=self.to_str().replace(self.value + " ", ""), params=[]),
+            ],
+        )
+
+    def as_layer_tap(self, layer: int | str) -> Self:
+        """Convert to layer-tap behavior (immutable).
+        
+        Args:
+            layer: Layer index or name
+            
+        Returns:
+            New LayoutBinding as layer-tap behavior
+            
+        Examples:
+            >>> binding = LayoutBinding.from_str("&kp SPACE").as_layer_tap(1)
+            >>> # Result: &lt 1 SPACE
+        """
+        # Extract just the key part without behavior
+        key_part = self.to_str().replace(self.value + " ", "") if self.params else "NONE"
+        return LayoutBinding(
+            value="&lt",
+            params=[
+                LayoutParam(value=layer, params=[]),
+                LayoutParam(value=key_part, params=[]),
+            ],
+        )
 
 
 class LayoutLayer(LayoutBaseModel):
