@@ -93,7 +93,30 @@ class DTParser:
             self._consume_comments_and_preprocessor()
 
             # Parse multiple root nodes
+            # Add safety counter to prevent infinite loops
+            max_iterations = 1000  # Reasonable limit for root nodes
+            iterations = 0
+            
             while not self._is_at_end():
+                iterations += 1
+                if iterations > max_iterations:
+                    if self.logger:
+                        self.logger.error(
+                            "Infinite loop detected in parse_multiple main loop",
+                            current_token=str(self.current_token),
+                            position=self.pos,
+                            total_tokens=len(self.tokens)
+                        )
+                    # Add error and break to prevent infinite loop
+                    self.errors.append(DTParseError(
+                        "Parser exceeded maximum iterations - possible infinite loop",
+                        self._current_line(), self._current_column(), "parse_multiple"
+                    ))
+                    break
+                    
+                # Store current position to detect if we're making progress
+                old_pos = self.pos
+                
                 # Skip any comments between root nodes
                 if self._consume_comments_and_preprocessor():
                     continue
@@ -105,6 +128,16 @@ class DTParser:
 
                 # Skip any trailing comments
                 self._consume_comments_and_preprocessor()
+                
+                # Safety check: if position hasn't advanced, force advance to prevent infinite loop
+                if self.pos == old_pos and not self._is_at_end():
+                    if self.logger:
+                        self.logger.error(
+                            "Parser position didn't advance, forcing advance to prevent infinite loop",
+                            current_token=str(self.current_token),
+                            position=self.pos
+                        )
+                    self._advance()  # Force advance to prevent infinite loop
 
             if self.errors:
                 # Return partial result with errors
@@ -539,8 +572,24 @@ class DTParser:
         """
         consumed = False
         len(self.comments)
+        
+        # Add safety counter to prevent infinite loops
+        max_iterations = 10000  # Reasonable limit for preprocessor/comment chains
+        iterations = 0
 
         while self._match(TokenType.COMMENT) or self._match(TokenType.PREPROCESSOR):
+            iterations += 1
+            if iterations > max_iterations:
+                if self.logger:
+                    self.logger.error(
+                        "Infinite loop detected in _consume_comments_and_preprocessor",
+                        current_token=str(self.current_token),
+                        position=self.pos,
+                        total_tokens=len(self.tokens)
+                    )
+                # Force break to prevent infinite loop
+                break
+                
             if self._match(TokenType.COMMENT):
                 if self.current_token is None:
                     break
@@ -551,7 +600,14 @@ class DTParser:
                 comment = DTComment(comment_text, line, column, is_block)
                 self.comments.append(comment)
                 consumed = True
+                # Store current position to detect if _advance() actually moves forward
+                old_pos = self.pos
                 self._advance()
+                # Safety check: if _advance() didn't actually advance, force break
+                if self.pos == old_pos:
+                    if self.logger:
+                        self.logger.error("_advance() failed to advance position, breaking loop")
+                    break
 
             elif self._match(TokenType.PREPROCESSOR):
                 if self.current_token is None:
@@ -574,7 +630,14 @@ class DTParser:
                 # Also store as conditional for extraction
                 self.conditionals.append(conditional)
                 consumed = True
+                # Store current position to detect if _advance() actually moves forward
+                old_pos = self.pos
                 self._advance()
+                # Safety check: if _advance() didn't actually advance, force break
+                if self.pos == old_pos:
+                    if self.logger:
+                        self.logger.error("_advance() failed to advance position, breaking loop")
+                    break
 
         if consumed:
             len(self.comments)
