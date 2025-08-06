@@ -116,7 +116,7 @@ class BehaviorFormatter:
             if param_strings:
                 return f"{behavior} {' '.join(param_strings)}"
             else:
-                return behavior
+                return str(behavior)
 
         # Fallback to string representation
         if hasattr(binding, "value"):
