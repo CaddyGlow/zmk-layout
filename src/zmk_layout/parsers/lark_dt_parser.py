@@ -8,11 +8,15 @@ type information and fallback behavior.
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .ast_nodes import DTNode, DTProperty, DTValue
+    from .ast_nodes import DTComment, DTNode, DTProperty, DTValue
 
 
 class LarkToDTTransformer:
     """Transform Lark parse tree to DTNode objects."""
+
+    def __init__(self) -> None:
+        """Initialize transformer."""
+        self.comments: list[DTComment] = []
 
     def transform(self, tree: Any) -> list["DTNode"]:
         """Transform parse tree to list of DTNode objects.
@@ -28,12 +32,28 @@ class LarkToDTTransformer:
         nodes = []
         root = DTNode(name="", label="")  # Root node
 
+        # Process all items including comments
         for item in tree.children:
-            if item.data == "node":
-                node = self._transform_node(item)
-                if node:
-                    nodes.append(node)
-                    root.add_child(node)
+            if hasattr(item, "data"):
+                if item.data == "node":
+                    node = self._transform_node(item)
+                    if node:
+                        nodes.append(node)
+                        root.add_child(node)
+                elif item.data == "comment":
+                    comment = self._transform_comment(item)
+                    if comment:
+                        self.comments.append(comment)
+            else:
+                # Handle terminal tokens like SINGLE_LINE_COMMENT and MULTI_LINE_COMMENT
+                token_type = getattr(item, "type", None)
+                if token_type in ["SINGLE_LINE_COMMENT", "MULTI_LINE_COMMENT"]:
+                    comment = self._transform_comment_token(item)
+                    if comment:
+                        self.comments.append(comment)
+
+        # Attach collected comments to root
+        root.comments.extend(self.comments)
 
         return nodes if nodes else [root]
 
@@ -195,6 +215,31 @@ class LarkToDTTransformer:
                 path_parts.append(str(child))
 
         return "/".join(path_parts) if path_parts else ""
+
+    def _transform_comment(self, comment_tree: Any) -> "DTComment | None":
+        """Transform comment tree to DTComment."""
+
+        # Extract comment text from tree children
+        for child in comment_tree.children:
+            token_type = getattr(child, "type", None)
+            if token_type in ["SINGLE_LINE_COMMENT", "MULTI_LINE_COMMENT"]:
+                return self._transform_comment_token(child)
+
+        return None
+
+    def _transform_comment_token(self, token: Any) -> "DTComment":
+        """Transform comment token to DTComment."""
+        from .ast_nodes import DTComment
+
+        comment_text = str(token.value) if hasattr(token, "value") else str(token)
+        token_type = getattr(token, "type", "")
+        line = getattr(token, "line", 1)
+        column = getattr(token, "column", 1)
+
+        # Use Lark's token type to determine if it's a block comment
+        is_block = token_type == "MULTI_LINE_COMMENT"
+
+        return DTComment(comment_text, line, column, is_block)
 
 
 def parse_dt_lark(text: str) -> list["DTNode"]:

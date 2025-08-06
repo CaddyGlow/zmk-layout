@@ -179,10 +179,7 @@ class SectionExtractor:
                 end_pattern, content[search_start:], re.IGNORECASE | re.MULTILINE
             )
 
-            if end_match:
-                content_end = search_start + end_match.start()
-            else:
-                content_end = len(content)
+            content_end = search_start + end_match.start() if end_match else len(content)
 
             # Extract and clean content
             raw_content = content[search_start:content_end].strip()
