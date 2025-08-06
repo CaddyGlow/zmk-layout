@@ -130,7 +130,7 @@ def sample_parsing_context() -> ParsingContext:
         keymap_content="/ { keymap { layer_0 { bindings = <&kp Q>; }; }; };",
         title="Test Layout",
         keyboard_name="test_keyboard",
-        extraction_config={"key_count": 10},
+        extraction_config=None,  # Use default extraction config
     )
 
 

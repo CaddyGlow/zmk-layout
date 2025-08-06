@@ -28,7 +28,7 @@ class BaseKeymapProcessor:
             section_extractor: Optional section extractor
         """
         self.logger = logger
-        self.section_extractor = section_extractor or create_section_extractor()
+        self.section_extractor = section_extractor or create_section_extractor(logger=logger)
 
     def process(self, context: "ParsingContext") -> LayoutData | None:
         """Process keymap content according to parsing strategy."""
@@ -345,14 +345,24 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
 
             # Use configured extraction or default
             extraction_config = context.extraction_config or get_default_extraction_config()
+            
+            if self.logger:
+                self.logger.debug("Template processing using extraction config", config_count=len(extraction_config))
 
             # Extract sections using template-aware approach (only user content)
             if self.section_extractor is None:
                 extracted_sections = {}
+                if self.logger:
+                    self.logger.warning("No section extractor available")
             else:
                 extracted_sections = self.section_extractor.extract_sections(
-                    context.keymap_content, [extraction_config]
+                    context.keymap_content, extraction_config
                 )
+                if self.logger:
+                    self.logger.debug("Section extraction completed", sections_found=len(extracted_sections), sections=list(extracted_sections.keys()))
+            
+            # Store extracted sections in context for result
+            context.extracted_sections = extracted_sections
 
             # Apply transformation to extracted sections BEFORE processing
             transformed_sections = {}
@@ -575,36 +585,40 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
 
 def create_full_keymap_processor(
     section_extractor: "SectionExtractorProtocol | None" = None,
+    logger: "LayoutLogger | None" = None,
 ) -> FullKeymapProcessor:
     """Create full keymap processor with AST.
 
     Args:
         section_extractor: Optional section extractor
-        template_adapter: Optional template adapter
+        logger: Optional logger for structured logging
 
     Returns:
         Configured FullKeymapProcessor instance
     """
     if section_extractor is None:
-        section_extractor = create_section_extractor()
+        section_extractor = create_section_extractor(logger=logger)
 
-    return FullKeymapProcessor(section_extractor=section_extractor)
+    return FullKeymapProcessor(logger=logger, section_extractor=section_extractor)
 
 
 def create_template_aware_processor(
     section_extractor: "SectionExtractorProtocol | None" = None,
+    logger: "LayoutLogger | None" = None,
 ) -> TemplateAwareProcessor:
     """Create template-aware processor with AST converter for each section
 
     Args:
         section_extractor: Optional section extractor
+        logger: Optional logger for structured logging
 
     Returns:
         Configured TemplateAwareProcessor instance
     """
     if section_extractor is None:
-        section_extractor = create_section_extractor()
+        section_extractor = create_section_extractor(logger=logger)
 
     return TemplateAwareProcessor(
+        logger=logger,
         section_extractor=section_extractor,
     )

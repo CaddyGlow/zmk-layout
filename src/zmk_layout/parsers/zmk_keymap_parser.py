@@ -18,14 +18,14 @@ from .keymap_processors import FullKeymapProcessor, TemplateAwareProcessor
 from .parsing_models import ParsingContext, get_default_extraction_config
 
 
-def create_full_keymap_processor() -> "ProcessorProtocol":
+def create_full_keymap_processor(logger: "LayoutLogger | None" = None) -> "ProcessorProtocol":
     """Create a full keymap processor with all features."""
-    return FullKeymapProcessor()
+    return FullKeymapProcessor(logger=logger)
 
 
-def create_template_aware_processor() -> "ProcessorProtocol":
+def create_template_aware_processor(logger: "LayoutLogger | None" = None) -> "ProcessorProtocol":
     """Create a template-aware keymap processor."""
-    return TemplateAwareProcessor()
+    return TemplateAwareProcessor(logger=logger)
 
 
 if TYPE_CHECKING:
@@ -134,8 +134,8 @@ class ZMKKeymapParser:
 
         # Initialize processors for different parsing modes
         self.processors = processors or {
-            ParsingMode.FULL: create_full_keymap_processor(),
-            ParsingMode.TEMPLATE_AWARE: create_template_aware_processor(),
+            ParsingMode.FULL: create_full_keymap_processor(logger=logger),
+            ParsingMode.TEMPLATE_AWARE: create_template_aware_processor(logger=logger),
         }
 
     def _resolve_binding_string(self, binding_str: str) -> str:
