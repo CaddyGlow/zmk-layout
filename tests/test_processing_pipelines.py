@@ -2,20 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from zmk_layout.core import Layout
-from zmk_layout.models.behaviors import ComboBehavior, MacroBehavior
 from zmk_layout.models.core import LayoutBinding
 from zmk_layout.models.metadata import LayoutData
 from zmk_layout.processing import (
     PipelineComposer,
-    ProcessingError,
     ProcessingPipeline,
-    ProcessingWarning,
     TransformationPipeline,
     WorkflowBuilder,
     compose_pipelines,
@@ -370,8 +366,8 @@ class TestValidationPipelineEnhancements:
 
         # Create layers with one unreachable
         base = layout.layers.add("base")
-        nav = layout.layers.add("nav")
-        unreachable = layout.layers.add("unreachable")
+        layout.layers.add("nav")
+        layout.layers.add("unreachable")
 
         # Add layer navigation from base to nav only
         base.set(0, "&mo 1")  # Can reach nav

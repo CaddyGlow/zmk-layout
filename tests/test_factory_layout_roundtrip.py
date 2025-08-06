@@ -155,6 +155,10 @@ class Glove80ConfigurationProvider(ConfigurationProvider):
         """Get Glove80 search paths from complete profile."""
         return self.profile.get_template_paths()
     
+    def get_keyboard_profile(self) -> Any:
+        """Get the complete Glove80 keyboard profile."""
+        return self.profile
+    
 
 
 
@@ -409,7 +413,8 @@ class TestFactoryRoundTripValidation:
             keymap_path = temp_path / "test_factory.keymap"
             
             # Generate keymap content and write to file
-            keymap_content = generator.generate_keymap_node(layout_data)
+            profile = providers.configuration.get_keyboard_profile()
+            keymap_content = generator.generate_keymap_node(profile, layout_data.layer_names, layout_data.layers)
             keymap_path.write_text(keymap_content)
             
             # Verify keymap was created and has expected content
@@ -426,7 +431,7 @@ class TestFactoryRoundTripValidation:
             )
             # Parse keymap content from file
             keymap_content = keymap_path.read_text()
-            parsed_layout_data = parser.parse_keymap(keymap_content)
+            parsed_layout_data = parser.parse_keymap(keymap_path)
             
             # Step 4: Convert back to JSON (using Pydantic model_dump)
             roundtrip_json = parsed_layout_data.model_dump(by_alias=True)
@@ -469,7 +474,7 @@ class TestFactoryRoundTripValidation:
         )
         # Parse keymap content from file
         keymap_content = factory_keymap_path.read_text()
-        original_layout_data = parser.parse_keymap(keymap_content)
+        original_layout_data = parser.parse_keymap(factory_keymap_path)
         
         # Use temporary files for intermediate steps
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -500,7 +505,8 @@ class TestFactoryRoundTripValidation:
             )
             roundtrip_keymap_path = temp_path / "roundtrip_factory.keymap"
             # Generate keymap content and write to file
-            keymap_content = generator.generate_keymap_node(roundtrip_layout_data)
+            profile = providers.configuration.get_keyboard_profile()
+            keymap_content = generator.generate_keymap_node(profile, roundtrip_layout_data.layer_names, roundtrip_layout_data.layers)
             roundtrip_keymap_path.write_text(keymap_content)
             
             # Step 5: Compare key structural elements
@@ -569,7 +575,8 @@ class TestFactoryRoundTripValidation:
             for i in range(3):
                 keymap_path = temp_path / f"test_keymap_{i}.keymap"
                 # Generate keymap content and write to file
-                keymap_content = generator.generate_keymap_node(layout_data)
+                profile = providers.configuration.get_keyboard_profile()
+                keymap_content = generator.generate_keymap_node(profile, layout_data.layer_names, layout_data.layers)
                 keymap_path.write_text(keymap_content)
                 
                 # Verify file exists and has content
@@ -615,7 +622,8 @@ class TestFactoryRoundTripValidation:
             for i in range(3):
                 keymap_path = temp_path / f"consistency_test_{i}.keymap"
                 # Generate keymap content and write to file
-                keymap_content = generator.generate_keymap_node(layout_data)
+                profile = providers.configuration.get_keyboard_profile()
+                keymap_content = generator.generate_keymap_node(profile, layout_data.layer_names, layout_data.layers)
                 keymap_path.write_text(keymap_content)
                 keymap_contents.append(keymap_path.read_text())
             

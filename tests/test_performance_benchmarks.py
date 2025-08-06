@@ -447,7 +447,7 @@ class TestPerformanceBenchmarks:
             )
 
             initial_data = LayoutData(keyboard="test", title="test", layers=[], layer_names=[])
-            result = pipeline.execute(initial_data)
+            pipeline.execute(initial_data)
 
         elapsed = time.perf_counter() - start_time
         per_op = (elapsed / iterations) * 1000
@@ -486,7 +486,7 @@ class TestPerformanceBenchmarks:
                 .optimize_layers(max_layer_count=8)
                 .apply_home_row_mods()
             )
-            result = pipeline.execute()
+            pipeline.execute()
 
         elapsed = time.perf_counter() - start_time
         per_op = (elapsed / iterations) * 1000
@@ -537,7 +537,7 @@ class TestPerformanceBenchmarks:
         per_op = (validation_time / iterations) * 1000
 
         print("\n=== Enhanced Validation Pipeline Performance ===")
-        print(f"Layout size: 10 layers × 100 keys = 1000 bindings")
+        print("Layout size: 10 layers × 100 keys = 1000 bindings")
         print(f"Total time: {validation_time:.3f}s for {iterations} iterations")
         print(f"Per validation: {per_op:.3f}ms")
         print(f"Errors found: {len(result.collect_errors())}")
@@ -623,7 +623,7 @@ class TestPerformanceBenchmarks:
 
         for _ in range(iterations):
             workflow = WorkflowBuilder.qmk_migration_workflow()
-            result = workflow.execute(layout_data)
+            workflow.execute(layout_data)
 
         elapsed = time.perf_counter() - start_time
         per_op = (elapsed / iterations) * 1000
@@ -637,9 +637,9 @@ class TestPerformanceBenchmarks:
 
     def test_behavior_builder_scaling(self) -> None:
         """Benchmark: BehaviorBuilder scaling with configuration complexity."""
-        from zmk_layout.builders import BehaviorBuilder
+        from collections.abc import Callable
 
-        from typing import Callable
+        from zmk_layout.builders import BehaviorBuilder
         from zmk_layout.models.behaviors import HoldTapBehavior
 
         configs: list[tuple[str, Callable[[BehaviorBuilder], HoldTapBehavior]]] = [
