@@ -64,7 +64,9 @@ class TestProviderBuilder:
 
     def test_debug_and_performance_modes(self) -> None:
         """Test debug and performance tracking modes."""
-        config = ProviderBuilder().enable_debug_mode().enable_performance_tracking().build()
+        config = (
+            ProviderBuilder().enable_debug_mode().enable_performance_tracking().build()
+        )
 
         assert config.debug_mode is True
         assert config.performance_tracking is True
@@ -163,7 +165,11 @@ class TestTemplateContextBuilder:
         combos = [ComboBehavior(name="copy", keyPositions=[0, 1], binding=mock_binding)]
         macros = [MacroBehavior(name="vim_save")]
 
-        context = TemplateContextBuilder().with_behaviors(behaviors=behaviors, combos=combos, macros=macros).build()
+        context = (
+            TemplateContextBuilder()
+            .with_behaviors(behaviors=behaviors, combos=combos, macros=macros)
+            .build()
+        )
 
         assert context.behaviors == behaviors
         assert context.combos == combos
@@ -174,7 +180,9 @@ class TestTemplateContextBuilder:
         """Test generation metadata."""
         context = (
             TemplateContextBuilder()
-            .with_generation_metadata(author="John Doe", version="2.1.0", generator_version="1.5.0")
+            .with_generation_metadata(
+                author="John Doe", version="2.1.0", generator_version="1.5.0"
+            )
             .build()
         )
 
@@ -187,7 +195,11 @@ class TestTemplateContextBuilder:
         """Test DTSI content sections."""
         context = (
             TemplateContextBuilder()
-            .with_dtsi_content(layer_defines="#define BASE 0", behaviors_dtsi="behaviors {}", keymap_node="keymap {}")
+            .with_dtsi_content(
+                layer_defines="#define BASE 0",
+                behaviors_dtsi="behaviors {}",
+                keymap_node="keymap {}",
+            )
             .build()
         )
 
@@ -197,7 +209,11 @@ class TestTemplateContextBuilder:
 
     def test_custom_variables(self) -> None:
         """Test custom variables."""
-        context = TemplateContextBuilder().with_custom_vars(theme="dark", layout_style="ergonomic").build()
+        context = (
+            TemplateContextBuilder()
+            .with_custom_vars(theme="dark", layout_style="ergonomic")
+            .build()
+        )
 
         assert context.custom_vars["theme"] == "dark"
         assert context.custom_vars["layout_style"] == "ergonomic"
@@ -205,7 +221,9 @@ class TestTemplateContextBuilder:
     def test_feature_flags(self) -> None:
         """Test feature flags."""
         context = (
-            TemplateContextBuilder().with_features(home_row_mods=True, mouse_keys=False, rgb_underglow=True).build()
+            TemplateContextBuilder()
+            .with_features(home_row_mods=True, mouse_keys=False, rgb_underglow=True)
+            .build()
         )
 
         assert context.features["home_row_mods"] is True
@@ -216,7 +234,9 @@ class TestTemplateContextBuilder:
         """Test custom transformer function."""
 
         def add_copyright(ctx: TemplateContext) -> TemplateContext:
-            return ctx.model_copy(update={"custom_vars": {**ctx.custom_vars, "copyright": "© 2025"}})
+            return ctx.model_copy(
+                update={"custom_vars": {**ctx.custom_vars, "copyright": "© 2025"}}
+            )
 
         context = TemplateContextBuilder().add_transformer(add_copyright).build()
 
@@ -226,7 +246,12 @@ class TestTemplateContextBuilder:
         """Test context merging."""
         base_context = TemplateContext(keyboard="base", custom_vars={"a": 1})
 
-        context = TemplateContextBuilder().merge_with(base_context).with_custom_vars(b=2).build()
+        context = (
+            TemplateContextBuilder()
+            .merge_with(base_context)
+            .with_custom_vars(b=2)
+            .build()
+        )
 
         assert context.keyboard == "base"
         assert context.custom_vars["a"] == 1
@@ -234,7 +259,9 @@ class TestTemplateContextBuilder:
 
     def test_build_dict(self) -> None:
         """Test building as dictionary."""
-        context_dict = TemplateContextBuilder().with_custom_vars(test="value").build_dict()
+        context_dict = (
+            TemplateContextBuilder().with_custom_vars(test="value").build_dict()
+        )
 
         assert isinstance(context_dict, dict)
         assert context_dict["custom_vars"]["test"] == "value"
@@ -342,7 +369,9 @@ class TestDebugTools:
         wrapped = inspector.wrap(TestBuilder())
         wrapped.method()
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as temp_file:
             inspector.export_history(temp_file.name)
             temp_path = temp_file.name
 
@@ -534,7 +563,10 @@ class TestIntegration:
         )
 
         context = (
-            TemplateContextBuilder().with_layout(layout_data).with_generation_metadata(author="Test Author").build()
+            TemplateContextBuilder()
+            .with_layout(layout_data)
+            .with_generation_metadata(author="Test Author")
+            .build()
         )
 
         # Simulate template rendering

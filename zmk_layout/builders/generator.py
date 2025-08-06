@@ -240,7 +240,9 @@ class ZMKGeneratorBuilder:
             else:
                 # Generate default layer names based on number of layers
                 if self._layout_data and hasattr(self._layout_data, "layers"):
-                    layer_names = [f"layer_{i}" for i in range(len(self._layout_data.layers))]
+                    layer_names = [
+                        f"layer_{i}" for i in range(len(self._layout_data.layers))
+                    ]
                 else:
                     layer_names = []
 

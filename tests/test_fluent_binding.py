@@ -197,7 +197,9 @@ class TestLayoutBindingFluentMethods:
 
     def test_with_modifier_chain(self) -> None:
         """Test chaining multiple modifiers."""
-        binding = LayoutBinding.from_str("&kp A").with_modifier("LS").with_modifier("LC")
+        binding = (
+            LayoutBinding.from_str("&kp A").with_modifier("LS").with_modifier("LC")
+        )
 
         # Should create LC(LS(A))
         assert binding.to_str() == "&kp LC(LS(A))"
@@ -291,10 +293,14 @@ class TestFluentAPIEquivalence:
             ("&none", []),
         ],
     )
-    def test_traditional_fluent_equivalence(self, behavior: str, params: list[str | int]) -> None:
+    def test_traditional_fluent_equivalence(
+        self, behavior: str, params: list[str | int]
+    ) -> None:
         """Test that fluent and traditional APIs produce identical results."""
         # Traditional approach
-        binding_str = f"{behavior} {' '.join(str(p) for p in params)}" if params else behavior
+        binding_str = (
+            f"{behavior} {' '.join(str(p) for p in params)}" if params else behavior
+        )
         traditional = LayoutBinding.from_str(binding_str)
 
         # Fluent approach
@@ -303,7 +309,11 @@ class TestFluentAPIEquivalence:
             if isinstance(param, str) and "(" in param:
                 # Handle nested params like LC(A)
                 parts = param.replace(")", "").split("(")
-                builder = builder.nested_param(parts[0], parts[1]) if len(parts) == 2 else builder.param(param)
+                builder = (
+                    builder.nested_param(parts[0], parts[1])
+                    if len(parts) == 2
+                    else builder.param(param)
+                )
             else:
                 builder = builder.param(param)
         fluent = builder.build()

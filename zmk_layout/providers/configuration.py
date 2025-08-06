@@ -13,7 +13,9 @@ class SystemBehavior:
     External implementations should provide their own SystemBehavior classes.
     """
 
-    def __init__(self, name: str, description: str = "", **kwargs: str | int | bool | None) -> None:
+    def __init__(
+        self, name: str, description: str = "", **kwargs: str | int | bool | None
+    ) -> None:
         self.name = name
         self.description = description
         self.properties: dict[str, str | int | bool | None] = kwargs

@@ -64,7 +64,9 @@ class LayoutMetadata(LayoutBaseModel):
     )
 
     # Configuration
-    config_parameters: list[ConfigParameter] = Field(default_factory=list, alias="config_parameters")
+    config_parameters: list[ConfigParameter] = Field(
+        default_factory=list, alias="config_parameters"
+    )
 
     layer_names: list[str] = Field(default_factory=list, alias="layer_names")
 
@@ -81,11 +83,21 @@ class LayoutData(LayoutMetadata):
     hold_taps: list["HoldTapBehavior"] = Field(default_factory=list, alias="holdTaps")
     combos: list["ComboBehavior"] = Field(default_factory=list)
     macros: list["MacroBehavior"] = Field(default_factory=list)
-    tap_dances: list["TapDanceBehavior"] = Field(default_factory=list, alias="tapDances")
-    sticky_keys: list["StickyKeyBehavior"] = Field(default_factory=list, alias="stickyKeys")
-    caps_words: list["CapsWordBehavior"] = Field(default_factory=list, alias="capsWords")
-    mod_morphs: list["ModMorphBehavior"] = Field(default_factory=list, alias="modMorphs")
-    input_listeners: list["InputListener"] | None = Field(default=None, alias="inputListeners")
+    tap_dances: list["TapDanceBehavior"] = Field(
+        default_factory=list, alias="tapDances"
+    )
+    sticky_keys: list["StickyKeyBehavior"] = Field(
+        default_factory=list, alias="stickyKeys"
+    )
+    caps_words: list["CapsWordBehavior"] = Field(
+        default_factory=list, alias="capsWords"
+    )
+    mod_morphs: list["ModMorphBehavior"] = Field(
+        default_factory=list, alias="modMorphs"
+    )
+    input_listeners: list["InputListener"] | None = Field(
+        default=None, alias="inputListeners"
+    )
 
     # Essential structure fields
     layers: list[LayerBindings] = Field(default_factory=list)

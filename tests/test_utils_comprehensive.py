@@ -76,15 +76,15 @@ class TestJSONOperations:
         """Create mock file provider."""
         provider = Mock()
         provider.exists.return_value = True
-        provider.read_text.return_value = (
-            '{"keyboard": "test", "title": "Test Layout", "layers": [], "layer_names": []}'
-        )
+        provider.read_text.return_value = '{"keyboard": "test", "title": "Test Layout", "layers": [], "layer_names": []}'
         return provider
 
     @pytest.fixture
     def sample_layout_data(self) -> LayoutData:
         """Create sample layout data."""
-        return LayoutData(keyboard="test_keyboard", title="Test Layout", layers=[], layer_names=[])
+        return LayoutData(
+            keyboard="test_keyboard", title="Test Layout", layers=[], layer_names=[]
+        )
 
     def test_load_layout_file_success(self, mock_file_provider: Mock) -> None:
         """Test successful layout file loading."""
@@ -115,7 +115,9 @@ class TestJSONOperations:
         with pytest.raises(ValueError, match="Invalid layout data"):
             load_layout_file(Path("invalid.json"), mock_file_provider)
 
-    def test_save_layout_file_success(self, mock_file_provider: Mock, sample_layout_data: LayoutData) -> None:
+    def test_save_layout_file_success(
+        self, mock_file_provider: Mock, sample_layout_data: LayoutData
+    ) -> None:
         """Test successful layout file saving."""
         save_layout_file(sample_layout_data, Path("output.json"), mock_file_provider)
 
@@ -128,12 +130,16 @@ class TestJSONOperations:
         saved_data = json.loads(saved_content)
         assert saved_data["keyboard"] == "test_keyboard"
 
-    def test_save_layout_file_os_error(self, mock_file_provider: Mock, sample_layout_data: LayoutData) -> None:
+    def test_save_layout_file_os_error(
+        self, mock_file_provider: Mock, sample_layout_data: LayoutData
+    ) -> None:
         """Test save failure due to OS error."""
         mock_file_provider.write_text.side_effect = OSError("Permission denied")
 
         with pytest.raises(OSError, match="Failed to save layout file"):
-            save_layout_file(sample_layout_data, Path("output.json"), mock_file_provider)
+            save_layout_file(
+                sample_layout_data, Path("output.json"), mock_file_provider
+            )
 
     def test_load_json_data_success(self, mock_file_provider: Mock) -> None:
         """Test successful raw JSON loading."""
@@ -172,25 +178,37 @@ class TestValidation:
             keyboard="test",
             title="Test",
             layer_names=["default", "lower", "raise"],
-            layers=[[LayoutBinding(value="&kp A")], [LayoutBinding(value="&kp B")], [LayoutBinding(value="&kp C")]],
+            layers=[
+                [LayoutBinding(value="&kp A")],
+                [LayoutBinding(value="&kp B")],
+                [LayoutBinding(value="&kp C")],
+            ],
         )
 
-    def test_validate_layer_exists_success(self, sample_layout_data: LayoutData) -> None:
+    def test_validate_layer_exists_success(
+        self, sample_layout_data: LayoutData
+    ) -> None:
         """Test successful layer validation."""
         result = validate_layer_exists(sample_layout_data, "lower")
         assert result == 1
 
-    def test_validate_layer_exists_failure(self, sample_layout_data: LayoutData) -> None:
+    def test_validate_layer_exists_failure(
+        self, sample_layout_data: LayoutData
+    ) -> None:
         """Test layer validation failure."""
         with pytest.raises(ValueError, match="Layer 'missing' not found"):
             validate_layer_exists(sample_layout_data, "missing")
 
-    def test_validate_layer_has_bindings_success(self, sample_layout_data: LayoutData) -> None:
+    def test_validate_layer_has_bindings_success(
+        self, sample_layout_data: LayoutData
+    ) -> None:
         """Test successful layer binding validation."""
         # Should not raise
         validate_layer_has_bindings(sample_layout_data, "default", 0)
 
-    def test_validate_layer_has_bindings_failure(self, sample_layout_data: LayoutData) -> None:
+    def test_validate_layer_has_bindings_failure(
+        self, sample_layout_data: LayoutData
+    ) -> None:
         """Test layer binding validation failure."""
         with pytest.raises(ValueError, match="has no binding data"):
             validate_layer_has_bindings(sample_layout_data, "missing", 10)
@@ -242,12 +260,16 @@ class TestValidation:
         result = validate_position_index(10, 5)
         assert result == 5  # Should be clamped
 
-    def test_validate_layer_name_unique_success(self, sample_layout_data: LayoutData) -> None:
+    def test_validate_layer_name_unique_success(
+        self, sample_layout_data: LayoutData
+    ) -> None:
         """Test successful unique layer name validation."""
         # Should not raise
         validate_layer_name_unique(sample_layout_data, "new_layer")
 
-    def test_validate_layer_name_unique_failure(self, sample_layout_data: LayoutData) -> None:
+    def test_validate_layer_name_unique_failure(
+        self, sample_layout_data: LayoutData
+    ) -> None:
         """Test unique layer name validation failure."""
         with pytest.raises(ValueError, match="already exists"):
             validate_layer_name_unique(sample_layout_data, "default")
@@ -258,7 +280,9 @@ class TestLayerReferences:
 
     def test_output_paths_creation(self) -> None:
         """Test OutputPaths creation."""
-        paths = OutputPaths(keymap=Path("test.keymap"), conf=Path("test.conf"), json=Path("test.json"))
+        paths = OutputPaths(
+            keymap=Path("test.keymap"), conf=Path("test.conf"), json=Path("test.json")
+        )
 
         assert paths.keymap == Path("test.keymap")
         assert paths.conf == Path("test.conf")
@@ -291,7 +315,9 @@ class TestLayerReferences:
         """Test successful JSON file processing."""
         # Create test file
         test_file = tmp_path / "test.json"
-        layout_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
+        layout_data = LayoutData(
+            keyboard="test", title="Test", layers=[], layer_names=[]
+        )
         test_file.write_text(layout_data.model_dump_json())
 
         # Mock file provider
@@ -306,7 +332,9 @@ class TestLayerReferences:
         def test_operation(data: LayoutData) -> str:
             return f"Processed {data.keyboard}"
 
-        result = process_json_file(test_file, "test operation", test_operation, file_provider, logger)
+        result = process_json_file(
+            test_file, "test operation", test_operation, file_provider, logger
+        )
 
         assert result == "Processed test"
         logger.info.assert_called_once()
@@ -326,7 +354,9 @@ class TestLayerReferences:
             return "success"
 
         with pytest.raises(LayoutError, match="test operation failed"):
-            process_json_file(test_file, "test operation", test_operation, file_provider, logger)
+            process_json_file(
+                test_file, "test operation", test_operation, file_provider, logger
+            )
 
         logger.error.assert_called_once()
 
@@ -343,7 +373,9 @@ class TestLayerReferences:
         with pytest.raises(LayoutError, match="Template file not found"):
             resolve_template_file_path("keyboard", "/nonexistent/template.txt")
 
-    def test_resolve_template_file_path_relative_with_provider(self, tmp_path: Path) -> None:
+    def test_resolve_template_file_path_relative_with_provider(
+        self, tmp_path: Path
+    ) -> None:
         """Test template path resolution with relative path and provider."""
         # Setup directory structure
         keyboard_dir = tmp_path / "test_keyboard"
@@ -355,10 +387,14 @@ class TestLayerReferences:
         config_provider = Mock()
         config_provider.get_search_paths.return_value = [tmp_path]
 
-        result = resolve_template_file_path("test_keyboard", "template.txt", config_provider)
+        result = resolve_template_file_path(
+            "test_keyboard", "template.txt", config_provider
+        )
         assert result == template_file.resolve()
 
-    def test_resolve_template_file_path_relative_search_root(self, tmp_path: Path) -> None:
+    def test_resolve_template_file_path_relative_search_root(
+        self, tmp_path: Path
+    ) -> None:
         """Test template path resolution in search root."""
         # Setup template in search root
         template_file = tmp_path / "template.txt"

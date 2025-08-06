@@ -21,7 +21,12 @@ class LayoutError(Exception):
 class LayerError(LayoutError):
     """Base exception for layer operations."""
 
-    def __init__(self, message: str, layer_name: str | None = None, details: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        layer_name: str | None = None,
+        details: dict[str, Any] | None = None,
+    ) -> None:
         """Initialize layer error.
 
         Args:
@@ -36,7 +41,9 @@ class LayerError(LayoutError):
 class LayerNotFoundError(LayerError):
     """Layer not found in layout."""
 
-    def __init__(self, layer_name: str, available_layers: list[str] | None = None) -> None:
+    def __init__(
+        self, layer_name: str, available_layers: list[str] | None = None
+    ) -> None:
         """Initialize layer not found error.
 
         Args:
@@ -47,7 +54,9 @@ class LayerNotFoundError(LayerError):
         if available_layers:
             message += f". Available layers: {', '.join(available_layers)}"
 
-        super().__init__(message, layer_name, {"available_layers": available_layers or []})
+        super().__init__(
+            message, layer_name, {"available_layers": available_layers or []}
+        )
 
 
 class LayerExistsError(LayerError):
@@ -66,7 +75,9 @@ class LayerExistsError(LayerError):
 class LayerIndexError(LayerError):
     """Invalid layer index."""
 
-    def __init__(self, index: int, layer_name: str | None = None, layer_size: int | None = None) -> None:
+    def __init__(
+        self, index: int, layer_name: str | None = None, layer_size: int | None = None
+    ) -> None:
         """Initialize layer index error.
 
         Args:
@@ -87,7 +98,12 @@ class LayerIndexError(LayerError):
 class InvalidBindingError(LayoutError):
     """Invalid binding format or value."""
 
-    def __init__(self, binding: str, reason: str | None = None, suggestions: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        binding: str,
+        reason: str | None = None,
+        suggestions: list[str] | None = None,
+    ) -> None:
         """Initialize invalid binding error.
 
         Args:
@@ -101,14 +117,23 @@ class InvalidBindingError(LayoutError):
         if suggestions:
             message += f". Suggestions: {', '.join(suggestions)}"
 
-        details = {"binding": binding, "reason": reason, "suggestions": suggestions or []}
+        details = {
+            "binding": binding,
+            "reason": reason,
+            "suggestions": suggestions or [],
+        }
         super().__init__(message, details)
 
 
 class BehaviorError(LayoutError):
     """Base exception for behavior operations."""
 
-    def __init__(self, message: str, behavior_name: str | None = None, details: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        behavior_name: str | None = None,
+        details: dict[str, Any] | None = None,
+    ) -> None:
         """Initialize behavior error.
 
         Args:
@@ -157,7 +182,9 @@ class BehaviorNotFoundError(BehaviorError):
 class InvalidBehaviorError(BehaviorError):
     """Invalid behavior configuration."""
 
-    def __init__(self, behavior_name: str, reason: str, behavior_type: str | None = None) -> None:
+    def __init__(
+        self, behavior_name: str, reason: str, behavior_type: str | None = None
+    ) -> None:
         """Initialize invalid behavior error.
 
         Args:
@@ -174,7 +201,9 @@ class InvalidBehaviorError(BehaviorError):
 class ValidationError(LayoutError):
     """Layout validation error."""
 
-    def __init__(self, message: str, validation_errors: list[str] | None = None) -> None:
+    def __init__(
+        self, message: str, validation_errors: list[str] | None = None
+    ) -> None:
         """Initialize validation error.
 
         Args:
@@ -182,7 +211,9 @@ class ValidationError(LayoutError):
             validation_errors: List of specific validation errors
         """
         if validation_errors:
-            full_message = f"{message}\nValidation errors:\n" + "\n".join(f"  - {error}" for error in validation_errors)
+            full_message = f"{message}\nValidation errors:\n" + "\n".join(
+                f"  - {error}" for error in validation_errors
+            )
         else:
             full_message = message
 
@@ -192,7 +223,9 @@ class ValidationError(LayoutError):
 class FileOperationError(LayoutError):
     """File operation error."""
 
-    def __init__(self, message: str, file_path: str | None = None, operation: str | None = None) -> None:
+    def __init__(
+        self, message: str, file_path: str | None = None, operation: str | None = None
+    ) -> None:
         """Initialize file operation error.
 
         Args:
@@ -229,7 +262,9 @@ class ProviderError(LayoutError):
 class ConfigurationError(LayoutError):
     """Configuration error."""
 
-    def __init__(self, message: str, setting_name: str | None = None, setting_value: Any = None) -> None:
+    def __init__(
+        self, message: str, setting_name: str | None = None, setting_value: Any = None
+    ) -> None:
         """Initialize configuration error.
 
         Args:
@@ -244,13 +279,17 @@ class ConfigurationError(LayoutError):
                 full_message += f", value: {setting_value}"
             full_message += ")"
 
-        super().__init__(full_message, {"setting_name": setting_name, "setting_value": setting_value})
+        super().__init__(
+            full_message, {"setting_name": setting_name, "setting_value": setting_value}
+        )
 
 
 # Convenience functions for creating common errors with helpful messages
 
 
-def layer_not_found_error(layer_name: str, available_layers: list[str]) -> LayerNotFoundError:
+def layer_not_found_error(
+    layer_name: str, available_layers: list[str]
+) -> LayerNotFoundError:
     """Create a helpful layer not found error."""
     return LayerNotFoundError(layer_name, available_layers)
 
@@ -276,10 +315,14 @@ def invalid_binding_error_with_suggestions(binding: str) -> InvalidBindingError:
     elif not binding.startswith("&"):
         reason = "ZMK bindings must start with '&'"
 
-    return InvalidBindingError(binding, reason, suggestions[:3])  # Limit to 3 suggestions
+    return InvalidBindingError(
+        binding, reason, suggestions[:3]
+    )  # Limit to 3 suggestions
 
 
-def behavior_validation_error(behavior_name: str, behavior_type: str, issues: list[str]) -> InvalidBehaviorError:
+def behavior_validation_error(
+    behavior_name: str, behavior_type: str, issues: list[str]
+) -> InvalidBehaviorError:
     """Create behavior validation error with multiple issues."""
     reason = "; ".join(issues)
     return InvalidBehaviorError(behavior_name, reason, behavior_type)

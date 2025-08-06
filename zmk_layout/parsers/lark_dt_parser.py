@@ -133,7 +133,11 @@ class LarkToDTTransformer:
                             values.append(DTValue(DTValueType.STRING, value_str))
                         elif value_child.data == "number_value":
                             num_str = str(value_child.children[0])
-                            value = int(num_str, 16) if num_str.startswith("0x") else int(num_str)
+                            value = (
+                                int(num_str, 16)
+                                if num_str.startswith("0x")
+                                else int(num_str)
+                            )
                             values.append(DTValue(DTValueType.INTEGER, value))
                         elif value_child.data == "identifier_value":
                             identifier = str(value_child.children[0])
@@ -163,12 +167,23 @@ class LarkToDTTransformer:
                                     if token.children:
                                         for token_child in token.children:
                                             if hasattr(token_child, "data"):
-                                                if token_child.data == "reference_token":
+                                                if (
+                                                    token_child.data
+                                                    == "reference_token"
+                                                ):
                                                     # Extract the reference name from reference_token
-                                                    ref_name = str(token_child.children[1])  # Skip & symbol
+                                                    ref_name = str(
+                                                        token_child.children[1]
+                                                    )  # Skip & symbol
                                                     values.append(f"&{ref_name}")
-                                                elif token_child.data == "function_call":
-                                                    func_call = self._transform_function_call(token_child)
+                                                elif (
+                                                    token_child.data == "function_call"
+                                                ):
+                                                    func_call = (
+                                                        self._transform_function_call(
+                                                            token_child
+                                                        )
+                                                    )
                                                     values.append(func_call)
                                             else:
                                                 # Direct token value

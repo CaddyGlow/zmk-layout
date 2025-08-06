@@ -20,12 +20,16 @@ def validate_layer_exists(layout_data: LayoutData, layer_name: str) -> int:
     """
     if layer_name not in layout_data.layer_names:
         available_layers = ", ".join(layout_data.layer_names)
-        raise ValueError(f"Layer '{layer_name}' not found. Available layers: {available_layers}")
+        raise ValueError(
+            f"Layer '{layer_name}' not found. Available layers: {available_layers}"
+        )
 
     return layout_data.layer_names.index(layer_name)
 
 
-def validate_layer_has_bindings(layout_data: LayoutData, layer_name: str, layer_idx: int) -> None:
+def validate_layer_has_bindings(
+    layout_data: LayoutData, layer_name: str, layer_idx: int
+) -> None:
     """Validate that a layer has binding data.
 
     Args:
@@ -40,7 +44,9 @@ def validate_layer_has_bindings(layout_data: LayoutData, layer_name: str, layer_
         raise ValueError(f"Layer '{layer_name}' has no binding data")
 
 
-def validate_output_path(output_path: Path, source_path: Path | None = None, force: bool = False) -> None:
+def validate_output_path(
+    output_path: Path, source_path: Path | None = None, force: bool = False
+) -> None:
     """Validate output file path and check for overwrites.
 
     Args:
@@ -52,10 +58,14 @@ def validate_output_path(output_path: Path, source_path: Path | None = None, for
         ValueError: If output file exists and overwrite not allowed
     """
     if output_path.exists() and output_path != source_path and not force:
-        raise ValueError(f"Output file already exists: {output_path}. Use --force to overwrite.")
+        raise ValueError(
+            f"Output file already exists: {output_path}. Use --force to overwrite."
+        )
 
 
-def validate_position_index(position: int | None, total_items: int, allow_append: bool = True) -> int:
+def validate_position_index(
+    position: int | None, total_items: int, allow_append: bool = True
+) -> int:
     """Validate and normalize a position index.
 
     Args:
@@ -76,7 +86,11 @@ def validate_position_index(position: int | None, total_items: int, allow_append
             raise ValueError("Position must be specified")
 
     # Handle negative indices
-    normalized = max(0, total_items + position + 1) if position < 0 else min(position, total_items)
+    normalized = (
+        max(0, total_items + position + 1)
+        if position < 0
+        else min(position, total_items)
+    )
 
     return normalized
 

@@ -90,7 +90,10 @@ class TestZmkGenerator:
         generator = ZMKGenerator()
 
         layout_data = LayoutData(
-            keyboard="test_kb", title="Test Layout", layers=[[LayoutBinding(value="&kp A")]], layer_names=["default"]
+            keyboard="test_kb",
+            title="Test Layout",
+            layers=[[LayoutBinding(value="&kp A")]],
+            layer_names=["default"],
         )
 
         # Test that generator can work with layout data
@@ -101,7 +104,9 @@ class TestZmkGenerator:
         """Test ZMK generator with behavior data."""
         generator = ZMKGenerator()
 
-        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200)
+        hold_tap = HoldTapBehavior(
+            name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200
+        )
 
         layout_data = LayoutData(
             keyboard="test_kb",
@@ -137,7 +142,9 @@ class TestConfigGenerator:
         )
 
         mock_profile = Mock()
-        layout_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
+        layout_data = LayoutData(
+            keyboard="test", title="Test", layers=[], layer_names=[]
+        )
 
         result = get_required_includes_for_layout(mock_profile, layout_data)
         assert isinstance(result, list)
@@ -150,12 +157,18 @@ class TestConfigGenerator:
 
         mock_file_provider = Mock()
         mock_profile = Mock()
-        layout_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
+        layout_data = LayoutData(
+            keyboard="test", title="Test", layers=[], layer_names=[]
+        )
 
-        with patch("zmk_layout.generators.config_generator.generate_kconfig_conf") as mock_gen:
+        with patch(
+            "zmk_layout.generators.config_generator.generate_kconfig_conf"
+        ) as mock_gen:
             mock_gen.return_value = ("# Test config", {"setting": "value"})
 
-            result = generate_config_file(mock_file_provider, mock_profile, layout_data, Path("/tmp/test.conf"))
+            result = generate_config_file(
+                mock_file_provider, mock_profile, layout_data, Path("/tmp/test.conf")
+            )
 
             assert isinstance(result, dict)
             mock_file_provider.write_text.assert_called_once()
@@ -217,9 +230,15 @@ class TestGeneratorIntegration:
         generator = ZMKGenerator(mock_config, mock_template, mock_logger)
 
         # Create layout with behaviors
-        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200)
+        hold_tap = HoldTapBehavior(
+            name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200
+        )
 
-        combo = ComboBehavior(name="esc_combo", keyPositions=[0, 1], binding=LayoutBinding(value="&kp ESC"))
+        combo = ComboBehavior(
+            name="esc_combo",
+            keyPositions=[0, 1],
+            binding=LayoutBinding(value="&kp ESC"),
+        )
 
         layout_data = LayoutData(
             keyboard="corne",
@@ -240,5 +259,7 @@ class TestGeneratorIntegration:
         assert len(layout_data.combos) == 1
 
         # Test behavior formatter
-        formatted = generator._behavior_formatter.format_binding(LayoutBinding(value="&kp A"))
+        formatted = generator._behavior_formatter.format_binding(
+            LayoutBinding(value="&kp A")
+        )
         assert formatted == "&kp A"

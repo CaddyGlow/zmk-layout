@@ -121,7 +121,9 @@ class WeakCache:
 
     def __init__(self) -> None:
         """Initialize weak cache."""
-        self.cache: weakref.WeakValueDictionary[Any, Any] = weakref.WeakValueDictionary()
+        self.cache: weakref.WeakValueDictionary[Any, Any] = (
+            weakref.WeakValueDictionary()
+        )
         self.lock = RLock()
 
     def get(self, key: Any) -> Any | None:

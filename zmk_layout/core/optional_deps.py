@@ -47,7 +47,9 @@ def get_template_provider() -> "TemplateProvider":
         # If we can't import the fallback provider, create a minimal inline provider
         # that doesn't require any imports
         class NullTemplateProvider:
-            def render_string(self, template: str, context: dict[str, Any] | None = None) -> str:
+            def render_string(
+                self, template: str, context: dict[str, Any] | None = None
+            ) -> str:
                 return template
 
             def has_template_syntax(self, text: str) -> bool:
@@ -144,7 +146,9 @@ def get_display_provider() -> Any:
                 def print(self, *args: Any, **kwargs: Any) -> None:
                     self.console.print(*args, **kwargs)
 
-                def print_table(self, data: list[dict[str, Any]], title: str = "") -> None:
+                def print_table(
+                    self, data: list[dict[str, Any]], title: str = ""
+                ) -> None:
                     if not data:
                         return
 
@@ -223,5 +227,10 @@ def require_optional_dependency(name: str, feature: str) -> None:
 
 def _get_extra_name(package_name: str) -> str:
     """Map package name to extras name."""
-    mapping = {"jinja2": "templating", "rich": "display", "lark": "parsing", "jsonpatch": "full"}
+    mapping = {
+        "jinja2": "templating",
+        "rich": "display",
+        "lark": "parsing",
+        "jsonpatch": "full",
+    }
     return mapping.get(package_name, package_name)

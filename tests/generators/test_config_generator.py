@@ -99,7 +99,9 @@ def base_profile() -> SimpleNamespace:
 class TestGetRequiredIncludesForLayout:
     """Tests for get_required_includes_for_layout function."""
 
-    def test_returns_empty_list(self, base_profile: SimpleNamespace, base_keymap_data: LayoutData) -> None:
+    def test_returns_empty_list(
+        self, base_profile: SimpleNamespace, base_keymap_data: LayoutData
+    ) -> None:
         """Verify stub implementation returns empty list."""
         result = get_required_includes_for_layout(base_profile, base_keymap_data)
         assert result == []
@@ -110,16 +112,25 @@ class TestGenerateConfigFile:
     """Tests for generate_config_file function."""
 
     def test_successful_generation(
-        self, mock_file_provider: MagicMock, base_profile: SimpleNamespace, base_keymap_data: LayoutData
+        self,
+        mock_file_provider: MagicMock,
+        base_profile: SimpleNamespace,
+        base_keymap_data: LayoutData,
     ) -> None:
         """Test successful config file generation."""
         # Arrange
         output_path = Path("/test/zmk.conf")
-        base_keymap_data.config_parameters = [ConfigParameter(paramName="IDLE_TIMEOUT", value=60000)]
-        base_profile.kconfig_options = {"IDLE_TIMEOUT": MockConfigOption("CONFIG_ZMK_IDLE_TIMEOUT", 30000)}
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="IDLE_TIMEOUT", value=60000)
+        ]
+        base_profile.kconfig_options = {
+            "IDLE_TIMEOUT": MockConfigOption("CONFIG_ZMK_IDLE_TIMEOUT", 30000)
+        }
 
         # Act
-        settings = generate_config_file(mock_file_provider, base_profile, base_keymap_data, output_path)
+        settings = generate_config_file(
+            mock_file_provider, base_profile, base_keymap_data, output_path
+        )
 
         # Assert
         assert str(output_path) in mock_file_provider.fs
@@ -128,14 +139,19 @@ class TestGenerateConfigFile:
         assert "CONFIG_ZMK_IDLE_TIMEOUT=60000" in content
 
     def test_empty_config_parameters(
-        self, mock_file_provider: MagicMock, base_profile: SimpleNamespace, base_keymap_data: LayoutData
+        self,
+        mock_file_provider: MagicMock,
+        base_profile: SimpleNamespace,
+        base_keymap_data: LayoutData,
     ) -> None:
         """Test generation with no config parameters."""
         # Arrange
         output_path = Path("/test/zmk.conf")
 
         # Act
-        settings = generate_config_file(mock_file_provider, base_profile, base_keymap_data, output_path)
+        settings = generate_config_file(
+            mock_file_provider, base_profile, base_keymap_data, output_path
+        )
 
         # Assert
         assert str(output_path) in mock_file_provider.fs
@@ -144,7 +160,10 @@ class TestGenerateConfigFile:
         assert "# Generated ZMK configuration" in content
 
     def test_file_write_error(
-        self, mock_file_provider: MagicMock, base_profile: SimpleNamespace, base_keymap_data: LayoutData
+        self,
+        mock_file_provider: MagicMock,
+        base_profile: SimpleNamespace,
+        base_keymap_data: LayoutData,
     ) -> None:
         """Test handling of file write errors."""
         # Arrange
@@ -153,7 +172,9 @@ class TestGenerateConfigFile:
 
         # Act & Assert
         with pytest.raises(IOError, match="Permission denied"):
-            generate_config_file(mock_file_provider, base_profile, base_keymap_data, output_path)
+            generate_config_file(
+                mock_file_provider, base_profile, base_keymap_data, output_path
+            )
 
     def test_logging_of_settings(
         self,
@@ -176,7 +197,9 @@ class TestGenerateConfigFile:
 
         # Act
         with caplog.at_level(logging.DEBUG):
-            settings = generate_config_file(mock_file_provider, base_profile, base_keymap_data, output_path)
+            settings = generate_config_file(
+                mock_file_provider, base_profile, base_keymap_data, output_path
+            )
 
         # Assert
         assert len(settings) == 2
@@ -226,7 +249,9 @@ class TestBuildTemplateContext:
         assert context["profile_name"] == "unknown"
         assert context["firmware_version"] == "unknown"
 
-    def test_empty_and_none_includes(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_empty_and_none_includes(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test handling of empty or None includes."""
         # Arrange
         base_profile.keyboard_config.keymap.header_includes = None
@@ -238,7 +263,9 @@ class TestBuildTemplateContext:
         # Assert
         assert context["resolved_includes"] == ""
 
-    def test_custom_behaviors_and_devicetree(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_custom_behaviors_and_devicetree(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test custom defined behaviors and devicetree."""
         # Arrange
         base_keymap_data.custom_defined_behaviors = "/* Custom behaviors */"
@@ -252,7 +279,9 @@ class TestBuildTemplateContext:
         assert context["custom_defined_behaviors"] == "/* Custom behaviors */"
         assert context["custom_devicetree"] == "/* Custom devicetree */"
 
-    def test_behavior_manager_integration(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_behavior_manager_integration(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test integration with behavior manager."""
         # Arrange
         dtsi_generator = MagicMock()
@@ -261,15 +290,22 @@ class TestBuildTemplateContext:
         behavior_manager.get_behavior_registry.return_value = {"test": "behavior"}
 
         # Act
-        build_template_context(base_keymap_data, base_profile, dtsi_generator, behavior_manager)
+        build_template_context(
+            base_keymap_data, base_profile, dtsi_generator, behavior_manager
+        )
 
         # Assert
-        behavior_manager.prepare_behaviors.assert_called_once_with(base_profile, base_keymap_data)
+        behavior_manager.prepare_behaviors.assert_called_once_with(
+            base_profile, base_keymap_data
+        )
         assert dtsi_generator._behavior_registry == {"test": "behavior"}
 
     @patch("zmk_layout.generators.config_generator.datetime")
     def test_timestamp_generation(
-        self, mock_datetime: MagicMock, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+        self,
+        mock_datetime: MagicMock,
+        base_keymap_data: LayoutData,
+        base_profile: SimpleNamespace,
     ) -> None:
         """Test that timestamp is generated correctly."""
         # Arrange
@@ -287,11 +323,17 @@ class TestBuildTemplateContext:
 class TestGenerateKconfigConf:
     """Tests for generate_kconfig_conf function."""
 
-    def test_supported_option_non_default(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_supported_option_non_default(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test supported option with non-default value."""
         # Arrange
-        base_profile.kconfig_options = {"IDLE_TIMEOUT": MockConfigOption("CONFIG_ZMK_IDLE_TIMEOUT", 30000)}
-        base_keymap_data.config_parameters = [ConfigParameter(paramName="IDLE_TIMEOUT", value=60000)]
+        base_profile.kconfig_options = {
+            "IDLE_TIMEOUT": MockConfigOption("CONFIG_ZMK_IDLE_TIMEOUT", 30000)
+        }
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="IDLE_TIMEOUT", value=60000)
+        ]
 
         # Act
         content, settings = generate_kconfig_conf(base_keymap_data, base_profile)
@@ -306,8 +348,12 @@ class TestGenerateKconfigConf:
     ) -> None:
         """Test option set to default value is commented out."""
         # Arrange
-        base_profile.kconfig_options = {"IDLE_TIMEOUT": MockConfigOption("CONFIG_ZMK_IDLE_TIMEOUT", 30000)}
-        base_keymap_data.config_parameters = [ConfigParameter(paramName="IDLE_TIMEOUT", value=30000)]
+        base_profile.kconfig_options = {
+            "IDLE_TIMEOUT": MockConfigOption("CONFIG_ZMK_IDLE_TIMEOUT", 30000)
+        }
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="IDLE_TIMEOUT", value=30000)
+        ]
 
         # Act
         content, settings = generate_kconfig_conf(base_keymap_data, base_profile)
@@ -317,11 +363,16 @@ class TestGenerateKconfigConf:
         assert settings == {}
 
     def test_unsupported_option(
-        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace, caplog: LogCaptureFixture
+        self,
+        base_keymap_data: LayoutData,
+        base_profile: SimpleNamespace,
+        caplog: LogCaptureFixture,
     ) -> None:
         """Test unsupported option is commented with warning."""
         # Arrange
-        base_keymap_data.config_parameters = [ConfigParameter(paramName="UNKNOWN_OPTION", value="value")]
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="UNKNOWN_OPTION", value="value")
+        ]
 
         # Act
         with caplog.at_level(logging.WARNING):
@@ -329,11 +380,15 @@ class TestGenerateKconfigConf:
 
         # Assert
         assert "Unsupported kconfig option 'UNKNOWN_OPTION'" in caplog.text
-        assert "# Warning: 'UNKNOWN_OPTION' is not a supported kconfig option" in content
+        assert (
+            "# Warning: 'UNKNOWN_OPTION' is not a supported kconfig option" in content
+        )
         assert "# CONFIG_ZMK_UNKNOWN_OPTION=value" in content
         assert settings == {}
 
-    def test_empty_config_parameters(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_empty_config_parameters(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test with no config parameters."""
         # Act
         content, settings = generate_kconfig_conf(base_keymap_data, base_profile)
@@ -342,11 +397,15 @@ class TestGenerateKconfigConf:
         assert content == "# Generated ZMK configuration"
         assert settings == {}
 
-    def test_custom_kconfig_prefix(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_custom_kconfig_prefix(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test custom kconfig prefix for unsupported options."""
         # Arrange
         base_profile.keyboard_config.zmk.patterns.kconfig_prefix = "CONFIG_CUSTOM_"
-        base_keymap_data.config_parameters = [ConfigParameter(paramName="TEST", value=123)]
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="TEST", value=123)
+        ]
 
         # Act
         content, _ = generate_kconfig_conf(base_keymap_data, base_profile)
@@ -354,10 +413,14 @@ class TestGenerateKconfigConf:
         # Assert
         assert "# CONFIG_CUSTOM_TEST=123" in content
 
-    def test_option_already_has_prefix(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_option_already_has_prefix(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test that options with prefix aren't double-prefixed."""
         # Arrange
-        base_keymap_data.config_parameters = [ConfigParameter(paramName="CONFIG_ZMK_ALREADY_PREFIXED", value="yes")]
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="CONFIG_ZMK_ALREADY_PREFIXED", value="yes")
+        ]
 
         # Act
         content, _ = generate_kconfig_conf(base_keymap_data, base_profile)
@@ -366,12 +429,18 @@ class TestGenerateKconfigConf:
         assert "# CONFIG_ZMK_CONFIG_ZMK_ALREADY_PREFIXED=yes" not in content
         # The option name itself already starts with the prefix, so logic may vary
 
-    def test_special_characters_in_values(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_special_characters_in_values(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test handling of special characters in config values."""
         # Arrange
-        base_profile.kconfig_options = {"STRING_OPT": MockConfigOption("CONFIG_ZMK_STRING")}
+        base_profile.kconfig_options = {
+            "STRING_OPT": MockConfigOption("CONFIG_ZMK_STRING")
+        }
         base_keymap_data.config_parameters = [
-            ConfigParameter(paramName="STRING_OPT", value="value with spaces and 'quotes'")
+            ConfigParameter(
+                paramName="STRING_OPT", value="value with spaces and 'quotes'"
+            )
         ]
 
         # Act
@@ -688,7 +757,10 @@ class TestGenerateConfigFileWithResult:
     """Tests for generate_config_file_with_result wrapper."""
 
     def test_successful_generation(
-        self, mock_file_provider: MagicMock, base_profile: SimpleNamespace, base_keymap_data: LayoutData
+        self,
+        mock_file_provider: MagicMock,
+        base_profile: SimpleNamespace,
+        base_keymap_data: LayoutData,
     ) -> None:
         """Test successful config generation."""
         # Arrange
@@ -713,7 +785,10 @@ class TestGenerateConfigFileWithResult:
         assert str(output_path) in mock_file_provider.fs
 
     def test_file_exists_without_force(
-        self, mock_file_provider: MagicMock, base_profile: SimpleNamespace, base_keymap_data: LayoutData
+        self,
+        mock_file_provider: MagicMock,
+        base_profile: SimpleNamespace,
+        base_keymap_data: LayoutData,
     ) -> None:
         """Test generation fails when file exists and force is False."""
         # Arrange
@@ -738,7 +813,10 @@ class TestGenerateConfigFileWithResult:
         assert mock_file_provider.fs[str(output_path)] == "existing"
 
     def test_file_exists_with_force(
-        self, mock_file_provider: MagicMock, base_profile: SimpleNamespace, base_keymap_data: LayoutData
+        self,
+        mock_file_provider: MagicMock,
+        base_profile: SimpleNamespace,
+        base_keymap_data: LayoutData,
     ) -> None:
         """Test generation succeeds when file exists and force is True."""
         # Arrange
@@ -792,7 +870,10 @@ class TestGenerateConfigFileWithResult:
         assert "Config generation failed: Disk full" in result.errors[0]
 
     def test_with_kconfig_settings(
-        self, mock_file_provider: MagicMock, base_profile: SimpleNamespace, base_keymap_data: LayoutData
+        self,
+        mock_file_provider: MagicMock,
+        base_profile: SimpleNamespace,
+        base_keymap_data: LayoutData,
     ) -> None:
         """Test message includes kconfig settings count."""
         # Arrange
@@ -826,11 +907,15 @@ class TestGenerateConfigFileWithResult:
 class TestEdgeCasesAndBoundaryConditions:
     """Tests for edge cases and boundary conditions."""
 
-    def test_unicode_in_config_values(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_unicode_in_config_values(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test handling of Unicode characters in config values."""
         # Arrange
         base_profile.kconfig_options = {"NAME": MockConfigOption("CONFIG_NAME")}
-        base_keymap_data.config_parameters = [ConfigParameter(paramName="NAME", value="Unicode: 你好 😊")]
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="NAME", value="Unicode: 你好 😊")
+        ]
 
         # Act
         content, settings = generate_kconfig_conf(base_keymap_data, base_profile)
@@ -839,12 +924,16 @@ class TestEdgeCasesAndBoundaryConditions:
         assert "CONFIG_NAME=Unicode: 你好 😊" in content
         assert settings["CONFIG_NAME"] == "Unicode: 你好 😊"
 
-    def test_very_long_config_value(self, base_keymap_data: LayoutData, base_profile: SimpleNamespace) -> None:
+    def test_very_long_config_value(
+        self, base_keymap_data: LayoutData, base_profile: SimpleNamespace
+    ) -> None:
         """Test handling of very long config values."""
         # Arrange
         long_value = "A" * 10000
         base_profile.kconfig_options = {"LONG": MockConfigOption("CONFIG_LONG")}
-        base_keymap_data.config_parameters = [ConfigParameter(paramName="LONG", value=long_value)]
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="LONG", value=long_value)
+        ]
 
         # Act
         content, settings = generate_kconfig_conf(base_keymap_data, base_profile)
@@ -888,10 +977,14 @@ class TestEdgeCasesAndBoundaryConditions:
         assert context["layer_names"] == []
         assert context["layers"] == []
 
-    def test_missing_keyboard_config_in_profile(self, base_keymap_data: LayoutData) -> None:
+    def test_missing_keyboard_config_in_profile(
+        self, base_keymap_data: LayoutData
+    ) -> None:
         """Test when profile has no keyboard_config attribute."""
         # Arrange
-        profile = SimpleNamespace(keyboard_name="test", firmware_version="v1", kconfig_options={})
+        profile = SimpleNamespace(
+            keyboard_name="test", firmware_version="v1", kconfig_options={}
+        )
         dtsi_generator = MagicMock()
 
         # Act
@@ -902,7 +995,9 @@ class TestEdgeCasesAndBoundaryConditions:
         assert context["key_position_header"] == ""
         assert context["system_behaviors_dts"] == ""
 
-    def test_profile_with_partial_nested_structure(self, base_keymap_data: LayoutData) -> None:
+    def test_profile_with_partial_nested_structure(
+        self, base_keymap_data: LayoutData
+    ) -> None:
         """Test profile with partially missing nested attributes."""
         # Arrange
         profile = SimpleNamespace(

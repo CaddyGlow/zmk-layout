@@ -177,11 +177,15 @@ def create_mock_generator_profile() -> Any:
     from types import SimpleNamespace
 
     return SimpleNamespace(
-        keyboard_config=SimpleNamespace(zmk=SimpleNamespace(compatible_strings=SimpleNamespace(keymap="zmk,keymap")))
+        keyboard_config=SimpleNamespace(
+            zmk=SimpleNamespace(compatible_strings=SimpleNamespace(keymap="zmk,keymap"))
+        )
     )
 
 
-def create_glove80_providers(profile_path: str | None = None) -> tuple[LayoutProviders, Any]:
+def create_glove80_providers(
+    profile_path: str | None = None,
+) -> tuple[LayoutProviders, Any]:
     """Create LayoutProviders with complete Glove80 configuration.
 
     Returns:
@@ -252,7 +256,9 @@ class TestGlove80ConfigurationProvider:
         assert "Custom" in behavior_codes
 
         # Verify we have a comprehensive set (should have all ZMK + Glove80 behaviors)
-        assert len(behaviors) >= 20  # Should have 16+ ZMK behaviors + 7 Glove80 behaviors
+        assert (
+            len(behaviors) >= 20
+        )  # Should have 16+ ZMK behaviors + 7 Glove80 behaviors
 
     def test_validation_rules_accuracy(self) -> None:
         """Verify validation rules match complete Glove80 specifications."""
@@ -320,7 +326,9 @@ class TestFactoryJsonToKeymap:
         providers, profile = create_glove80_providers()
 
         # Mock JSON data based on Factory.json structure
-        factory_json_path = Path(__file__).parent.parent / "examples" / "layouts" / "Factory.json"
+        factory_json_path = (
+            Path(__file__).parent.parent / "examples" / "layouts" / "Factory.json"
+        )
 
         if factory_json_path.exists():
             with open(factory_json_path) as f:
@@ -339,7 +347,9 @@ class TestFactoryJsonToKeymap:
         # Test magic behavior handling
         magic_behaviors = ["&magic", "&bt_0", "&bt_1", "&bt_2", "&bt_3"]
         for behavior in magic_behaviors:
-            supported = providers.configuration.get_validation_rules()["supported_behaviors"]
+            supported = providers.configuration.get_validation_rules()[
+                "supported_behaviors"
+            ]
             assert isinstance(supported, list)
             behavior_code = behavior.lstrip("&")
             assert behavior_code in supported, f"Behavior {behavior} not supported"
@@ -364,7 +374,9 @@ class TestFactoryKeymapToJson:
         """Test keymap parsing with proper Glove80 parser configuration."""
         providers, profile = create_glove80_providers()
 
-        factory_keymap_path = Path(__file__).parent.parent / "examples" / "layouts" / "Factory.keymap"
+        factory_keymap_path = (
+            Path(__file__).parent.parent / "examples" / "layouts" / "Factory.keymap"
+        )
 
         if factory_keymap_path.exists():
             # In full implementation, would use ZMKKeymapParser
@@ -394,7 +406,9 @@ class TestFactoryKeymapToJson:
         assert isinstance(supported, list)
 
         for bt_behavior in bt_behaviors:
-            assert bt_behavior in supported, f"Bluetooth behavior {bt_behavior} not supported"
+            assert bt_behavior in supported, (
+                f"Bluetooth behavior {bt_behavior} not supported"
+            )
 
     def test_complex_binding_parameter_handling(self) -> None:
         """Test handling of complex key bindings with nested parameters."""
@@ -416,7 +430,9 @@ class TestFactoryRoundTripValidation:
         providers, complete_profile = create_glove80_providers()
 
         # Load the original Factory.json
-        factory_json_path = Path(__file__).parent.parent / "examples" / "layouts" / "Factory.json"
+        factory_json_path = (
+            Path(__file__).parent.parent / "examples" / "layouts" / "Factory.json"
+        )
 
         if not factory_json_path.exists():
             pytest.skip(f"Factory.json not found at {factory_json_path}")
@@ -453,15 +469,21 @@ class TestFactoryRoundTripValidation:
             assert "layer_Magic" in keymap_content or "layer_magic" in keymap_content
 
             # Step 3: Parse keymap back to LayoutData using ZMKKeymapParser
-            parser = ZMKKeymapParser(configuration_provider=providers.configuration, logger=providers.logger)
+            parser = ZMKKeymapParser(
+                configuration_provider=providers.configuration, logger=providers.logger
+            )
             # Parse keymap content from file using FULL mode (not TEMPLATE_AWARE)
             # FULL mode can extract layers directly from AST without needing section extractor
             from zmk_layout.parsers.zmk_keymap_parser import ParsingMode
+
             keymap_content = keymap_path.read_text()
             parse_result = parser.parse_keymap(keymap_path, mode=ParsingMode.FULL)
 
             # Extract the actual LayoutData from the parse result
-            if hasattr(parse_result, 'layout_data') and parse_result.layout_data is not None:
+            if (
+                hasattr(parse_result, "layout_data")
+                and parse_result.layout_data is not None
+            ):
                 parsed_layout_data = parse_result.layout_data
             else:
                 # Fallback: skip if no layout_data available
@@ -476,7 +498,10 @@ class TestFactoryRoundTripValidation:
             # Handle keyboard field with fallback - parser defaults to 'unknown'
             if "keyboard" in roundtrip_json:
                 # Parser sets keyboard to 'unknown' when it can't determine from keymap
-                assert roundtrip_json["keyboard"] in [original_json["keyboard"], "unknown"]
+                assert roundtrip_json["keyboard"] in [
+                    original_json["keyboard"],
+                    "unknown",
+                ]
             else:
                 # Parser might not preserve keyboard field, which is OK for the core test
                 print("Warning: 'keyboard' field not preserved in roundtrip")
@@ -499,28 +524,39 @@ class TestFactoryRoundTripValidation:
 
             # Should contain Glove80-specific behaviors
             assert "&magic" in keymap_behaviors or "magic" in str(keymap_behaviors)
-            assert any("&bt_" in str(behavior) or "bt_" in str(behavior) for behavior in keymap_behaviors)
+            assert any(
+                "&bt_" in str(behavior) or "bt_" in str(behavior)
+                for behavior in keymap_behaviors
+            )
 
     def test_keymap_json_keymap_cycle(self) -> None:
         """Test reverse cycle: Keymap -> JSON -> Keymap preserves structure."""
         providers, profile = create_glove80_providers()
 
         # Load the original Factory.keymap
-        factory_keymap_path = Path(__file__).parent.parent / "examples" / "layouts" / "Factory.keymap"
+        factory_keymap_path = (
+            Path(__file__).parent.parent / "examples" / "layouts" / "Factory.keymap"
+        )
 
         if not factory_keymap_path.exists():
             pytest.skip(f"Factory.keymap not found at {factory_keymap_path}")
 
         # Step 1: Parse keymap to LayoutData using ZMKKeymapParser
-        parser = ZMKKeymapParser(configuration_provider=providers.configuration, logger=providers.logger)
+        parser = ZMKKeymapParser(
+            configuration_provider=providers.configuration, logger=providers.logger
+        )
         # Parse keymap content from file using FULL mode (not TEMPLATE_AWARE) to avoid timeout
         # FULL mode can extract layers directly from AST without needing section extractor
         from zmk_layout.parsers.zmk_keymap_parser import ParsingMode
+
         keymap_content = factory_keymap_path.read_text()
         parse_result = parser.parse_keymap(factory_keymap_path, mode=ParsingMode.FULL)
 
         # Extract the actual LayoutData from the parse result
-        if hasattr(parse_result, 'layout_data') and parse_result.layout_data is not None:
+        if (
+            hasattr(parse_result, "layout_data")
+            and parse_result.layout_data is not None
+        ):
             original_layout_data = parse_result.layout_data
         else:
             # Fallback: skip if no layout_data available
@@ -566,9 +602,15 @@ class TestFactoryRoundTripValidation:
             roundtrip_content = roundtrip_keymap_path.read_text()
 
             # Both should contain the same layer definitions
-            assert "layer_Base" in original_content and "layer_Base" in roundtrip_content
-            assert "layer_Lower" in original_content and "layer_Lower" in roundtrip_content
-            assert "layer_Magic" in original_content and "layer_Magic" in roundtrip_content
+            assert (
+                "layer_Base" in original_content and "layer_Base" in roundtrip_content
+            )
+            assert (
+                "layer_Lower" in original_content and "layer_Lower" in roundtrip_content
+            )
+            assert (
+                "layer_Magic" in original_content and "layer_Magic" in roundtrip_content
+            )
 
             # Both should contain Glove80-specific behaviors
             glove80_behaviors = ["magic", "bt_0", "bt_1", "bt_2", "bt_3", "rgb_ug"]
@@ -576,12 +618,16 @@ class TestFactoryRoundTripValidation:
                 original_has_behavior = behavior in original_content
                 roundtrip_has_behavior = behavior in roundtrip_content
                 if original_has_behavior:
-                    assert roundtrip_has_behavior, f"Behavior '{behavior}' lost in roundtrip"
+                    assert roundtrip_has_behavior, (
+                        f"Behavior '{behavior}' lost in roundtrip"
+                    )
 
             # Both should have the same number of layer definitions
             original_layers = original_content.count("layer {")
             roundtrip_layers = roundtrip_content.count("layer {")
-            assert original_layers == roundtrip_layers, "Layer count mismatch in roundtrip"
+            assert original_layers == roundtrip_layers, (
+                "Layer count mismatch in roundtrip"
+            )
 
     def test_data_integrity_validation(self) -> None:
         """Validate that no data is lost in transformations."""
@@ -602,7 +648,9 @@ class TestFactoryRoundTripValidation:
         providers, profile = create_glove80_providers()
 
         # Load Factory.json for testing
-        factory_json_path = Path(__file__).parent.parent / "examples" / "layouts" / "Factory.json"
+        factory_json_path = (
+            Path(__file__).parent.parent / "examples" / "layouts" / "Factory.json"
+        )
 
         if not factory_json_path.exists():
             pytest.skip(f"Factory.json not found at {factory_json_path}")
@@ -627,7 +675,9 @@ class TestFactoryRoundTripValidation:
             for i in range(3):
                 keymap_path = temp_path / f"test_keymap_{i}.keymap"
                 # Generate keymap content and write to file
-                keymap_content = generator.generate_keymap_node(profile, layout_data.layer_names, layout_data.layers)
+                keymap_content = generator.generate_keymap_node(
+                    profile, layout_data.layer_names, layout_data.layers
+                )
                 keymap_path.write_text(keymap_content)
 
                 # Verify file exists and has content
@@ -644,13 +694,17 @@ class TestFactoryRoundTripValidation:
 
         # After exiting the context manager, verify files are cleaned up
         for temp_file in temp_files_created:
-            assert not temp_file.exists(), f"Temporary file {temp_file} was not cleaned up"
+            assert not temp_file.exists(), (
+                f"Temporary file {temp_file} was not cleaned up"
+            )
 
     def test_file_content_consistency(self) -> None:
         """Test that generated files have consistent content across multiple generations."""
         providers, profile = create_glove80_providers()
 
-        factory_json_path = Path(__file__).parent.parent / "examples" / "layouts" / "Factory.json"
+        factory_json_path = (
+            Path(__file__).parent.parent / "examples" / "layouts" / "Factory.json"
+        )
 
         if not factory_json_path.exists():
             pytest.skip(f"Factory.json not found at {factory_json_path}")
@@ -673,13 +727,17 @@ class TestFactoryRoundTripValidation:
             for i in range(3):
                 keymap_path = temp_path / f"consistency_test_{i}.keymap"
                 # Generate keymap content and write to file
-                keymap_content = generator.generate_keymap_node(profile, layout_data.layer_names, layout_data.layers)
+                keymap_content = generator.generate_keymap_node(
+                    profile, layout_data.layer_names, layout_data.layers
+                )
                 keymap_path.write_text(keymap_content)
                 keymap_contents.append(keymap_path.read_text())
 
             # All generated files should have identical content
             for i, content in enumerate(keymap_contents[1:], 1):
-                assert content == keymap_contents[0], f"Generated keymap {i} differs from first generation"
+                assert content == keymap_contents[0], (
+                    f"Generated keymap {i} differs from first generation"
+                )
 
             # Verify essential elements are present in all generations
             for content in keymap_contents:
@@ -757,7 +815,10 @@ class TestGlove80SpecificFeatures:
         validation_rules = providers.configuration.get_validation_rules()
         supported = validation_rules["supported_behaviors"]
         assert isinstance(supported, list)
-        system_behaviors = ["reset", "bootloader"]  # Removed sys_reset as it's not in complete profile
+        system_behaviors = [
+            "reset",
+            "bootloader",
+        ]  # Removed sys_reset as it's not in complete profile
 
         for behavior in system_behaviors:
             assert behavior in supported

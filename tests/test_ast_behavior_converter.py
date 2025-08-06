@@ -69,18 +69,24 @@ class TestASTBehaviorConverter:
 
     def test_resolve_binding_string_complex(self) -> None:
         """Test complex binding string resolution."""
-        converter = ASTBehaviorConverter(defines={"LAYER": "1", "KEY": "A"}, logger=self.mock_logger)
+        converter = ASTBehaviorConverter(
+            defines={"LAYER": "1", "KEY": "A"}, logger=self.mock_logger
+        )
         result = converter._resolve_binding_string("&lt LAYER KEY")
         assert result == "&lt 1 A"
 
     def test_resolve_binding_string_nested_functions(self) -> None:
         """Test binding string resolution with nested functions."""
-        result = self.converter_with_defines._resolve_binding_string("&kp LG(LA(MY_TIMEOUT))")
+        result = self.converter_with_defines._resolve_binding_string(
+            "&kp LG(LA(MY_TIMEOUT))"
+        )
         assert result == "&kp LG(LA(300))"
 
     def test_resolve_binding_string_behavior_references_not_resolved(self) -> None:
         """Test that behavior references starting with & are not resolved."""
-        converter = ASTBehaviorConverter(defines={"kp": "should_not_resolve"}, logger=self.mock_logger)
+        converter = ASTBehaviorConverter(
+            defines={"kp": "should_not_resolve"}, logger=self.mock_logger
+        )
         result = converter._resolve_binding_string("&kp A")
         assert result == "&kp A"
 
@@ -126,7 +132,11 @@ class TestASTBehaviorConverter:
         node = DTNode(name="my_ht")
 
         # Patch to force an exception
-        with patch.object(self.converter, "_extract_description_from_node", side_effect=Exception("Test error")):
+        with patch.object(
+            self.converter,
+            "_extract_description_from_node",
+            side_effect=Exception("Test error"),
+        ):
             result = self.converter.convert_hold_tap_node(node)
 
         assert result is None
@@ -138,7 +148,9 @@ class TestASTBehaviorConverter:
         node.add_property(DTProperty("wait-ms", DTValue.integer(40)))
         node.add_property(DTProperty("tap-ms", DTValue.integer(30)))
         node.add_property(DTProperty("#binding-cells", DTValue.integer(1)))
-        node.add_property(DTProperty("bindings", DTValue.array(["&kp", "HOME", "&kp", "END"])))
+        node.add_property(
+            DTProperty("bindings", DTValue.array(["&kp", "HOME", "&kp", "END"]))
+        )
 
         result = self.converter.convert_macro_node(node)
 
@@ -175,7 +187,9 @@ class TestASTBehaviorConverter:
     def test_convert_macro_node_compatible_fallback(self) -> None:
         """Test macro node conversion with compatible property fallback."""
         node = DTNode(name="my_macro")
-        node.add_property(DTProperty("compatible", DTValue.string("zmk,behavior-macro-one-param")))
+        node.add_property(
+            DTProperty("compatible", DTValue.string("zmk,behavior-macro-one-param"))
+        )
 
         result = self.converter.convert_macro_node(node)
 
@@ -271,7 +285,9 @@ class TestASTBehaviorConverter:
     def test_extract_description_from_property(self) -> None:
         """Test description extraction from description property."""
         node = DTNode(name="test")
-        node.add_property(DTProperty("description", DTValue.string("Property description")))
+        node.add_property(
+            DTProperty("description", DTValue.string("Property description"))
+        )
 
         result = self.converter._extract_description_from_node(node)
 
@@ -371,8 +387,14 @@ class TestASTBehaviorConverter:
         prop = DTProperty("bindings", DTValue.array(["&kp", "A"]))
 
         with (
-            patch.object(self.converter, "_preprocess_moergo_binding_edge_cases", side_effect=lambda x: x),
-            patch.object(self.converter, "_resolve_binding_string", side_effect=lambda x: x),
+            patch.object(
+                self.converter,
+                "_preprocess_moergo_binding_edge_cases",
+                side_effect=lambda x: x,
+            ),
+            patch.object(
+                self.converter, "_resolve_binding_string", side_effect=lambda x: x
+            ),
             patch("zmk_layout.models.core.LayoutBinding.from_str") as mock_from_str,
         ):
             mock_binding = Mock()
@@ -387,8 +409,14 @@ class TestASTBehaviorConverter:
         prop = DTProperty("bindings", DTValue(DTValueType.STRING, "", "<&kp LG( A )>"))
 
         with (
-            patch.object(self.converter, "_preprocess_moergo_binding_edge_cases", side_effect=lambda x: x),
-            patch.object(self.converter, "_resolve_binding_string", side_effect=lambda x: x),
+            patch.object(
+                self.converter,
+                "_preprocess_moergo_binding_edge_cases",
+                side_effect=lambda x: x,
+            ),
+            patch.object(
+                self.converter, "_resolve_binding_string", side_effect=lambda x: x
+            ),
             patch("zmk_layout.models.core.LayoutBinding.from_str") as mock_from_str,
         ):
             mock_binding = Mock()
@@ -413,7 +441,11 @@ class TestASTBehaviorConverter:
         """Test single binding extraction with exception."""
         prop = DTProperty("bindings", DTValue.array(["&kp", "A"]))
 
-        with patch.object(self.converter, "_preprocess_moergo_binding_edge_cases", side_effect=Exception("Test error")):
+        with patch.object(
+            self.converter,
+            "_preprocess_moergo_binding_edge_cases",
+            side_effect=Exception("Test error"),
+        ):
             result = self.converter._extract_single_binding_from_property(prop)
 
             # Should return fallback binding
@@ -451,7 +483,9 @@ class TestASTBehaviorConverter:
 
     def test_preprocess_moergo_binding_edge_cases_magic_cleanup(self) -> None:
         """Test MoErgo edge case preprocessing for magic parameter cleanup."""
-        result = self.converter._preprocess_moergo_binding_edge_cases("&magic LAYER_Magic 0")
+        result = self.converter._preprocess_moergo_binding_edge_cases(
+            "&magic LAYER_Magic 0"
+        )
         assert result == "&magic"
         self.mock_logger.debug.assert_called()
 
@@ -465,7 +499,9 @@ class TestASTBehaviorConverter:
         node = DTNode(name="input_listener")
         child_node = DTNode(name="xy_listener")
         child_node.add_property(DTProperty("layers", DTValue.array([0, 1])))
-        child_node.add_property(DTProperty("input-processors", DTValue.array(["&zip_xy_scaler", "1", "9"])))
+        child_node.add_property(
+            DTProperty("input-processors", DTValue.array(["&zip_xy_scaler", "1", "9"]))
+        )
         node.add_child(child_node)
 
         result = self.converter.convert_input_listener_node(node)
@@ -488,7 +524,9 @@ class TestASTBehaviorConverter:
         child_node = DTNode(name="xy_listener")
         child_node.add_property(DTProperty("layers", DTValue.array([0, 1])))
 
-        result = self.converter._convert_input_listener_child_node("xy_listener", child_node)
+        result = self.converter._convert_input_listener_child_node(
+            "xy_listener", child_node
+        )
 
         assert result is not None
         assert result.code == "xy_listener"
@@ -496,7 +534,9 @@ class TestASTBehaviorConverter:
 
     def test_extract_input_processors_from_property_array_separate(self) -> None:
         """Test input processors extraction from separate array elements."""
-        prop = DTProperty("input-processors", DTValue.array(["&zip_xy_scaler", "1", "9"]))
+        prop = DTProperty(
+            "input-processors", DTValue.array(["&zip_xy_scaler", "1", "9"])
+        )
         result = self.converter._extract_input_processors_from_property(prop)
 
         assert len(result) == 1
@@ -524,7 +564,9 @@ class TestASTBehaviorConverter:
     def test_convert_tap_dance_node_success(self) -> None:
         """Test successful tap dance node conversion."""
         node = DTNode(name="&td_q_esc")
-        node.add_property(DTProperty("compatible", DTValue.string("zmk,behavior-tap-dance")))
+        node.add_property(
+            DTProperty("compatible", DTValue.string("zmk,behavior-tap-dance"))
+        )
         node.add_property(DTProperty("label", DTValue.string("TAP_DANCE_Q_ESC")))
         node.add_property(DTProperty("tapping-term-ms", DTValue.integer(200)))
         node.add_property(DTProperty("bindings", DTValue.array(["&kp Q", "&kp ESC"])))
@@ -549,7 +591,9 @@ class TestASTBehaviorConverter:
     def test_convert_tap_dance_node_tapping_term_array(self) -> None:
         """Test tap dance node conversion with tapping-term-ms as array."""
         node = DTNode(name="test")
-        node.add_property(DTProperty("compatible", DTValue.string("zmk,behavior-tap-dance")))
+        node.add_property(
+            DTProperty("compatible", DTValue.string("zmk,behavior-tap-dance"))
+        )
         node.add_property(DTProperty("tapping-term-ms", DTValue.array([250])))
         node.add_property(DTProperty("bindings", DTValue.array(["&kp A", "&kp B"])))
 
@@ -561,7 +605,9 @@ class TestASTBehaviorConverter:
     def test_convert_sticky_key_node_success(self) -> None:
         """Test successful sticky key node conversion."""
         node = DTNode(name="&sk_shift")
-        node.add_property(DTProperty("compatible", DTValue.string("zmk,behavior-sticky-key")))
+        node.add_property(
+            DTProperty("compatible", DTValue.string("zmk,behavior-sticky-key"))
+        )
         node.add_property(DTProperty("label", DTValue.string("STICKY_SHIFT")))
         node.add_property(DTProperty("release-after-ms", DTValue.integer(1000)))
         node.add_property(DTProperty("quick-release", DTValue.boolean(True)))
@@ -592,9 +638,13 @@ class TestASTBehaviorConverter:
     def test_convert_caps_word_node_success(self) -> None:
         """Test successful caps word node conversion."""
         node = DTNode(name="&caps_word")
-        node.add_property(DTProperty("compatible", DTValue.string("zmk,behavior-caps-word")))
+        node.add_property(
+            DTProperty("compatible", DTValue.string("zmk,behavior-caps-word"))
+        )
         node.add_property(DTProperty("label", DTValue.string("CAPS_WORD")))
-        node.add_property(DTProperty("continue-list", DTValue.array(["UNDERSCORE", "BACKSPACE"])))
+        node.add_property(
+            DTProperty("continue-list", DTValue.array(["UNDERSCORE", "BACKSPACE"]))
+        )
         node.add_property(DTProperty("mods", DTValue.integer(2)))
 
         result = self.converter.convert_caps_word_node(node)
@@ -609,7 +659,9 @@ class TestASTBehaviorConverter:
     def test_convert_caps_word_node_continue_list_with_defines(self) -> None:
         """Test caps word node conversion with defines in continue-list."""
         node = DTNode(name="caps_word")
-        node.add_property(DTProperty("compatible", DTValue.string("zmk,behavior-caps-word")))
+        node.add_property(
+            DTProperty("compatible", DTValue.string("zmk,behavior-caps-word"))
+        )
         node.add_property(DTProperty("continue-list", DTValue.array(["MY_TIMEOUT"])))
 
         result = self.converter_with_defines.convert_caps_word_node(node)
@@ -629,11 +681,15 @@ class TestASTBehaviorConverter:
     def test_convert_mod_morph_node_success(self) -> None:
         """Test successful mod-morph node conversion."""
         node = DTNode(name="&mm_dot_colon")
-        node.add_property(DTProperty("compatible", DTValue.string("zmk,behavior-mod-morph")))
+        node.add_property(
+            DTProperty("compatible", DTValue.string("zmk,behavior-mod-morph"))
+        )
         node.add_property(DTProperty("label", DTValue.string("DOT_COLON")))
         node.add_property(DTProperty("mods", DTValue.integer(1)))
         node.add_property(DTProperty("keep-mods", DTValue.integer(2)))
-        node.add_property(DTProperty("bindings", DTValue.array(["&kp DOT", "&kp COLON"])))
+        node.add_property(
+            DTProperty("bindings", DTValue.array(["&kp DOT", "&kp COLON"]))
+        )
 
         result = self.converter.convert_mod_morph_node(node)
 
@@ -661,7 +717,9 @@ class TestASTBehaviorConverter:
         node.add_property(DTProperty("quick-tap-ms", DTValue.integer(150)))
         node.add_property(DTProperty("require-prior-idle-ms", DTValue.integer(100)))
         node.add_property(DTProperty("flavor", DTValue.string("tap-preferred")))
-        node.add_property(DTProperty("hold-trigger-key-positions", DTValue.array([5, 6, 7])))
+        node.add_property(
+            DTProperty("hold-trigger-key-positions", DTValue.array([5, 6, 7]))
+        )
         node.add_property(DTProperty("hold-trigger-on-release", DTValue.boolean(True)))
         node.add_property(DTProperty("retro-tap", DTValue.boolean(True)))
         node.add_property(DTProperty("bindings", DTValue.array(["&kp", "&mo"])))
@@ -692,7 +750,10 @@ class TestASTBehaviorConverter:
     def test_populate_combo_properties_all_properties(self) -> None:
         """Test combo properties population with all properties."""
         combo = ComboBehavior(
-            name="test", description="", keyPositions=[0, 1], binding=LayoutBinding(value="&kp", params=[])
+            name="test",
+            description="",
+            keyPositions=[0, 1],
+            binding=LayoutBinding(value="&kp", params=[]),
         )
         node = DTNode(name="test")
         node.add_property(DTProperty("timeout-ms", DTValue.integer(50)))
@@ -706,7 +767,10 @@ class TestASTBehaviorConverter:
     def test_populate_combo_properties_missing_layers(self) -> None:
         """Test combo properties population with missing layers."""
         combo = ComboBehavior(
-            name="test", description="", keyPositions=[0, 1], binding=LayoutBinding(value="&kp", params=[])
+            name="test",
+            description="",
+            keyPositions=[0, 1],
+            binding=LayoutBinding(value="&kp", params=[]),
         )
         node = DTNode(name="test")
 
@@ -758,7 +822,11 @@ class TestASTBehaviorConverter:
             method = getattr(self.converter, method_name)
 
             # Patch internal method to raise exception
-            with patch.object(self.converter, "_extract_description_from_node", side_effect=Exception("Test error")):
+            with patch.object(
+                self.converter,
+                "_extract_description_from_node",
+                side_effect=Exception("Test error"),
+            ):
                 result = method(bad_node)
 
                 # Should return None and log error
@@ -768,7 +836,10 @@ class TestASTBehaviorConverter:
 
         # Test input_listener_node separately as it has different behavior
         # Force an exception by creating a node that will cause an error in the method body
-        with patch("zmk_layout.models.behaviors.InputListener", side_effect=Exception("Test error")):
+        with patch(
+            "zmk_layout.models.behaviors.InputListener",
+            side_effect=Exception("Test error"),
+        ):
             result = self.converter.convert_input_listener_node(bad_node)
             assert result is None
 
@@ -779,7 +850,9 @@ class TestASTBehaviorConverter:
         assert result == "&reset"
 
         # Test preprocessing of magic parameter cleanup
-        result = self.converter._preprocess_moergo_binding_edge_cases("&magic LAYER_Magic 0")
+        result = self.converter._preprocess_moergo_binding_edge_cases(
+            "&magic LAYER_Magic 0"
+        )
         assert result == "&magic"
 
     def test_extract_macro_bindings_fallback_on_error(self) -> None:
@@ -787,9 +860,18 @@ class TestASTBehaviorConverter:
         prop = DTProperty("bindings", DTValue.array(["&invalid_binding"]))
 
         with (
-            patch.object(self.converter, "_preprocess_moergo_binding_edge_cases", side_effect=lambda x: x),
-            patch.object(self.converter, "_resolve_binding_string", side_effect=lambda x: x),
-            patch("zmk_layout.models.core.LayoutBinding.from_str", side_effect=Exception("Parse error")),
+            patch.object(
+                self.converter,
+                "_preprocess_moergo_binding_edge_cases",
+                side_effect=lambda x: x,
+            ),
+            patch.object(
+                self.converter, "_resolve_binding_string", side_effect=lambda x: x
+            ),
+            patch(
+                "zmk_layout.models.core.LayoutBinding.from_str",
+                side_effect=Exception("Parse error"),
+            ),
         ):
             result = self.converter._extract_macro_bindings_from_property(prop)
 
@@ -812,7 +894,9 @@ class TestASTBehaviorConverter:
         node.add_property(DTProperty("quick-tap-ms", DTValue.integer(150)))
         node.add_property(DTProperty("require-prior-idle-ms", DTValue.integer(100)))
         node.add_property(DTProperty("flavor", DTValue.string("balanced")))
-        node.add_property(DTProperty("hold-trigger-key-positions", DTValue.array([5, 6, 7, 8, 9])))
+        node.add_property(
+            DTProperty("hold-trigger-key-positions", DTValue.array([5, 6, 7, 8, 9]))
+        )
         node.add_property(DTProperty("hold-trigger-on-release", DTValue.boolean(True)))
         node.add_property(DTProperty("retro-tap", DTValue.boolean(True)))
         node.add_property(DTProperty("bindings", DTValue.array(["&kp", "&mo"])))

@@ -56,7 +56,9 @@ class TestLayoutBinding:
 
     def test_layout_binding_to_string(self) -> None:
         """Test binding string representation."""
-        binding = LayoutBinding(value="&mt", params=[LayoutParam(value="LSHIFT"), LayoutParam(value="A")])
+        binding = LayoutBinding(
+            value="&mt", params=[LayoutParam(value="LSHIFT"), LayoutParam(value="A")]
+        )
         str_repr = str(binding)
         assert "&mt" in str_repr
 
@@ -74,7 +76,12 @@ class TestBehaviorModels:
     def test_hold_tap_behavior_validation(self) -> None:
         """Test hold-tap behavior validation."""
         # Test valid hold-tap
-        ht = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200, flavor="tap-preferred")
+        ht = HoldTapBehavior(
+            name="&mt",
+            bindings=["&kp LSHIFT", "&kp A"],
+            tappingTermMs=200,
+            flavor="tap-preferred",
+        )
         assert ht.name == "&mt"
         assert len(ht.bindings) == 2
         assert ht.tapping_term_ms == 200
@@ -82,7 +89,9 @@ class TestBehaviorModels:
 
     def test_hold_tap_behavior_serialization(self) -> None:
         """Test hold-tap serialization."""
-        ht = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200)
+        ht = HoldTapBehavior(
+            name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200
+        )
         data = ht.model_dump()
         assert data["name"] == "&mt"
         assert "bindings" in data
@@ -135,14 +144,24 @@ class TestLayoutData:
 
     def test_layout_data_with_all_behaviors(self) -> None:
         """Test layout data with all behavior types."""
-        hold_tap = HoldTapBehavior(name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200)
+        hold_tap = HoldTapBehavior(
+            name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200
+        )
 
-        combo = ComboBehavior(name="esc_combo", keyPositions=[0, 1], binding=LayoutBinding(value="&kp ESC"))
+        combo = ComboBehavior(
+            name="esc_combo",
+            keyPositions=[0, 1],
+            binding=LayoutBinding(value="&kp ESC"),
+        )
 
-        macro = MacroBehavior(name="&email", bindings=[LayoutBinding(value="&kp H")], waitMs=10)
+        macro = MacroBehavior(
+            name="&email", bindings=[LayoutBinding(value="&kp H")], waitMs=10
+        )
 
         tap_dance = TapDanceBehavior(
-            name="&td_caps", bindings=[LayoutBinding(value="&kp A"), LayoutBinding(value="&kp B")], tappingTermMs=200
+            name="&td_caps",
+            bindings=[LayoutBinding(value="&kp A"), LayoutBinding(value="&kp B")],
+            tappingTermMs=200,
         )
 
         layout = LayoutData(
@@ -164,7 +183,10 @@ class TestLayoutData:
     def test_layout_data_serialization(self) -> None:
         """Test layout data serialization."""
         layout = LayoutData(
-            keyboard="test_kb", title="Test Layout", layers=[[LayoutBinding(value="&kp A")]], layer_names=["default"]
+            keyboard="test_kb",
+            title="Test Layout",
+            layers=[[LayoutBinding(value="&kp A")]],
+            layer_names=["default"],
         )
 
         # Test JSON serialization
@@ -335,11 +357,17 @@ class TestComplexScenarios:
         ]
 
         hold_tap = HoldTapBehavior(
-            name="&mt", bindings=["&kp LSHIFT", "&kp A"], tappingTermMs=200, flavor="tap-preferred"
+            name="&mt",
+            bindings=["&kp LSHIFT", "&kp A"],
+            tappingTermMs=200,
+            flavor="tap-preferred",
         )
 
         combo = ComboBehavior(
-            name="qw_esc", keyPositions=[0, 1], binding=LayoutBinding.from_str("&kp ESC"), timeoutMs=50
+            name="qw_esc",
+            keyPositions=[0, 1],
+            binding=LayoutBinding.from_str("&kp ESC"),
+            timeoutMs=50,
         )
 
         layout = LayoutData(

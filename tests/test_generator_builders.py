@@ -113,7 +113,13 @@ class TestComboBuilder:
 
     def test_combo_with_layers(self) -> None:
         """Test creating a combo limited to specific layers."""
-        combo = ComboBuilder("paste").positions([13, 14]).binding("&kp LC(V)").layers([0, 1, 2]).build()
+        combo = (
+            ComboBuilder("paste")
+            .positions([13, 14])
+            .binding("&kp LC(V)")
+            .layers([0, 1, 2])
+            .build()
+        )
 
         assert combo.layers == [0, 1, 2]
 
@@ -136,7 +142,13 @@ class TestComboBuilder:
 
     def test_behavior_override(self) -> None:
         """Test setting behavior override."""
-        combo = ComboBuilder("custom").positions([5, 6]).binding("&kp A").behavior_override("&custom_combo").build()
+        combo = (
+            ComboBuilder("custom")
+            .positions([5, 6])
+            .binding("&kp A")
+            .behavior_override("&custom_combo")
+            .build()
+        )
 
         assert combo.behavior == "&custom_combo"
 
@@ -183,7 +195,9 @@ class TestMacroBuilder:
 
     def test_macro_sequence(self) -> None:
         """Test adding sequence of actions."""
-        macro = MacroBuilder("word").sequence("&kp W", "&kp O", "&kp R", "&kp D").build()
+        macro = (
+            MacroBuilder("word").sequence("&kp W", "&kp O", "&kp R", "&kp D").build()
+        )
 
         assert len(macro.bindings) == 4
 
@@ -200,7 +214,14 @@ class TestMacroBuilder:
 
     def test_press_release_actions(self) -> None:
         """Test press and release actions."""
-        macro = MacroBuilder("shift_word").press("&kp LSHIFT").tap("&kp H").tap("&kp I").release("&kp LSHIFT").build()
+        macro = (
+            MacroBuilder("shift_word")
+            .press("&kp LSHIFT")
+            .tap("&kp H")
+            .tap("&kp I")
+            .release("&kp LSHIFT")
+            .build()
+        )
 
         assert len(macro.bindings) == 4
         assert macro.bindings[0].value == "&macro_press"
@@ -220,7 +241,11 @@ class TestZMKGeneratorBuilder:
         profile = MagicMock()
         layout_data = MagicMock()
 
-        builder = ZMKGeneratorBuilder(generator).with_profile(profile).with_layout(layout_data)
+        builder = (
+            ZMKGeneratorBuilder(generator)
+            .with_profile(profile)
+            .with_layout(layout_data)
+        )
 
         # Test behaviors generation
         behaviors_dtsi = builder.generate_behaviors_dtsi()
@@ -242,7 +267,12 @@ class TestZMKGeneratorBuilder:
         behavior1 = BehaviorBuilder("hm_l").bindings("&kp", "&kp").build()
         behavior2 = BehaviorBuilder("hm_r").bindings("&kp", "&kp").build()
 
-        builder = ZMKGeneratorBuilder(generator).with_profile(profile).add_behavior(behavior1).add_behavior(behavior2)
+        builder = (
+            ZMKGeneratorBuilder(generator)
+            .with_profile(profile)
+            .add_behavior(behavior1)
+            .add_behavior(behavior2)
+        )
 
         assert len(builder._behaviors) == 2
         assert builder._behaviors[0].name == "hm_l"
@@ -274,7 +304,9 @@ class TestZMKGeneratorBuilder:
         """Test setting generation options."""
         generator = MagicMock()
 
-        builder = ZMKGeneratorBuilder(generator).with_options(format_style="grid", include_comments=True)
+        builder = ZMKGeneratorBuilder(generator).with_options(
+            format_style="grid", include_comments=True
+        )
 
         assert builder._options["format_style"] == "grid"
         assert builder._options["include_comments"] is True

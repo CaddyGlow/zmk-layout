@@ -30,7 +30,12 @@ class MockLogger:
     def debug(self, message: str, **kwargs: str | int | float | bool | None) -> None:
         self.debug_calls.append((message, dict(kwargs)))
 
-    def error(self, message: str, exc_info: bool = False, **kwargs: str | int | float | bool | None) -> None:
+    def error(
+        self,
+        message: str,
+        exc_info: bool = False,
+        **kwargs: str | int | float | bool | None,
+    ) -> None:
         self.error_calls.append((message, dict(kwargs)))
 
     def warning(self, message: str, **kwargs: str | int | float | bool | None) -> None:
@@ -39,12 +44,18 @@ class MockLogger:
     def info(self, message: str, **kwargs: str | int | float | bool | None) -> None:
         pass
 
-    def exception(self, message: str, **kwargs: str | int | float | bool | None) -> None:
+    def exception(
+        self, message: str, **kwargs: str | int | float | bool | None
+    ) -> None:
         self.error_calls.append((message, dict(kwargs)))
 
 
 class MockProcessor:
-    def __init__(self, return_value: LayoutData | None = None, should_raise: Exception | None = None) -> None:
+    def __init__(
+        self,
+        return_value: LayoutData | None = None,
+        should_raise: Exception | None = None,
+    ) -> None:
         self.return_value = return_value
         self.should_raise = should_raise
         self.process_calls: list[ParsingContext] = []
@@ -106,13 +117,18 @@ def sample_layout_data() -> LayoutData:
                 LayoutBinding(value="&kp", params=[LayoutParam(value="Q")]),
                 LayoutBinding(value="&kp", params=[LayoutParam(value="W")]),
             ],
-            [LayoutBinding(value="&trans", params=[]), LayoutBinding(value="&kp", params=[LayoutParam(value="ESC")])],
+            [
+                LayoutBinding(value="&trans", params=[]),
+                LayoutBinding(value="&kp", params=[LayoutParam(value="ESC")]),
+            ],
         ],
     )
 
 
 @pytest.fixture
-def zmk_parser(mock_logger: MockLogger, mock_configuration_provider: MockConfigurationProvider) -> ZMKKeymapParser:
+def zmk_parser(
+    mock_logger: MockLogger, mock_configuration_provider: MockConfigurationProvider
+) -> ZMKKeymapParser:
     mock_processors: dict[ParsingMode, MockProcessor] = {
         ParsingMode.TEMPLATE_AWARE: MockProcessor(),
         ParsingMode.FULL: MockProcessor(),
@@ -141,13 +157,18 @@ class TestZMKKeymapParserFileHandling:
         assert result.parsing_method == ParsingMethod.AST
 
     def test_parse_keymap_empty_file(
-        self, zmk_parser: ZMKKeymapParser, tmp_path: Path, sample_layout_data: LayoutData
+        self,
+        zmk_parser: ZMKKeymapParser,
+        tmp_path: Path,
+        sample_layout_data: LayoutData,
     ) -> None:
         """Test parsing empty keymap file."""
         empty_file = tmp_path / "empty.keymap"
         empty_file.write_text("")
 
-        zmk_parser.processors[ParsingMode.TEMPLATE_AWARE].return_value = sample_layout_data  # type: ignore[attr-defined]
+        zmk_parser.processors[
+            ParsingMode.TEMPLATE_AWARE
+        ].return_value = sample_layout_data  # type: ignore[attr-defined]
 
         result = zmk_parser.parse_keymap(empty_file)
 
@@ -161,7 +182,9 @@ class TestZMKKeymapParserFileHandling:
     ) -> None:
         """Test parsing file with encoding issues."""
         mock_exists.return_value = True  # Make the file appear to exist
-        mock_read_text.side_effect = UnicodeDecodeError("utf-8", b"", 0, 1, "invalid start byte")
+        mock_read_text.side_effect = UnicodeDecodeError(
+            "utf-8", b"", 0, 1, "invalid start byte"
+        )
 
         keymap_file = Path("test.keymap")
         result = zmk_parser.parse_keymap(keymap_file)
@@ -172,19 +195,31 @@ class TestZMKKeymapParserFileHandling:
         error_text = " ".join(result.errors)
         assert any(
             keyword in error_text
-            for keyword in ["Parsing failed", "encoding", "UnicodeDecodeError", "Template-aware parsing failed"]
+            for keyword in [
+                "Parsing failed",
+                "encoding",
+                "UnicodeDecodeError",
+                "Template-aware parsing failed",
+            ]
         )
 
     def test_parse_keymap_with_different_modes(
-        self, zmk_parser: ZMKKeymapParser, tmp_path: Path, sample_layout_data: LayoutData
+        self,
+        zmk_parser: ZMKKeymapParser,
+        tmp_path: Path,
+        sample_layout_data: LayoutData,
     ) -> None:
         """Test parsing with different parsing modes."""
         keymap_file = tmp_path / "test.keymap"
         keymap_file.write_text("/ { keymap { layer_0 { bindings = <&kp Q>; }; }; };")
 
         # Test TEMPLATE_AWARE mode
-        zmk_parser.processors[ParsingMode.TEMPLATE_AWARE].return_value = sample_layout_data  # type: ignore[attr-defined]
-        result_template = zmk_parser.parse_keymap(keymap_file, mode=ParsingMode.TEMPLATE_AWARE)
+        zmk_parser.processors[
+            ParsingMode.TEMPLATE_AWARE
+        ].return_value = sample_layout_data  # type: ignore[attr-defined]
+        result_template = zmk_parser.parse_keymap(
+            keymap_file, mode=ParsingMode.TEMPLATE_AWARE
+        )
         assert result_template.parsing_mode == ParsingMode.TEMPLATE_AWARE
 
         # Test FULL mode
@@ -196,7 +231,9 @@ class TestZMKKeymapParserFileHandling:
 class TestZMKKeymapParserBindingConversion:
     """Tests for AST binding conversion logic."""
 
-    def test_resolve_binding_string_with_defines(self, zmk_parser: ZMKKeymapParser) -> None:
+    def test_resolve_binding_string_with_defines(
+        self, zmk_parser: ZMKKeymapParser
+    ) -> None:
         """Test binding string resolution with defines."""
         zmk_parser.defines = {"CUSTOM_KEY": "Q", "MOD_KEY": "LCTRL"}
 
@@ -208,23 +245,35 @@ class TestZMKKeymapParserBindingConversion:
         result = zmk_parser._resolve_binding_string("&custom_behavior")
         assert result == "&custom_behavior"
 
-    def test_resolve_binding_string_no_defines(self, zmk_parser: ZMKKeymapParser) -> None:
+    def test_resolve_binding_string_no_defines(
+        self, zmk_parser: ZMKKeymapParser
+    ) -> None:
         """Test binding string when no defines match."""
         result = zmk_parser._resolve_binding_string("&kp UNKNOWN_KEY")
         assert result == "&kp UNKNOWN_KEY"
 
-    def test_convert_ast_bindings_complex_parameters(self, zmk_parser: ZMKKeymapParser) -> None:
+    def test_convert_ast_bindings_complex_parameters(
+        self, zmk_parser: ZMKKeymapParser
+    ) -> None:
         """Test conversion of AST bindings with complex parameters."""
         from zmk_layout.parsers.ast_nodes import DTValue, DTValueType
 
         # Mock complex binding structure
         mock_binding_value = DTValue(
-            type=DTValueType.ARRAY, value=["&hm", "LCTRL", "A", "&kp", "Q", "&mt", "LSHIFT", "ESC"], raw="<>"
+            type=DTValueType.ARRAY,
+            value=["&hm", "LCTRL", "A", "&kp", "Q", "&mt", "LSHIFT", "ESC"],
+            raw="<>",
         )
 
         with (
-            patch.object(zmk_parser, "_preprocess_moergo_binding_edge_cases", side_effect=lambda x: x),
-            patch.object(zmk_parser, "_resolve_binding_string", side_effect=lambda x: x),
+            patch.object(
+                zmk_parser,
+                "_preprocess_moergo_binding_edge_cases",
+                side_effect=lambda x: x,
+            ),
+            patch.object(
+                zmk_parser, "_resolve_binding_string", side_effect=lambda x: x
+            ),
         ):
             bindings = zmk_parser._convert_ast_bindings(mock_binding_value)
 
@@ -234,7 +283,9 @@ class TestZMKKeymapParserBindingConversion:
         assert bindings[1].value == "&kp"
         assert len(bindings[1].params) == 1  # Q
 
-    def test_convert_ast_bindings_empty_value(self, zmk_parser: ZMKKeymapParser) -> None:
+    def test_convert_ast_bindings_empty_value(
+        self, zmk_parser: ZMKKeymapParser
+    ) -> None:
         """Test conversion with empty or None binding value."""
         from zmk_layout.parsers.ast_nodes import DTValue, DTValueType
 
@@ -243,16 +294,29 @@ class TestZMKKeymapParserBindingConversion:
         result = zmk_parser._convert_ast_bindings(empty_value)
         assert result == []
 
-    def test_convert_ast_bindings_parsing_failure(self, zmk_parser: ZMKKeymapParser, mock_logger: MockLogger) -> None:
+    def test_convert_ast_bindings_parsing_failure(
+        self, zmk_parser: ZMKKeymapParser, mock_logger: MockLogger
+    ) -> None:
         """Test handling of binding parsing failures."""
         from zmk_layout.parsers.ast_nodes import DTValue, DTValueType
 
-        mock_binding_value = DTValue(type=DTValueType.ARRAY, value=["&invalid_binding"], raw="<>")
+        mock_binding_value = DTValue(
+            type=DTValueType.ARRAY, value=["&invalid_binding"], raw="<>"
+        )
 
         with (
-            patch.object(zmk_parser, "_preprocess_moergo_binding_edge_cases", side_effect=lambda x: x),
-            patch.object(zmk_parser, "_resolve_binding_string", side_effect=lambda x: x),
-            patch("zmk_layout.models.core.LayoutBinding.from_str", side_effect=ValueError("Invalid binding")),
+            patch.object(
+                zmk_parser,
+                "_preprocess_moergo_binding_edge_cases",
+                side_effect=lambda x: x,
+            ),
+            patch.object(
+                zmk_parser, "_resolve_binding_string", side_effect=lambda x: x
+            ),
+            patch(
+                "zmk_layout.models.core.LayoutBinding.from_str",
+                side_effect=ValueError("Invalid binding"),
+            ),
         ):
             bindings = zmk_parser._convert_ast_bindings(mock_binding_value)
 
@@ -262,13 +326,17 @@ class TestZMKKeymapParserBindingConversion:
         assert bindings[0].params == []
 
         # Should log error
-        assert any("Failed to parse binding" in call[0] for call in mock_logger.error_calls)
+        assert any(
+            "Failed to parse binding" in call[0] for call in mock_logger.error_calls
+        )
 
 
 class TestZMKKeymapParserMoErgoPreprocessing:
     """Tests for MoErgo-specific preprocessing."""
 
-    def test_preprocess_moergo_binding_edge_cases(self, zmk_parser: ZMKKeymapParser) -> None:
+    def test_preprocess_moergo_binding_edge_cases(
+        self, zmk_parser: ZMKKeymapParser
+    ) -> None:
         """Test MoErgo binding preprocessing."""
         # Test various edge cases that might be specific to MoErgo boards
         test_cases = [
@@ -286,7 +354,11 @@ class TestZMKKeymapParserIntegration:
 
     @patch("zmk_layout.parsers.zmk_keymap_parser.datetime")
     def test_parse_keymap_success_workflow(
-        self, mock_datetime: Any, zmk_parser: ZMKKeymapParser, tmp_path: Path, sample_layout_data: LayoutData
+        self,
+        mock_datetime: Any,
+        zmk_parser: ZMKKeymapParser,
+        tmp_path: Path,
+        sample_layout_data: LayoutData,
     ) -> None:
         """Test successful complete parsing workflow."""
         # Mock datetime.now() for deterministic testing
@@ -296,7 +368,9 @@ class TestZMKKeymapParserIntegration:
         keymap_file = tmp_path / "test.keymap"
         keymap_file.write_text("/ { keymap { layer_0 { bindings = <&kp Q>; }; }; };")
 
-        zmk_parser.processors[ParsingMode.TEMPLATE_AWARE].return_value = sample_layout_data  # type: ignore[attr-defined]
+        zmk_parser.processors[
+            ParsingMode.TEMPLATE_AWARE
+        ].return_value = sample_layout_data  # type: ignore[attr-defined]
 
         result = zmk_parser.parse_keymap(keymap_file)
 
@@ -306,13 +380,17 @@ class TestZMKKeymapParserIntegration:
         assert result.layout_data.creator == "glovebox"
         assert "test.keymap" in result.layout_data.notes
 
-    def test_parse_keymap_processor_error(self, zmk_parser: ZMKKeymapParser, tmp_path: Path) -> None:
+    def test_parse_keymap_processor_error(
+        self, zmk_parser: ZMKKeymapParser, tmp_path: Path
+    ) -> None:
         """Test handling of processor errors."""
         keymap_file = tmp_path / "test.keymap"
         keymap_file.write_text("invalid content")
 
         # Configure processor to raise an exception
-        zmk_parser.processors[ParsingMode.TEMPLATE_AWARE].should_raise = RuntimeError("Processing failed")  # type: ignore[attr-defined]
+        zmk_parser.processors[ParsingMode.TEMPLATE_AWARE].should_raise = RuntimeError(
+            "Processing failed"
+        )  # type: ignore[attr-defined]
 
         result = zmk_parser.parse_keymap(keymap_file)
 
@@ -320,7 +398,10 @@ class TestZMKKeymapParserIntegration:
         assert any("Parsing failed" in error for error in result.errors)
 
     def test_parse_keymap_with_profile(
-        self, zmk_parser: ZMKKeymapParser, tmp_path: Path, sample_layout_data: LayoutData
+        self,
+        zmk_parser: ZMKKeymapParser,
+        tmp_path: Path,
+        sample_layout_data: LayoutData,
     ) -> None:
         """Test parsing with keyboard profile."""
         keymap_file = tmp_path / "test.keymap"
@@ -329,7 +410,9 @@ class TestZMKKeymapParserIntegration:
         profile = Mock()
         profile.keyboard_name = "test_board"
 
-        zmk_parser.processors[ParsingMode.TEMPLATE_AWARE].return_value = sample_layout_data  # type: ignore[attr-defined]
+        zmk_parser.processors[
+            ParsingMode.TEMPLATE_AWARE
+        ].return_value = sample_layout_data  # type: ignore[attr-defined]
 
         zmk_parser.parse_keymap(keymap_file, profile=profile)
 
@@ -361,7 +444,9 @@ class TestZMKKeymapParserFactories:
 class TestZMKKeymapParserErrorHandling:
     """Tests for comprehensive error handling."""
 
-    def test_extraction_config_error_handling(self, zmk_parser: ZMKKeymapParser) -> None:
+    def test_extraction_config_error_handling(
+        self, zmk_parser: ZMKKeymapParser
+    ) -> None:
         """Test error handling in extraction config retrieval."""
         # Configure provider to return None or invalid config
         zmk_parser.configuration_provider.extraction_config = None  # type: ignore[union-attr]
@@ -409,7 +494,10 @@ class TestZMKKeymapParserEdgeCases:
     """Tests for edge cases and boundary conditions."""
 
     def test_parse_keymap_with_warnings(
-        self, zmk_parser: ZMKKeymapParser, tmp_path: Path, sample_layout_data: LayoutData
+        self,
+        zmk_parser: ZMKKeymapParser,
+        tmp_path: Path,
+        sample_layout_data: LayoutData,
     ) -> None:
         """Test parsing that generates warnings."""
         keymap_file = tmp_path / "test.keymap"
@@ -427,28 +515,43 @@ class TestZMKKeymapParserEdgeCases:
         assert result.success
         assert "Test warning" in result.warnings
 
-    def test_standalone_parameter_handling(self, zmk_parser: ZMKKeymapParser, mock_logger: MockLogger) -> None:
+    def test_standalone_parameter_handling(
+        self, zmk_parser: ZMKKeymapParser, mock_logger: MockLogger
+    ) -> None:
         """Test handling of standalone parameters without behavior references."""
         from zmk_layout.parsers.ast_nodes import DTValue, DTValueType
 
         # Mock binding with standalone parameter (edge case)
-        mock_binding_value = DTValue(type=DTValueType.ARRAY, value=["STANDALONE_PARAM"], raw="<>")
+        mock_binding_value = DTValue(
+            type=DTValueType.ARRAY, value=["STANDALONE_PARAM"], raw="<>"
+        )
 
         bindings = zmk_parser._convert_ast_bindings(mock_binding_value)
 
         # Should handle gracefully and log warning
         assert len(bindings) == 0  # No valid bindings created
-        assert any("Found standalone parameter" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "Found standalone parameter" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
     def test_single_binding_conversion(self, zmk_parser: ZMKKeymapParser) -> None:
         """Test conversion of single binding (non-array)."""
         from zmk_layout.parsers.ast_nodes import DTValue, DTValueType
 
-        mock_binding_value = DTValue(type=DTValueType.STRING, value="&kp Q", raw='"&kp Q"')
+        mock_binding_value = DTValue(
+            type=DTValueType.STRING, value="&kp Q", raw='"&kp Q"'
+        )
 
         with (
-            patch.object(zmk_parser, "_preprocess_moergo_binding_edge_cases", side_effect=lambda x: x),
-            patch.object(zmk_parser, "_resolve_binding_string", side_effect=lambda x: x),
+            patch.object(
+                zmk_parser,
+                "_preprocess_moergo_binding_edge_cases",
+                side_effect=lambda x: x,
+            ),
+            patch.object(
+                zmk_parser, "_resolve_binding_string", side_effect=lambda x: x
+            ),
         ):
             bindings = zmk_parser._convert_ast_bindings(mock_binding_value)
 

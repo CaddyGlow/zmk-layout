@@ -189,7 +189,11 @@ class TestValidationPipeline:
         layer.set(1, "&mo 5")  # Invalid layer reference
 
         validator = ValidationPipeline(layout)
-        result = validator.validate_bindings().validate_layer_references().validate_key_positions(max_keys=10)
+        result = (
+            validator.validate_bindings()
+            .validate_layer_references()
+            .validate_key_positions(max_keys=10)
+        )
 
         assert not result.is_valid()
         errors = result.collect_errors()
@@ -291,13 +295,17 @@ class TestValidationPipeline:
         # Layer 1: base
         base = layout.layers.add("base")
         base.set(0, "&kp A")  # Valid
-        base.bindings.append(LayoutBinding(value="invalid", params=[]))  # Invalid syntax
+        base.bindings.append(
+            LayoutBinding(value="invalid", params=[])
+        )  # Invalid syntax
         base.set(2, "&mo 3")  # Invalid layer ref
 
         # Layer 2: nav
         nav = layout.layers.add("nav")
         nav.set(0, "&to 0")  # Valid
-        nav.bindings.append(LayoutBinding(value="&unknown_behavior", params=[]))  # Unknown behavior
+        nav.bindings.append(
+            LayoutBinding(value="&unknown_behavior", params=[])
+        )  # Unknown behavior
 
         # Add many keys for warning
         for i in range(50):

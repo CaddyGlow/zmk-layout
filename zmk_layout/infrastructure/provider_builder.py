@@ -167,7 +167,9 @@ class ProviderBuilder:
         """
         return self._copy_with(logger=logger)
 
-    def with_configuration_provider(self, provider: ConfigurationProviderProtocol) -> Self:
+    def with_configuration_provider(
+        self, provider: ConfigurationProviderProtocol
+    ) -> Self:
         """Set configuration provider - returns new instance.
 
         Args:
@@ -293,7 +295,9 @@ class ProviderBuilder:
         if not config.logger and (config.debug_mode or config.performance_tracking):
             import logging
 
-            logging.basicConfig(level=logging.DEBUG if config.debug_mode else logging.INFO)
+            logging.basicConfig(
+                level=logging.DEBUG if config.debug_mode else logging.INFO
+            )
             # Create a simple logger wrapper
             logger = logging.getLogger("zmk_layout")
             config.logger = logger

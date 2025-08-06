@@ -78,7 +78,9 @@ class BehaviorBuilder:
         self._flavor = flavor
         self._hold_trigger_on_release = hold_trigger_on_release
         self._require_prior_idle_ms = require_prior_idle_ms
-        self._hold_trigger_key_positions: tuple[int, ...] = hold_trigger_key_positions or ()
+        self._hold_trigger_key_positions: tuple[int, ...] = (
+            hold_trigger_key_positions or ()
+        )
         self._retro_tap = retro_tap
         self._tap_behavior = tap_behavior
         self._hold_behavior = hold_behavior
@@ -99,9 +101,15 @@ class BehaviorBuilder:
             tapping_term_ms=updates.get("tapping_term_ms", self._tapping_term_ms),
             quick_tap_ms=updates.get("quick_tap_ms", self._quick_tap_ms),
             flavor=updates.get("flavor", self._flavor),
-            hold_trigger_on_release=updates.get("hold_trigger_on_release", self._hold_trigger_on_release),
-            require_prior_idle_ms=updates.get("require_prior_idle_ms", self._require_prior_idle_ms),
-            hold_trigger_key_positions=updates.get("hold_trigger_key_positions", self._hold_trigger_key_positions),
+            hold_trigger_on_release=updates.get(
+                "hold_trigger_on_release", self._hold_trigger_on_release
+            ),
+            require_prior_idle_ms=updates.get(
+                "require_prior_idle_ms", self._require_prior_idle_ms
+            ),
+            hold_trigger_key_positions=updates.get(
+                "hold_trigger_key_positions", self._hold_trigger_key_positions
+            ),
             retro_tap=updates.get("retro_tap", self._retro_tap),
             tap_behavior=updates.get("tap_behavior", self._tap_behavior),
             hold_behavior=updates.get("hold_behavior", self._hold_behavior),
@@ -186,7 +194,9 @@ class BehaviorBuilder:
             "tap-unless-interrupted",
         ]
         if flavor_type not in valid_flavors:
-            raise ValueError(f"Invalid flavor: {flavor_type}. Must be one of {valid_flavors}")
+            raise ValueError(
+                f"Invalid flavor: {flavor_type}. Must be one of {valid_flavors}"
+            )
         return self._copy_with(flavor=flavor_type)
 
     def positions(self, key_positions: list[int] | tuple[int, ...]) -> Self:
@@ -202,7 +212,9 @@ class BehaviorBuilder:
             >>> # Left hand positions for right hand mod
             >>> builder = builder.positions([0, 1, 2, 3, 4, 10, 11, 12, 13, 14])
         """
-        positions_tuple = tuple(key_positions) if isinstance(key_positions, list) else key_positions
+        positions_tuple = (
+            tuple(key_positions) if isinstance(key_positions, list) else key_positions
+        )
         return self._copy_with(hold_trigger_key_positions=positions_tuple)
 
     def retro_tap(self, enabled: bool = True) -> Self:
@@ -286,7 +298,9 @@ class BehaviorBuilder:
         """
         # Validate required fields
         if len(self._bindings) != 2:
-            raise ValueError(f"Hold-tap behavior requires exactly 2 bindings, found {len(self._bindings)}")
+            raise ValueError(
+                f"Hold-tap behavior requires exactly 2 bindings, found {len(self._bindings)}"
+            )
 
         # Build the behavior
         return HoldTapBehavior(

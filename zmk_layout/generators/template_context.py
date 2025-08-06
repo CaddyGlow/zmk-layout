@@ -61,7 +61,9 @@ class TemplateService:
         **context: Any,
     ) -> None:
         """Override to use provider logger instead of base service logger."""
-        self.providers.logger.error(message, error=str(error), error_type=type(error).__name__, **context)
+        self.providers.logger.error(
+            message, error=str(error), error_type=type(error).__name__, **context
+        )
 
     def process_layout_data(self, layout_data: LayoutData) -> LayoutData:
         """Process layout data with multi-pass template resolution.
@@ -112,10 +114,14 @@ class TemplateService:
             return resolved_layout
 
         except Exception as e:
-            self.log_error_with_context("template_processing_failed", e, operation="process_layout_data")
+            self.log_error_with_context(
+                "template_processing_failed", e, operation="process_layout_data"
+            )
             raise TemplateError(f"Template processing failed: {e}") from e
 
-    def create_template_context(self, layout_data: LayoutData, stage: str) -> TemplateContext:
+    def create_template_context(
+        self, layout_data: LayoutData, stage: str
+    ) -> TemplateContext:
         """Create template context for given resolution stage.
 
         Args:
@@ -129,7 +135,9 @@ class TemplateService:
         data = layout_data.model_dump(mode="json", by_alias=True)
         return self._create_template_context_from_dict(data, stage)
 
-    def _create_template_context_from_dict(self, layout_data: dict[str, Any], stage: str) -> TemplateContext:
+    def _create_template_context_from_dict(
+        self, layout_data: dict[str, Any], stage: str
+    ) -> TemplateContext:
         """Create template context from dict data for given resolution stage."""
         # Base context always available
         context: TemplateContext = {
@@ -146,7 +154,11 @@ class TemplateService:
                 context[field] = layout_data[field]
 
         # Handle version only if it's not the default "1.0.0"
-        if "version" in layout_data and layout_data["version"] and layout_data["version"] != "1.0.0":
+        if (
+            "version" in layout_data
+            and layout_data["version"]
+            and layout_data["version"] != "1.0.0"
+        ):
             context["version"] = layout_data["version"]
 
         # Handle date only if it's explicitly set (not auto-generated current time)
@@ -166,8 +178,12 @@ class TemplateService:
 
         # Add layer utilities
         layer_names = context["layer_names"]
-        context["layer_name_to_index"] = {name: idx for idx, name in enumerate(layer_names)}
-        context["get_layer_index"] = lambda name: context["layer_name_to_index"].get(name, -1)
+        context["layer_name_to_index"] = {
+            name: idx for idx, name in enumerate(layer_names)
+        }
+        context["get_layer_index"] = lambda name: context["layer_name_to_index"].get(
+            name, -1
+        )
 
         # Add stage-specific context
         if stage in ("behaviors", "layers", "custom"):
@@ -207,7 +223,9 @@ class TemplateService:
         try:
             self._validate_templates_in_structure(data, "", errors)
         except Exception as e:
-            self.log_error_with_context("template_validation_failed", e, operation="validate_template_syntax")
+            self.log_error_with_context(
+                "template_validation_failed", e, operation="validate_template_syntax"
+            )
             errors.append(f"Validation error: {e}")
 
         return errors
@@ -243,7 +261,9 @@ class TemplateService:
             TemplateError: If template processing fails
         """
         try:
-            self.providers.logger.debug("processing_templates_raw_data", operation="process_raw_data")
+            self.providers.logger.debug(
+                "processing_templates_raw_data", operation="process_raw_data"
+            )
             self._resolution_cache.clear()
 
             # Skip processing if no variables or templates
@@ -272,7 +292,9 @@ class TemplateService:
             return processed_data
 
         except Exception as e:
-            self.log_error_with_context("raw_data_template_processing_failed", e, operation="process_raw_data")
+            self.log_error_with_context(
+                "raw_data_template_processing_failed", e, operation="process_raw_data"
+            )
             raise TemplateError(f"Raw data template processing failed: {e}") from e
 
     def _has_templates(self, data: dict[str, Any]) -> bool:
@@ -291,7 +313,9 @@ class TemplateService:
 
     def _resolve_basic_fields(self, data: dict[str, Any]) -> dict[str, Any]:
         """Resolve basic metadata fields that don't reference complex structures."""
-        self.providers.logger.debug("resolving_basic_fields", operation="resolve_basic_fields")
+        self.providers.logger.debug(
+            "resolving_basic_fields", operation="resolve_basic_fields"
+        )
         context = self._create_template_context_from_dict(data, "basic")
 
         # Process basic metadata fields
@@ -304,7 +328,9 @@ class TemplateService:
 
     def _resolve_behaviors(self, data: dict[str, Any]) -> dict[str, Any]:
         """Resolve behavior definitions with enriched context."""
-        self.providers.logger.debug("resolving_behavior_definitions", operation="resolve_behaviors")
+        self.providers.logger.debug(
+            "resolving_behavior_definitions", operation="resolve_behaviors"
+        )
         context = self._create_template_context_from_dict(data, "behaviors")
 
         # Process behavior arrays
@@ -319,7 +345,9 @@ class TemplateService:
 
     def _resolve_layers(self, data: dict[str, Any]) -> dict[str, Any]:
         """Resolve layer content with full behavior context."""
-        self.providers.logger.debug("resolving_layer_content", operation="resolve_layers")
+        self.providers.logger.debug(
+            "resolving_layer_content", operation="resolve_layers"
+        )
         context = self._create_template_context_from_dict(data, "layers")
 
         # Process layers
@@ -337,7 +365,9 @@ class TemplateService:
 
     def _resolve_custom_code(self, data: dict[str, Any]) -> dict[str, Any]:
         """Resolve custom DTSI/behavior code with full layout context."""
-        self.providers.logger.debug("resolving_custom_code", operation="resolve_custom_code")
+        self.providers.logger.debug(
+            "resolving_custom_code", operation="resolve_custom_code"
+        )
         context = self._create_template_context_from_dict(data, "custom")
 
         # Process custom code fields
@@ -400,7 +430,9 @@ class TemplateService:
         # Return as string
         return value
 
-    def _validate_templates_in_structure(self, obj: Any, path: str, errors: list[str]) -> None:
+    def _validate_templates_in_structure(
+        self, obj: Any, path: str, errors: list[str]
+    ) -> None:
         """Recursively validate template syntax in data structure."""
         if isinstance(obj, str):
             if re.search(r"\{\{|\{%|\{#", obj):

@@ -38,7 +38,9 @@ class PipelineComposer:
         self._rollback_enabled = False
         self._error_handler: Callable[[Exception, str], Any] | None = None
 
-    def add_processing(self, pipeline: ProcessingPipeline, name: str = "processing") -> PipelineComposer:
+    def add_processing(
+        self, pipeline: ProcessingPipeline, name: str = "processing"
+    ) -> PipelineComposer:
         """Add processing pipeline stage.
 
         Args:
@@ -54,7 +56,9 @@ class PipelineComposer:
         self._stages.append((name, lambda data: pipeline.execute(data)))
         return self
 
-    def add_transformation(self, pipeline: TransformationPipeline, name: str = "transformation") -> PipelineComposer:
+    def add_transformation(
+        self, pipeline: TransformationPipeline, name: str = "transformation"
+    ) -> PipelineComposer:
         """Add transformation pipeline stage.
 
         Args:
@@ -71,7 +75,9 @@ class PipelineComposer:
         return self
 
     def add_validation(
-        self, pipeline_factory: Callable[[Layout], ValidationPipeline], name: str = "validation"
+        self,
+        pipeline_factory: Callable[[Layout], ValidationPipeline],
+        name: str = "validation",
     ) -> PipelineComposer:
         """Add validation pipeline stage.
 
@@ -100,14 +106,20 @@ class PipelineComposer:
                 # Store validation errors in variables
                 if not data.variables:
                     data.variables = {}
-                data.variables["validation_errors"] = [str(e) for e in validation_result.errors]
-                data.variables["validation_warnings"] = [str(w) for w in validation_result.warnings]
+                data.variables["validation_errors"] = [
+                    str(e) for e in validation_result.errors
+                ]
+                data.variables["validation_warnings"] = [
+                    str(w) for w in validation_result.warnings
+                ]
             return data
 
         self._stages.append((name, validate))
         return self
 
-    def add_custom_stage(self, name: str, operation: Callable[[Any], Any]) -> PipelineComposer:
+    def add_custom_stage(
+        self, name: str, operation: Callable[[Any], Any]
+    ) -> PipelineComposer:
         """Add custom pipeline stage.
 
         Args:
@@ -135,7 +147,9 @@ class PipelineComposer:
         self._rollback_enabled = True
         return self
 
-    def with_error_handler(self, handler: Callable[[Exception, str], Any]) -> PipelineComposer:
+    def with_error_handler(
+        self, handler: Callable[[Exception, str], Any]
+    ) -> PipelineComposer:
         """Set custom error handler.
 
         Args:
@@ -164,7 +178,9 @@ class PipelineComposer:
         Examples:
             >>> composer = composer.checkpoint("after_processing")
         """
-        self._stages.append((f"checkpoint_{name}", lambda data: self._save_checkpoint(name, data)))
+        self._stages.append(
+            (f"checkpoint_{name}", lambda data: self._save_checkpoint(name, data))
+        )
         return self
 
     def _save_checkpoint(self, name: str, data: Any) -> Any:
@@ -265,7 +281,11 @@ class WorkflowBuilder:
                 .validate_layer_accessibility()
             )
 
-        return composer.add_custom_stage("transform", transform_stage).add_validation(validate_stage).with_rollback()
+        return (
+            composer.add_custom_stage("transform", transform_stage)
+            .add_validation(validate_stage)
+            .with_rollback()
+        )
 
     @staticmethod
     def layout_optimization_workflow(max_layers: int = 10) -> PipelineComposer:
@@ -309,7 +329,9 @@ class WorkflowBuilder:
         )
 
     @staticmethod
-    def home_row_mods_workflow(mod_config: dict[str, Any] | None = None) -> PipelineComposer:
+    def home_row_mods_workflow(
+        mod_config: dict[str, Any] | None = None,
+    ) -> PipelineComposer:
         """Create home row mods application workflow.
 
         Args:
@@ -342,10 +364,14 @@ class WorkflowBuilder:
                 .validate_hold_tap_timing()
             )
 
-        return composer.add_custom_stage("apply_hrm", hrm_stage).add_validation(validate_stage)
+        return composer.add_custom_stage("apply_hrm", hrm_stage).add_validation(
+            validate_stage
+        )
 
     @staticmethod
-    def full_processing_workflow(processor: BaseKeymapProcessor, ast_roots: list[Any]) -> PipelineComposer:
+    def full_processing_workflow(
+        processor: BaseKeymapProcessor, ast_roots: list[Any]
+    ) -> PipelineComposer:
         """Create full keymap processing workflow.
 
         Args:
@@ -385,7 +411,11 @@ class WorkflowBuilder:
                 .validate_layer_accessibility()
             )
 
-        return composer.add_processing(processing).checkpoint("after_processing").add_validation(validate_stage)
+        return (
+            composer.add_processing(processing)
+            .checkpoint("after_processing")
+            .add_validation(validate_stage)
+        )
 
 
 def compose_pipelines(*pipelines: Any) -> PipelineComposer:

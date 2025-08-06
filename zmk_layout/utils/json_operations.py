@@ -73,7 +73,9 @@ def load_layout_file(
             _skip_variable_resolution = old_skip_value
 
     except json.JSONDecodeError as e:
-        raise json.JSONDecodeError(f"Invalid JSON in layout file {file_path}: {e.msg}", e.doc, e.pos) from e
+        raise json.JSONDecodeError(
+            f"Invalid JSON in layout file {file_path}: {e.msg}", e.doc, e.pos
+        ) from e
     except Exception as e:
         raise ValueError(f"Invalid layout data in {file_path}: {e}") from e
 
@@ -83,7 +85,9 @@ def should_skip_variable_resolution() -> bool:
     return _skip_variable_resolution
 
 
-def save_layout_file(layout_data: LayoutData, file_path: Path, file_provider: "FileProvider") -> None:
+def save_layout_file(
+    layout_data: LayoutData, file_path: Path, file_provider: "FileProvider"
+) -> None:
     """Save layout data to JSON file with proper formatting.
 
     Args:
@@ -131,10 +135,14 @@ def load_json_data(file_path: Path, file_provider: "FileProvider") -> dict[str, 
             raise ValueError(f"JSON file {file_path} does not contain a dictionary")
         return data
     except json.JSONDecodeError as e:
-        raise json.JSONDecodeError(f"Invalid JSON in file {file_path}: {e.msg}", e.doc, e.pos) from e
+        raise json.JSONDecodeError(
+            f"Invalid JSON in file {file_path}: {e.msg}", e.doc, e.pos
+        ) from e
 
 
-def save_json_data(data: dict[str, Any] | list[Any], file_path: Path, file_provider: "FileProvider") -> None:
+def save_json_data(
+    data: dict[str, Any] | list[Any], file_path: Path, file_provider: "FileProvider"
+) -> None:
     """Save raw JSON data to file.
 
     Args:

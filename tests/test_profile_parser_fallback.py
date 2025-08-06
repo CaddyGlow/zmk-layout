@@ -143,7 +143,9 @@ def test_extraction_config_sections_list_conversion() -> None:
 def test_extraction_config_complex_profile_structure() -> None:
     """Test with more complex profile structure."""
     profile = SimpleNamespace(
-        keymap_extraction=SimpleNamespace(sections=["layers", "behaviors", "macros", "combos"]),
+        keymap_extraction=SimpleNamespace(
+            sections=["layers", "behaviors", "macros", "combos"]
+        ),
         keyboard_name="complex_kb",
         other_attributes="should_be_ignored",
     )

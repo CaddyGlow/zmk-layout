@@ -81,7 +81,9 @@ class TestZmkKeymapParserMethods:
         compat_prop = DTProperty(name="compatible", value=DTValue.string("zmk,keymap"))
         keymap_node.add_property(compat_prop)
 
-        bindings_prop = DTProperty(name="bindings", value=DTValue.array(["&kp Q", "&kp W"]))
+        bindings_prop = DTProperty(
+            name="bindings", value=DTValue.array(["&kp Q", "&kp W"])
+        )
         layer_node.add_property(bindings_prop)
 
         # Build hierarchy
@@ -233,14 +235,27 @@ class TestZmkKeymapParserIntegration:
 
         # Add keymap node
         keymap = DTNode(name="keymap")
-        keymap.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,keymap")))
+        keymap.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,keymap"))
+        )
 
         # Add default layer
         default_layer = DTNode(name="default_layer")
         default_layer.add_property(
             DTProperty(
                 name="bindings",
-                value=DTValue.array(["&kp Q", "&kp W", "&kp E", "&kp R", "&kp T", "&kp Y", "&kp U", "&kp I"]),
+                value=DTValue.array(
+                    [
+                        "&kp Q",
+                        "&kp W",
+                        "&kp E",
+                        "&kp R",
+                        "&kp T",
+                        "&kp Y",
+                        "&kp U",
+                        "&kp I",
+                    ]
+                ),
             )
         )
         keymap.add_child(default_layer)
@@ -250,7 +265,18 @@ class TestZmkKeymapParserIntegration:
         raise_layer.add_property(
             DTProperty(
                 name="bindings",
-                value=DTValue.array(["&kp N1", "&kp N2", "&kp N3", "&kp N4", "&trans", "&trans", "&trans", "&trans"]),
+                value=DTValue.array(
+                    [
+                        "&kp N1",
+                        "&kp N2",
+                        "&kp N3",
+                        "&kp N4",
+                        "&trans",
+                        "&trans",
+                        "&trans",
+                        "&trans",
+                    ]
+                ),
             )
         )
         keymap.add_child(raise_layer)
@@ -277,7 +303,9 @@ class TestZmkKeymapParserIntegration:
                 result = parser._extract_layers_from_ast(node)
                 assert result is None
             except Exception as e:
-                pytest.fail(f"Parser should handle edge case gracefully, but raised: {e}")
+                pytest.fail(
+                    f"Parser should handle edge case gracefully, but raised: {e}"
+                )
 
     def test_parser_memory_efficiency(self) -> None:
         """Test parser memory efficiency with repeated operations."""

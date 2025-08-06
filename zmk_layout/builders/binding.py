@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 class BuildError(Exception):
     """Enhanced error with builder state context for debugging."""
 
-    def __init__(self, message: str, builder_state: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self, message: str, builder_state: dict[str, Any] | None = None
+    ) -> None:
         self.builder_state = builder_state
         details = f"\nBuilder state: {builder_state}" if builder_state else ""
         suggestion = "\nSuggestion: Check binding syntax and parameter structure"
@@ -43,7 +45,12 @@ class LayoutBindingBuilder:
     _cache_lock = RLock()
     _result_cache: weakref.WeakValueDictionary[int, Any] = weakref.WeakValueDictionary()
 
-    __slots__ = ("_behavior", "_params", "_modifiers", "__weakref__")  # Memory optimization
+    __slots__ = (
+        "_behavior",
+        "_params",
+        "_modifiers",
+        "__weakref__",
+    )  # Memory optimization
 
     def __init__(
         self,

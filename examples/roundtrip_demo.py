@@ -31,6 +31,7 @@ try:
 except ImportError:
     print("Warning: glove80_profile not available. Using mock configuration.")
     CompleteGlove80Profile = Any
+
     def create_complete_glove80_profile() -> Any:
         return None
 
@@ -69,12 +70,30 @@ class Glove80ConfigurationProvider(ConfigurationProvider):
             else:
                 # Fallback basic behaviors for when profile is not available
                 basic_behaviors = [
-                    "kp", "trans", "none", "mt", "lt", "mo", "to", "bt", "out",
-                    "magic", "lower", "bt_0", "bt_1", "bt_2", "bt_3", "rgb_ug", "reset", "bootloader"
+                    "kp",
+                    "trans",
+                    "none",
+                    "mt",
+                    "lt",
+                    "mo",
+                    "to",
+                    "bt",
+                    "out",
+                    "magic",
+                    "lower",
+                    "bt_0",
+                    "bt_1",
+                    "bt_2",
+                    "bt_3",
+                    "rgb_ug",
+                    "reset",
+                    "bootloader",
                 ]
                 for behavior in basic_behaviors:
                     self._behavior_definitions.append(
-                        SystemBehavior(name=behavior, description="", url="", origin="zmk")
+                        SystemBehavior(
+                            name=behavior, description="", url="", origin="zmk"
+                        )
                     )
 
         return self._behavior_definitions
@@ -87,7 +106,7 @@ class Glove80ConfigurationProvider(ConfigurationProvider):
             "dt-bindings/zmk/keys.h",
             "dt-bindings/zmk/bt.h",
             "dt-bindings/zmk/rgb.h",
-            "dt-bindings/zmk/outputs.h"
+            "dt-bindings/zmk/outputs.h",
         ]
 
     def get_validation_rules(self) -> dict[str, Any]:
@@ -110,8 +129,24 @@ class Glove80ConfigurationProvider(ConfigurationProvider):
                     "max_layers": 10,
                     "key_positions": list(range(80)),
                     "supported_behaviors": [
-                        "kp", "trans", "none", "mt", "lt", "mo", "to", "bt", "out",
-                        "magic", "lower", "bt_0", "bt_1", "bt_2", "bt_3", "rgb_ug", "reset", "bootloader"
+                        "kp",
+                        "trans",
+                        "none",
+                        "mt",
+                        "lt",
+                        "mo",
+                        "to",
+                        "bt",
+                        "out",
+                        "magic",
+                        "lower",
+                        "bt_0",
+                        "bt_1",
+                        "bt_2",
+                        "bt_3",
+                        "rgb_ug",
+                        "reset",
+                        "bootloader",
                     ],
                     "bluetooth_profiles": [0, 1, 2, 3],
                     "rgb_commands": ["RGB_TOG", "RGB_BRI", "RGB_BRD"],
@@ -178,11 +213,10 @@ class Glove80ConfigurationProvider(ConfigurationProvider):
 def create_mock_generator_profile() -> Any:
     """Create a mock profile for the generator."""
     from types import SimpleNamespace
+
     return SimpleNamespace(
         keyboard_config=SimpleNamespace(
-            zmk=SimpleNamespace(
-                compatible_strings=SimpleNamespace(keymap="zmk,keymap")
-            )
+            zmk=SimpleNamespace(compatible_strings=SimpleNamespace(keymap="zmk,keymap"))
         )
     )
 
@@ -242,7 +276,9 @@ def main():
         # Load original JSON
         with open(factory_json_path) as f:
             original_json = json.load(f)
-        print(f"✅ Loaded Factory.json ({len(original_json['layers'])} layers, {len(original_json['layers'][0])} keys)")
+        print(
+            f"✅ Loaded Factory.json ({len(original_json['layers'])} layers, {len(original_json['layers'][0])} keys)"
+        )
 
         # Convert to LayoutData
         layout_data = LayoutData.model_validate(original_json)
@@ -275,15 +311,17 @@ def main():
     try:
         # Parse original keymap
         parser = ZMKKeymapParser(
-            configuration_provider=providers.configuration,
-            logger=providers.logger
+            configuration_provider=providers.configuration, logger=providers.logger
         )
 
         # Use FULL parsing mode to avoid timeout issues
         parse_result = parser.parse_keymap(factory_keymap_path, mode=ParsingMode.FULL)
 
         # Extract LayoutData
-        if hasattr(parse_result, 'layout_data') and parse_result.layout_data is not None:
+        if (
+            hasattr(parse_result, "layout_data")
+            and parse_result.layout_data is not None
+        ):
             parsed_layout_data = parse_result.layout_data
         else:
             parsed_layout_data = parse_result
@@ -324,7 +362,10 @@ def main():
 
         # Step 3: Keymap → LayoutData
         parse_result = parser.parse_keymap(roundtrip_keymap_path, mode=ParsingMode.FULL)
-        if hasattr(parse_result, 'layout_data') and parse_result.layout_data is not None:
+        if (
+            hasattr(parse_result, "layout_data")
+            and parse_result.layout_data is not None
+        ):
             layout_data_2 = parse_result.layout_data
         else:
             layout_data_2 = parse_result
@@ -350,7 +391,9 @@ def main():
         if original_layer_count == roundtrip_layer_count:
             print(f"✅ Layer count preserved: {original_layer_count}")
         else:
-            print(f"⚠️  Layer count changed: {original_layer_count} → {roundtrip_layer_count}")
+            print(
+                f"⚠️  Layer count changed: {original_layer_count} → {roundtrip_layer_count}"
+            )
 
         # Compare layer names
         original_layer_names = original_json["layer_names"]
@@ -358,14 +401,20 @@ def main():
         if original_layer_names == roundtrip_layer_names:
             print(f"✅ Layer names preserved: {original_layer_names}")
         else:
-            print(f"⚠️  Layer names changed: {original_layer_names} → {roundtrip_layer_names}")
+            print(
+                f"⚠️  Layer names changed: {original_layer_names} → {roundtrip_layer_names}"
+            )
 
         # Check key counts per layer
-        for i, (orig_layer, rt_layer) in enumerate(zip(original_json["layers"], roundtrip_json["layers"], strict=False)):
+        for i, (orig_layer, rt_layer) in enumerate(
+            zip(original_json["layers"], roundtrip_json["layers"], strict=False)
+        ):
             if len(orig_layer) == len(rt_layer):
                 print(f"✅ Layer {i} key count preserved: {len(orig_layer)}")
             else:
-                print(f"⚠️  Layer {i} key count changed: {len(orig_layer)} → {len(rt_layer)}")
+                print(
+                    f"⚠️  Layer {i} key count changed: {len(orig_layer)} → {len(rt_layer)}"
+                )
 
         # Check for Glove80-specific behaviors
         behaviors_found = set()
@@ -375,8 +424,14 @@ def main():
                     behaviors_found.add(key["value"])
 
         glove80_behaviors = ["&magic", "&bt_0", "&bt_1", "&bt_2", "&bt_3", "&rgb_ug"]
-        preserved_behaviors = [b for b in glove80_behaviors if b in behaviors_found or b.lstrip("&") in str(behaviors_found)]
-        print(f"✅ Glove80 behaviors preserved: {len(preserved_behaviors)}/{len(glove80_behaviors)}")
+        preserved_behaviors = [
+            b
+            for b in glove80_behaviors
+            if b in behaviors_found or b.lstrip("&") in str(behaviors_found)
+        ]
+        print(
+            f"✅ Glove80 behaviors preserved: {len(preserved_behaviors)}/{len(glove80_behaviors)}"
+        )
 
     except Exception as e:
         print(f"❌ Roundtrip cycle failed: {e}")

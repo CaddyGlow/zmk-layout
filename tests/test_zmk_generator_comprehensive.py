@@ -25,7 +25,9 @@ def create_layout_binding(binding_str: str) -> LayoutBinding:
     """Convert string binding to LayoutBinding object."""
     parts = binding_str.split()
     if len(parts) >= 2:
-        return LayoutBinding(value=parts[0], params=[LayoutParam(value=p) for p in parts[1:]])
+        return LayoutBinding(
+            value=parts[0], params=[LayoutParam(value=p) for p in parts[1:]]
+        )
     return LayoutBinding(value=binding_str, params=[])
 
 
@@ -45,7 +47,12 @@ class MockLogger:
     def debug(self, message: str, **kwargs: str | int | float | bool | None) -> None:
         self.debug_calls.append((message, kwargs))
 
-    def error(self, message: str, exc_info: bool = False, **kwargs: str | int | float | bool | None) -> None:
+    def error(
+        self,
+        message: str,
+        exc_info: bool = False,
+        **kwargs: str | int | float | bool | None,
+    ) -> None:
         self.error_calls.append((message, kwargs))
 
     def warning(self, message: str, **kwargs: str | int | float | bool | None) -> None:
@@ -54,7 +61,9 @@ class MockLogger:
     def info(self, message: str, **kwargs: str | int | float | bool | None) -> None:
         self.info_calls.append((message, kwargs))
 
-    def exception(self, message: str, **kwargs: str | int | float | bool | None) -> None:
+    def exception(
+        self, message: str, **kwargs: str | int | float | bool | None
+    ) -> None:
         self.exception_calls.append((message, kwargs))
 
 
@@ -116,7 +125,9 @@ class MockTemplateProvider:
         self.render_calls.append((template_name, context))
         return self.render_responses.get(template_name, f"rendered_{template_name}")
 
-    def render_string(self, template: str, context: dict[str, str | int | float | bool | None]) -> str:
+    def render_string(
+        self, template: str, context: dict[str, str | int | float | bool | None]
+    ) -> str:
         return template
 
     def has_template_syntax(self, content: str) -> bool:
@@ -149,7 +160,9 @@ class MockBehaviorFormatter:
             return binding
         elif hasattr(binding, "value") and hasattr(binding, "params"):
             if binding.params:
-                param_strs = [p.value if hasattr(p, "value") else str(p) for p in binding.params]
+                param_strs = [
+                    p.value if hasattr(p, "value") else str(p) for p in binding.params
+                ]
                 return f"{binding.value} {' '.join(param_strs)}"
             else:
                 return str(binding.value)
@@ -167,7 +180,11 @@ class MockLayoutFormatter:
         return f"formatted_grid_{len(bindings)}_bindings"
 
     def generate_layer_layout(
-        self, layer_data: Any, profile: Any = None, base_indent: str = "            ", **kwargs: Any
+        self,
+        layer_data: Any,
+        profile: Any = None,
+        base_indent: str = "            ",
+        **kwargs: Any,
     ) -> str:
         """Generate layer layout for ZMK generator compatibility."""
         self.generate_calls.append((layer_data, profile, base_indent, kwargs))
@@ -210,7 +227,9 @@ def mock_layout_formatter() -> MockLayoutFormatter:
 
 
 @pytest.fixture
-def sample_keyboard_profile(mock_configuration_provider: MockConfigurationProvider) -> Any:
+def sample_keyboard_profile(
+    mock_configuration_provider: MockConfigurationProvider,
+) -> Any:
     profile = Mock()
     profile.keyboard_config = mock_configuration_provider.keyboard_config
     profile.keyboard_name = "test_keyboard"
@@ -238,11 +257,15 @@ def zmk_generator(
 class TestZMKGeneratorLayerDefines:
     """Tests for layer defines generation."""
 
-    def test_generate_layer_defines_basic(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_layer_defines_basic(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test basic layer defines generation."""
         layer_names = ["base", "nav", "symbols"]
 
-        result = zmk_generator.generate_layer_defines(sample_keyboard_profile, layer_names)
+        result = zmk_generator.generate_layer_defines(
+            sample_keyboard_profile, layer_names
+        )
 
         assert "#define base 0" in result
         assert "#define nav 1" in result
@@ -252,15 +275,23 @@ class TestZMKGeneratorLayerDefines:
         self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
     ) -> None:
         """Test layer name sanitization in defines."""
-        layer_names = ["layer-with-dashes", "layer_with_underscores", "layer with spaces"]
+        layer_names = [
+            "layer-with-dashes",
+            "layer_with_underscores",
+            "layer with spaces",
+        ]
 
-        result = zmk_generator.generate_layer_defines(sample_keyboard_profile, layer_names)
+        result = zmk_generator.generate_layer_defines(
+            sample_keyboard_profile, layer_names
+        )
 
         assert "#define layer_with_dashes 0" in result
         assert "#define layer_with_underscores 1" in result
         assert "#define layer_with_spaces 2" in result
 
-    def test_generate_layer_defines_empty(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_layer_defines_empty(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test layer defines generation with empty list."""
         result = zmk_generator.generate_layer_defines(sample_keyboard_profile, [])
 
@@ -279,14 +310,19 @@ class TestZMKGeneratorLayerDefines:
 class TestZMKGeneratorBehaviorsDTSI:
     """Tests for behaviors DTSI generation."""
 
-    def test_generate_behaviors_dtsi_empty(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_behaviors_dtsi_empty(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test behaviors generation with empty list."""
         result = zmk_generator.generate_behaviors_dtsi(sample_keyboard_profile, [])
 
         assert result == ""
 
     def test_generate_behaviors_dtsi_valid_hold_tap(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test generation with valid hold-tap behavior."""
         hold_tap = HoldTapBehavior(
@@ -302,7 +338,9 @@ class TestZMKGeneratorBehaviorsDTSI:
             retroTap=True,
         )
 
-        result = zmk_generator.generate_behaviors_dtsi(sample_keyboard_profile, [hold_tap])
+        result = zmk_generator.generate_behaviors_dtsi(
+            sample_keyboard_profile, [hold_tap]
+        )
 
         assert "custom_ht: custom_ht {" in result
         assert 'compatible = "zmk,behavior-hold-tap";' in result
@@ -315,7 +353,10 @@ class TestZMKGeneratorBehaviorsDTSI:
         assert "retro-tap;" in result
 
     def test_generate_behaviors_dtsi_missing_name(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test handling of hold-tap with missing name."""
         hold_tap = HoldTapBehavior(
@@ -324,13 +365,21 @@ class TestZMKGeneratorBehaviorsDTSI:
             tappingTermMs=200,
         )
 
-        result = zmk_generator.generate_behaviors_dtsi(sample_keyboard_profile, [hold_tap])
+        result = zmk_generator.generate_behaviors_dtsi(
+            sample_keyboard_profile, [hold_tap]
+        )
 
         assert result == ""
-        assert any("Skipping hold-tap behavior with missing 'name'" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "Skipping hold-tap behavior with missing 'name'" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
     def test_generate_behaviors_dtsi_wrong_binding_count(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test handling of hold-tap with wrong binding count."""
         # Create a mock hold-tap that bypasses model validation
@@ -346,13 +395,21 @@ class TestZMKGeneratorBehaviorsDTSI:
         hold_tap.hold_trigger_key_positions = None
         hold_tap.retro_tap = None
 
-        result = zmk_generator.generate_behaviors_dtsi(sample_keyboard_profile, [hold_tap])
+        result = zmk_generator.generate_behaviors_dtsi(
+            sample_keyboard_profile, [hold_tap]
+        )
 
         assert result == ""
-        assert any("requires exactly 2 bindings" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "requires exactly 2 bindings" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
     def test_generate_behaviors_dtsi_invalid_flavor(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test handling of invalid flavor."""
         # Create a mock hold-tap with invalid flavor
@@ -368,12 +425,17 @@ class TestZMKGeneratorBehaviorsDTSI:
         hold_tap.hold_trigger_key_positions = None
         hold_tap.retro_tap = None
 
-        result = zmk_generator.generate_behaviors_dtsi(sample_keyboard_profile, [hold_tap])
+        result = zmk_generator.generate_behaviors_dtsi(
+            sample_keyboard_profile, [hold_tap]
+        )
 
         # Should generate the behavior but omit the invalid flavor
         assert "ht_invalid_flavor: ht_invalid_flavor {" in result
         assert 'flavor = "invalid-flavor";' not in result
-        assert any("Invalid flavor 'invalid-flavor'" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "Invalid flavor 'invalid-flavor'" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
     def test_generate_behaviors_dtsi_behavior_registry_integration(
         self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
@@ -408,7 +470,9 @@ class TestZMKGeneratorBehaviorsDTSI:
 
         # Should use behavior formatter context (access the generator's mock formatter)
         mock_formatter = cast(MockBehaviorFormatter, zmk_generator._behavior_formatter)
-        assert not mock_formatter.behavior_reference_context  # Should be reset after use
+        assert (
+            not mock_formatter.behavior_reference_context
+        )  # Should be reset after use
 
     def test_generate_behaviors_dtsi_fallback_bindings(
         self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
@@ -421,7 +485,9 @@ class TestZMKGeneratorBehaviorsDTSI:
             bindings=["&kp", "&mo"],
         )
 
-        result = zmk_generator.generate_behaviors_dtsi(sample_keyboard_profile, [hold_tap])
+        result = zmk_generator.generate_behaviors_dtsi(
+            sample_keyboard_profile, [hold_tap]
+        )
 
         # Should still generate valid DTSI with fallback formatting
         assert "bindings = <&kp>, <&mo>;" in result
@@ -430,13 +496,17 @@ class TestZMKGeneratorBehaviorsDTSI:
 class TestZMKGeneratorTapDances:
     """Tests for tap dance generation."""
 
-    def test_generate_tap_dances_dtsi_empty(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_tap_dances_dtsi_empty(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test tap dance generation with empty list."""
         result = zmk_generator.generate_tap_dances_dtsi(sample_keyboard_profile, [])
 
         assert result == ""
 
-    def test_generate_tap_dances_dtsi_basic(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_tap_dances_dtsi_basic(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test basic tap dance generation."""
         tap_dance = TapDanceBehavior(
             name="test_td",
@@ -444,7 +514,9 @@ class TestZMKGeneratorTapDances:
             tappingTermMs=200,
         )
 
-        result = zmk_generator.generate_tap_dances_dtsi(sample_keyboard_profile, [tap_dance])
+        result = zmk_generator.generate_tap_dances_dtsi(
+            sample_keyboard_profile, [tap_dance]
+        )
 
         assert "test_td: test_td {" in result
         assert 'compatible = "zmk,behavior-tap-dance";' in result
@@ -452,7 +524,10 @@ class TestZMKGeneratorTapDances:
         assert "bindings = <&kp Q>, <&kp W>, <&kp E>;" in result
 
     def test_generate_tap_dances_dtsi_missing_name(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test tap dance with missing name."""
         # Create a mock tap dance that bypasses model validation
@@ -462,13 +537,21 @@ class TestZMKGeneratorTapDances:
         tap_dance.bindings = create_layout_bindings(["&kp Q", "&kp W"])
         tap_dance.tappingTermMs = None
 
-        result = zmk_generator.generate_tap_dances_dtsi(sample_keyboard_profile, [tap_dance])
+        result = zmk_generator.generate_tap_dances_dtsi(
+            sample_keyboard_profile, [tap_dance]
+        )
 
         assert result == ""
-        assert any("Skipping tap-dance with missing name" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "Skipping tap-dance with missing name" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
     def test_generate_tap_dances_dtsi_insufficient_bindings(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test tap dance with insufficient bindings."""
         # Create a mock tap dance with insufficient bindings
@@ -478,27 +561,38 @@ class TestZMKGeneratorTapDances:
         tap_dance.bindings = create_layout_bindings(["&kp Q"])  # Need at least 2
         tap_dance.tappingTermMs = None
 
-        result = zmk_generator.generate_tap_dances_dtsi(sample_keyboard_profile, [tap_dance])
+        result = zmk_generator.generate_tap_dances_dtsi(
+            sample_keyboard_profile, [tap_dance]
+        )
 
         assert result == ""
-        assert any("requires at least 2 bindings" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "requires at least 2 bindings" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
 
 class TestZMKGeneratorMacros:
     """Tests for macro generation."""
 
-    def test_generate_macros_dtsi_empty(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_macros_dtsi_empty(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test macro generation with empty list."""
         result = zmk_generator.generate_macros_dtsi(sample_keyboard_profile, [])
 
         assert result == ""
 
-    def test_generate_macros_dtsi_basic(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_macros_dtsi_basic(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test basic macro generation."""
         macro = MacroBehavior(
             name="test_macro",
             description="Test macro",
-            bindings=create_layout_bindings(["&kp H", "&kp E", "&kp L", "&kp L", "&kp O"]),
+            bindings=create_layout_bindings(
+                ["&kp H", "&kp E", "&kp L", "&kp L", "&kp O"]
+            ),
             waitMs=10,
             tapMs=5,
         )
@@ -516,7 +610,10 @@ class TestZMKGeneratorMacros:
         assert "<&kp O>" in result
 
     def test_generate_macros_dtsi_missing_name(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test macro with missing name."""
         macro = MacroBehavior(
@@ -527,10 +624,16 @@ class TestZMKGeneratorMacros:
         result = zmk_generator.generate_macros_dtsi(sample_keyboard_profile, [macro])
 
         assert result == ""
-        assert any("Skipping macro with missing name" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "Skipping macro with missing name" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
     def test_generate_macros_dtsi_empty_bindings(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test macro with empty bindings."""
         macro = MacroBehavior(
@@ -547,13 +650,17 @@ class TestZMKGeneratorMacros:
 class TestZMKGeneratorCombos:
     """Tests for combo generation."""
 
-    def test_generate_combos_dtsi_empty(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_combos_dtsi_empty(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test combo generation with empty list."""
         result = zmk_generator.generate_combos_dtsi(sample_keyboard_profile, [], [])
 
         assert result == ""
 
-    def test_generate_combos_dtsi_basic(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_combos_dtsi_basic(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test basic combo generation."""
         combo = ComboBehavior(
             name="test_combo",
@@ -564,7 +671,9 @@ class TestZMKGeneratorCombos:
             layers=[0],
         )
 
-        result = zmk_generator.generate_combos_dtsi(sample_keyboard_profile, [combo], ["base", "nav"])
+        result = zmk_generator.generate_combos_dtsi(
+            sample_keyboard_profile, [combo], ["base", "nav"]
+        )
 
         assert "test_combo {" in result
         assert 'compatible = "zmk,combos";' in result
@@ -574,7 +683,10 @@ class TestZMKGeneratorCombos:
         assert "layers = <0>;" in result
 
     def test_generate_combos_dtsi_missing_name(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test combo with missing name."""
         combo = ComboBehavior(
@@ -583,13 +695,21 @@ class TestZMKGeneratorCombos:
             binding=LayoutBinding(value="&kp", params=[LayoutParam(value="ESC")]),
         )
 
-        result = zmk_generator.generate_combos_dtsi(sample_keyboard_profile, [combo], ["base", "nav"])
+        result = zmk_generator.generate_combos_dtsi(
+            sample_keyboard_profile, [combo], ["base", "nav"]
+        )
 
         assert result == ""
-        assert any("Skipping combo with missing name" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "Skipping combo with missing name" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
     def test_generate_combos_dtsi_insufficient_positions(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test combo with insufficient key positions."""
         combo = ComboBehavior(
@@ -598,13 +718,21 @@ class TestZMKGeneratorCombos:
             binding=LayoutBinding(value="&kp", params=[LayoutParam(value="ESC")]),
         )
 
-        result = zmk_generator.generate_combos_dtsi(sample_keyboard_profile, [combo], ["base", "nav"])
+        result = zmk_generator.generate_combos_dtsi(
+            sample_keyboard_profile, [combo], ["base", "nav"]
+        )
 
         assert result == ""
-        assert any("requires at least 2 key positions" in call[0] for call in mock_logger.warning_calls)
+        assert any(
+            "requires at least 2 key positions" in call[0]
+            for call in mock_logger.warning_calls
+        )
 
     def test_generate_combos_dtsi_empty_bindings(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test combo with empty bindings."""
         combo = ComboBehavior(
@@ -613,7 +741,9 @@ class TestZMKGeneratorCombos:
             binding=LayoutBinding(value="&none", params=[]),
         )
 
-        result = zmk_generator.generate_combos_dtsi(sample_keyboard_profile, [combo], ["base", "nav"])
+        result = zmk_generator.generate_combos_dtsi(
+            sample_keyboard_profile, [combo], ["base", "nav"]
+        )
 
         assert result == ""
         assert any("has no bindings" in call[0] for call in mock_logger.warning_calls)
@@ -626,7 +756,9 @@ class TestZMKGeneratorInputListeners:
         self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
     ) -> None:
         """Test input listener generation with empty data."""
-        result = zmk_generator.generate_input_listeners_node(sample_keyboard_profile, [])
+        result = zmk_generator.generate_input_listeners_node(
+            sample_keyboard_profile, []
+        )
 
         assert result == ""
 
@@ -635,13 +767,25 @@ class TestZMKGeneratorInputListeners:
     ) -> None:
         """Test basic input listener generation."""
         input_listeners = [
-            InputListener(code="encoder_1", nodes=[InputListenerNode(code="encoder_1_node", description="Encoder 1")]),
             InputListener(
-                code="rotary_switch", nodes=[InputListenerNode(code="rotary_switch_node", description="Rotary Switch")]
+                code="encoder_1",
+                nodes=[
+                    InputListenerNode(code="encoder_1_node", description="Encoder 1")
+                ],
+            ),
+            InputListener(
+                code="rotary_switch",
+                nodes=[
+                    InputListenerNode(
+                        code="rotary_switch_node", description="Rotary Switch"
+                    )
+                ],
             ),
         ]
 
-        result = zmk_generator.generate_input_listeners_node(sample_keyboard_profile, input_listeners)
+        result = zmk_generator.generate_input_listeners_node(
+            sample_keyboard_profile, input_listeners
+        )
 
         assert "encoder_1 {" in result
         assert "// Encoder 1" in result
@@ -654,10 +798,15 @@ class TestZMKGeneratorInputListeners:
     ) -> None:
         """Test input listener with optional properties."""
         input_listeners = [
-            InputListener(code="encoder_1", nodes=[InputListenerNode(code="encoder_1_node", layers=[0, 1])])
+            InputListener(
+                code="encoder_1",
+                nodes=[InputListenerNode(code="encoder_1_node", layers=[0, 1])],
+            )
         ]
 
-        result = zmk_generator.generate_input_listeners_node(sample_keyboard_profile, input_listeners)
+        result = zmk_generator.generate_input_listeners_node(
+            sample_keyboard_profile, input_listeners
+        )
 
         assert "encoder_1 {" in result
         assert "layers = <0 1>;" in result
@@ -667,7 +816,10 @@ class TestZMKGeneratorKeymapNode:
     """Tests for keymap node generation."""
 
     def test_generate_keymap_node_basic(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_layout_formatter: MockLayoutFormatter
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_layout_formatter: MockLayoutFormatter,
     ) -> None:
         """Test basic keymap node generation."""
         layout_data = LayoutData(
@@ -696,7 +848,9 @@ class TestZMKGeneratorKeymapNode:
         assert "nav {" in result
         assert "bindings = <" in result
 
-    def test_generate_keymap_node_empty_layers(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_keymap_node_empty_layers(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test keymap generation with empty layers."""
         layout_data = LayoutData(
             title="Empty Layout",
@@ -714,7 +868,10 @@ class TestZMKGeneratorKeymapNode:
         # Should still generate valid structure even with no layers
 
     def test_generate_keymap_node_grid_formatting(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_layout_formatter: MockLayoutFormatter
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_layout_formatter: MockLayoutFormatter,
     ) -> None:
         """Test keymap generation with grid formatting."""
         layout_data = LayoutData(
@@ -731,7 +888,9 @@ class TestZMKGeneratorKeymapNode:
             ],
         )
 
-        zmk_generator.generate_keymap_node(sample_keyboard_profile, layout_data.layer_names, layout_data.layers)
+        zmk_generator.generate_keymap_node(
+            sample_keyboard_profile, layout_data.layer_names, layout_data.layers
+        )
 
         # Should call layout formatter - check generate_calls since that's what the formatter tracks
         mock_formatter = cast(MockLayoutFormatter, zmk_generator._layout_formatter)
@@ -741,7 +900,9 @@ class TestZMKGeneratorKeymapNode:
 class TestZMKGeneratorKconfig:
     """Tests for Kconfig generation."""
 
-    def test_generate_kconfig_conf_basic(self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any) -> None:
+    def test_generate_kconfig_conf_basic(
+        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any
+    ) -> None:
         """Test basic Kconfig generation."""
         layout_data = LayoutData(
             title="Test Layout",
@@ -750,7 +911,9 @@ class TestZMKGeneratorKconfig:
             layers=[[], []],
         )
 
-        result = zmk_generator.generate_kconfig_conf(layout_data, sample_keyboard_profile)
+        result = zmk_generator.generate_kconfig_conf(
+            layout_data, sample_keyboard_profile
+        )
 
         # Should return tuple of (content, settings)
         assert isinstance(result, tuple)
@@ -770,7 +933,9 @@ class TestZMKGeneratorKconfig:
             layers=[[]],
         )
 
-        result = zmk_generator.generate_kconfig_conf(layout_data, sample_keyboard_profile)
+        result = zmk_generator.generate_kconfig_conf(
+            layout_data, sample_keyboard_profile
+        )
 
         # Should handle empty behaviors gracefully
         assert isinstance(result, tuple)
@@ -816,7 +981,9 @@ class TestZMKGeneratorFactory:
         mock_logger = Mock()
 
         generator = create_zmk_generator(
-            configuration_provider=mock_configuration, template_provider=mock_template, logger=mock_logger
+            configuration_provider=mock_configuration,
+            template_provider=mock_template,
+            logger=mock_logger,
         )
 
         assert isinstance(generator, ZMKGenerator)
@@ -828,7 +995,9 @@ class TestZMKGeneratorFactory:
 class TestZMKGeneratorErrorHandling:
     """Tests for error handling and edge cases."""
 
-    def test_generate_behaviors_dtsi_with_none_logger(self, sample_keyboard_profile: Any) -> None:
+    def test_generate_behaviors_dtsi_with_none_logger(
+        self, sample_keyboard_profile: Any
+    ) -> None:
         """Test behavior generation with no logger."""
         generator = ZMKGenerator(
             configuration_provider=MockConfigurationProvider(),
@@ -846,7 +1015,9 @@ class TestZMKGeneratorErrorHandling:
 
         assert "test_ht: test_ht {" in result
 
-    def test_generate_behaviors_dtsi_none_registry(self, sample_keyboard_profile: Any) -> None:
+    def test_generate_behaviors_dtsi_none_registry(
+        self, sample_keyboard_profile: Any
+    ) -> None:
         """Test behavior generation with no registry."""
         generator = ZMKGenerator(
             configuration_provider=MockConfigurationProvider(),
@@ -879,7 +1050,11 @@ class TestZMKGeneratorErrorHandling:
                     LayoutBinding(value="", params=[]),  # Empty binding
                     LayoutBinding(
                         value="&invalid",
-                        params=[LayoutParam(value="too"), LayoutParam(value="many"), LayoutParam(value="params")],
+                        params=[
+                            LayoutParam(value="too"),
+                            LayoutParam(value="many"),
+                            LayoutParam(value="params"),
+                        ],
                     ),
                 ]
             ],
@@ -894,7 +1069,10 @@ class TestZMKGeneratorErrorHandling:
         assert "base {" in result
 
     def test_edge_case_empty_names_with_ampersand_prefix(
-        self, zmk_generator: ZMKGenerator, sample_keyboard_profile: Any, mock_logger: MockLogger
+        self,
+        zmk_generator: ZMKGenerator,
+        sample_keyboard_profile: Any,
+        mock_logger: MockLogger,
     ) -> None:
         """Test edge case handling of names with ampersand prefix."""
         hold_tap = HoldTapBehavior(
@@ -902,7 +1080,9 @@ class TestZMKGeneratorErrorHandling:
             bindings=["&kp", "&mo"],
         )
 
-        result = zmk_generator.generate_behaviors_dtsi(sample_keyboard_profile, [hold_tap])
+        result = zmk_generator.generate_behaviors_dtsi(
+            sample_keyboard_profile, [hold_tap]
+        )
 
         # Should strip ampersand for node name but keep for registration
         assert "test_ht: test_ht {" in result

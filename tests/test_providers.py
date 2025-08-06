@@ -171,7 +171,9 @@ class TestLayoutProviders:
         assert len(behaviors) > 0
 
         # Test templating
-        template_result = providers.template.render_string("Keyboard: {name}", {"name": "Test"})
+        template_result = providers.template.render_string(
+            "Keyboard: {name}", {"name": "Test"}
+        )
         assert template_result == "Keyboard: Test"
 
         # Test file operations

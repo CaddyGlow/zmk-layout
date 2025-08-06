@@ -124,7 +124,9 @@ class ComboBuilder:
             >>> builder = builder.binding("&kp LC(C)")  # Ctrl+C
             >>> builder = builder.binding(LayoutBinding.from_str("&kp ESC"))
         """
-        binding_obj = LayoutBinding.from_str(binding) if isinstance(binding, str) else binding
+        binding_obj = (
+            LayoutBinding.from_str(binding) if isinstance(binding, str) else binding
+        )
         return self._copy_with(binding=binding_obj)
 
     def timeout(self, ms: int) -> Self:
@@ -141,7 +143,9 @@ class ComboBuilder:
         """
         return self._copy_with(timeout_ms=ms)
 
-    def layers(self, layer_indices: list[LayerIndex] | tuple[LayerIndex, ...] | None) -> Self:
+    def layers(
+        self, layer_indices: list[LayerIndex] | tuple[LayerIndex, ...] | None
+    ) -> Self:
         """Set layers where combo is active - returns new instance.
 
         Args:
@@ -157,7 +161,11 @@ class ComboBuilder:
         if layer_indices is None:
             layers_tuple = None
         else:
-            layers_tuple = tuple(layer_indices) if isinstance(layer_indices, list) else layer_indices
+            layers_tuple = (
+                tuple(layer_indices)
+                if isinstance(layer_indices, list)
+                else layer_indices
+            )
         return self._copy_with(layers=layers_tuple)
 
     def behavior_override(self, behavior: str) -> Self:

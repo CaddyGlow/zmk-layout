@@ -99,7 +99,9 @@ class BehaviorManager:
             Self for method chaining
         """
         # Convert string binding to LayoutBinding if needed
-        layout_binding = LayoutBinding.from_str(binding) if isinstance(binding, str) else binding
+        layout_binding = (
+            LayoutBinding.from_str(binding) if isinstance(binding, str) else binding
+        )
 
         # Create combo behavior
         combo = ComboBehavior(
@@ -124,7 +126,12 @@ class BehaviorManager:
         return self
 
     def add_macro(
-        self, name: str, sequence: list[str], wait_ms: int | None = None, tap_ms: int | None = None, **kwargs: Any
+        self,
+        name: str,
+        sequence: list[str],
+        wait_ms: int | None = None,
+        tap_ms: int | None = None,
+        **kwargs: Any,
     ) -> "BehaviorManager":
         """Add macro behavior and return self for chaining.
 
@@ -146,7 +153,9 @@ class BehaviorManager:
         layout_bindings = [LayoutBinding.from_str(binding) for binding in sequence]
 
         # Create macro behavior
-        macro = MacroBehavior(name=name, bindings=layout_bindings, waitMs=wait_ms, tapMs=tap_ms, **kwargs)
+        macro = MacroBehavior(
+            name=name, bindings=layout_bindings, waitMs=wait_ms, tapMs=tap_ms, **kwargs
+        )
 
         # Initialize macros list if needed
         if self._data.macros is None:
@@ -161,7 +170,11 @@ class BehaviorManager:
         return self
 
     def add_tap_dance(
-        self, name: str, bindings: list[str], tapping_term_ms: int | None = None, **kwargs: Any
+        self,
+        name: str,
+        bindings: list[str],
+        tapping_term_ms: int | None = None,
+        **kwargs: Any,
     ) -> "BehaviorManager":
         """Add tap dance behavior and return self for chaining.
 
@@ -182,7 +195,9 @@ class BehaviorManager:
         layout_bindings = [LayoutBinding.from_str(binding) for binding in bindings]
 
         # Create tap dance behavior
-        tap_dance = TapDanceBehavior(name=name, bindings=layout_bindings, tappingTermMs=tapping_term_ms, **kwargs)
+        tap_dance = TapDanceBehavior(
+            name=name, bindings=layout_bindings, tappingTermMs=tapping_term_ms, **kwargs
+        )
 
         # Initialize tap_dances list if needed
         if self._data.tap_dances is None:
@@ -209,7 +224,9 @@ class BehaviorManager:
             # Ensure name has & prefix for comparison
             if not name.startswith("&"):
                 name = f"&{name}"
-            self._data.hold_taps = [ht for ht in self._data.hold_taps if ht.name != name]
+            self._data.hold_taps = [
+                ht for ht in self._data.hold_taps if ht.name != name
+            ]
 
         return self
 
@@ -257,7 +274,9 @@ class BehaviorManager:
             # Ensure name has & prefix for comparison
             if not name.startswith("&"):
                 name = f"&{name}"
-            self._data.tap_dances = [td for td in self._data.tap_dances if td.name != name]
+            self._data.tap_dances = [
+                td for td in self._data.tap_dances if td.name != name
+            ]
 
         return self
 
@@ -301,7 +320,12 @@ class BehaviorManager:
     @property
     def total_count(self) -> int:
         """Get total number of behaviors."""
-        return self.hold_tap_count + self.combo_count + self.macro_count + self.tap_dance_count
+        return (
+            self.hold_tap_count
+            + self.combo_count
+            + self.macro_count
+            + self.tap_dance_count
+        )
 
     def has_hold_tap(self, name: str) -> bool:
         """Check if hold-tap behavior exists."""

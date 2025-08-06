@@ -29,7 +29,9 @@ class BehaviorExtractorProtocol(Protocol):
 class SectionExtractorProtocol(Protocol):
     """Protocol for section extraction."""
 
-    def extract_sections(self, content: str, configs: list[Any]) -> dict[str, ExtractedSection]:
+    def extract_sections(
+        self, content: str, configs: list[Any]
+    ) -> dict[str, ExtractedSection]:
         """Extract sections from content."""
         ...
 
@@ -65,7 +67,7 @@ class UniversalBehaviorExtractor:
             "sticky_keys": [],
             "caps_words": [],
             "mod_morphs": [],
-            "input_listeners": []
+            "input_listeners": [],
         }
 
 
@@ -79,7 +81,9 @@ class SectionExtractor:
     ) -> None:
         """Initialize section extractor with dependencies."""
         self.logger = logger
-        self.behavior_extractor = behavior_extractor or UniversalBehaviorExtractor(logger)
+        self.behavior_extractor = behavior_extractor or UniversalBehaviorExtractor(
+            logger
+        )
 
     def extract_sections(
         self, content: str, configs: list[ExtractionConfig]
@@ -137,7 +141,9 @@ class SectionExtractor:
 
                 if not result.success and result.error_message:
                     if self.logger:
-                        self.logger.warning("Section processing failed", error=result.error_message)
+                        self.logger.warning(
+                            "Section processing failed", error=result.error_message
+                        )
                     context.errors.append(
                         f"Processing {section_name}: {result.error_message}"
                     )
@@ -169,7 +175,7 @@ class SectionExtractor:
                     self.logger.debug(
                         "No start delimiter found",
                         section_name=config.tpl_ctx_name,
-                        pattern=start_pattern
+                        pattern=start_pattern,
                     )
                 return None
 
@@ -180,7 +186,9 @@ class SectionExtractor:
                 end_pattern, content[search_start:], re.IGNORECASE | re.MULTILINE
             )
 
-            content_end = search_start + end_match.start() if end_match else len(content)
+            content_end = (
+                search_start + end_match.start() if end_match else len(content)
+            )
 
             # Extract and clean content
             raw_content = content[search_start:content_end].strip()
@@ -289,6 +297,7 @@ class SectionExtractor:
             # Parse section content as AST
             try:
                 from .dt_parser import parse_dt_multiple_safe
+
                 roots, parse_errors = parse_dt_multiple_safe(content_raw)
             except ImportError:
                 return SectionProcessingResult(
@@ -306,7 +315,9 @@ class SectionExtractor:
                 )
 
             # Extract behaviors using AST converter
-            defines = context.defines if context and hasattr(context, "defines") else None
+            defines = (
+                context.defines if context and hasattr(context, "defines") else None
+            )
             converted_behaviors = self.behavior_extractor.extract_behaviors_as_models(
                 roots, content_raw, defines
             )
@@ -316,9 +327,13 @@ class SectionExtractor:
             if section.type == "behavior":
                 data = converted_behaviors if converted_behaviors else {}
             elif section.type == "macro":
-                data = converted_behaviors.get("macros", []) if converted_behaviors else []
+                data = (
+                    converted_behaviors.get("macros", []) if converted_behaviors else []
+                )
             elif section.type == "combo":
-                data = converted_behaviors.get("combos", []) if converted_behaviors else []
+                data = (
+                    converted_behaviors.get("combos", []) if converted_behaviors else []
+                )
             else:
                 data = converted_behaviors if converted_behaviors else {}
 
@@ -354,6 +369,7 @@ class SectionExtractor:
             # Parse section content as AST
             try:
                 from .dt_parser import parse_dt_multiple_safe
+
                 roots, parse_errors = parse_dt_multiple_safe(section.content)
             except ImportError:
                 return SectionProcessingResult(
@@ -373,6 +389,7 @@ class SectionExtractor:
             # Extract layers using the ZMK keymap parser layer extraction method
             try:
                 from .zmk_keymap_parser import ZMKKeymapParser
+
                 temp_parser = ZMKKeymapParser()
 
                 # Pass defines if available from context
@@ -393,7 +410,9 @@ class SectionExtractor:
 
             except Exception as e:
                 if self.logger:
-                    self.logger.warning("Failed to extract layers, using empty result", error=str(e))
+                    self.logger.warning(
+                        "Failed to extract layers, using empty result", error=str(e)
+                    )
                 layers_data = {"layer_names": [], "layers": []}
 
             return SectionProcessingResult(
@@ -430,7 +449,9 @@ class StubSectionExtractor:
     def __init__(self) -> None:
         self._behavior_extractor = StubBehaviorExtractor()
 
-    def extract_sections(self, content: str, configs: list[Any]) -> dict[str, ExtractedSection]:
+    def extract_sections(
+        self, content: str, configs: list[Any]
+    ) -> dict[str, ExtractedSection]:
         """Stub implementation."""
         return {}
 

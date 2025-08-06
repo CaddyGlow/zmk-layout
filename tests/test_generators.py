@@ -24,7 +24,9 @@ class TestZMKGenerator:
 
             def generate_keymap(self, layout_data: LayoutData) -> str:
                 """Generate a basic keymap."""
-                self.providers.logger.info("Generating keymap", keyboard=layout_data.keyboard)
+                self.providers.logger.info(
+                    "Generating keymap", keyboard=layout_data.keyboard
+                )
 
                 keymap_content = f"""
 #include <behaviors.dtsi>
@@ -155,7 +157,8 @@ class TestTemplateContext:
                     "keyboard": layout_data.keyboard,
                     "title": layout_data.title,
                     "layer_count": len(layout_data.layers),
-                    "behavior_count": len(layout_data.hold_taps) + len(layout_data.combos),
+                    "behavior_count": len(layout_data.hold_taps)
+                    + len(layout_data.combos),
                     "layers": [
                         {"name": f"layer_{i}", "binding_count": len(layer_bindings)}
                         for i, layer_bindings in enumerate(layout_data.layers)
@@ -166,7 +169,10 @@ class TestTemplateContext:
         layout_data = LayoutData(
             keyboard="ergodox",
             title="Ergodox Layout",
-            layers=[[LayoutBinding.from_str("&kp A")], [LayoutBinding.from_str("&kp N1")]],
+            layers=[
+                [LayoutBinding.from_str("&kp A")],
+                [LayoutBinding.from_str("&kp N1")],
+            ],
             holdTaps=[HoldTapBehavior(name="mt", bindings=["&kp", "&kp"])],
         )
 
@@ -197,11 +203,18 @@ class TestTemplateContext:
             def __init__(self, providers: LayoutProviders):
                 self.providers = providers
 
-            def create_enhanced_context(self, layout_data: LayoutData) -> dict[str, Any]:
-                base_context = {"keyboard": layout_data.keyboard, "title": layout_data.title}
+            def create_enhanced_context(
+                self, layout_data: LayoutData
+            ) -> dict[str, Any]:
+                base_context = {
+                    "keyboard": layout_data.keyboard,
+                    "title": layout_data.title,
+                }
 
                 # Add configuration context
-                config_context: dict[str, Any] = self.providers.configuration.get_template_context()
+                config_context: dict[str, Any] = (
+                    self.providers.configuration.get_template_context()
+                )
                 base_context.update(config_context)
 
                 return base_context
@@ -304,13 +317,19 @@ class TestCoreOperations:
 
             def process_layout(self, layout_data: LayoutData) -> dict[str, Any]:
                 """Process layout data and return summary."""
-                self.providers.logger.info("Processing layout", keyboard=layout_data.keyboard)
+                self.providers.logger.info(
+                    "Processing layout", keyboard=layout_data.keyboard
+                )
 
                 return {
                     "keyboard": layout_data.keyboard,
                     "processed": True,
-                    "layer_names": [f"layer_{i}" for i in range(len(layout_data.layers))],
-                    "total_bindings": sum(len(layer_bindings) for layer_bindings in layout_data.layers),
+                    "layer_names": [
+                        f"layer_{i}" for i in range(len(layout_data.layers))
+                    ],
+                    "total_bindings": sum(
+                        len(layer_bindings) for layer_bindings in layout_data.layers
+                    ),
                 }
 
         layout_data = LayoutData(

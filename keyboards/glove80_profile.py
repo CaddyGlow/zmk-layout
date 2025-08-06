@@ -143,8 +143,16 @@ class Glove80BehaviorDefinitions:
                     {"code": "BT_CLR_ALL", "description": "Clear all profiles"},
                     {"code": "BT_NXT", "description": "Next profile"},
                     {"code": "BT_PRV", "description": "Previous profile"},
-                    {"code": "BT_SEL", "description": "Select profile", "additional_params": ["profile_number"]},
-                    {"code": "BT_DISC", "description": "Disconnect profile", "additional_params": ["profile_number"]},
+                    {
+                        "code": "BT_SEL",
+                        "description": "Select profile",
+                        "additional_params": ["profile_number"],
+                    },
+                    {
+                        "code": "BT_DISC",
+                        "description": "Disconnect profile",
+                        "additional_params": ["profile_number"],
+                    },
                 ],
             },
             {
@@ -386,7 +394,9 @@ class Glove80KeymapConfig:
     )
 
     # Layer name mappings
-    layer_names: dict[str, int] = field(default_factory=lambda: {"Base": 0, "Lower": 1, "Magic": 2})
+    layer_names: dict[str, int] = field(
+        default_factory=lambda: {"Base": 0, "Lower": 1, "Magic": 2}
+    )
 
     # Key position definitions (Glove80 specific)
     key_position_defines: str = """
@@ -611,11 +621,106 @@ class Glove80KeymapConfig:
             "base_indent": "",
             "rows": [
                 [0, 1, 2, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1, 5, 6, 7, 8, 9],
-                [10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, 16, 17, 18, 19, 20, 21],
-                [22, 23, 24, 25, 26, 27, -1, -1, -1, -1, -1, -1, 28, 29, 30, 31, 32, 33],
-                [34, 35, 36, 37, 38, 39, -1, -1, -1, -1, -1, -1, 40, 41, 42, 43, 44, 45],
-                [46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
-                [64, 65, 66, 67, 68, -1, 69, 70, 71, 72, 73, 74, -1, 75, 76, 77, 78, 79],
+                [
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                    21,
+                ],
+                [
+                    22,
+                    23,
+                    24,
+                    25,
+                    26,
+                    27,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    28,
+                    29,
+                    30,
+                    31,
+                    32,
+                    33,
+                ],
+                [
+                    34,
+                    35,
+                    36,
+                    37,
+                    38,
+                    39,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    40,
+                    41,
+                    42,
+                    43,
+                    44,
+                    45,
+                ],
+                [
+                    46,
+                    47,
+                    48,
+                    49,
+                    50,
+                    51,
+                    52,
+                    53,
+                    54,
+                    55,
+                    56,
+                    57,
+                    58,
+                    59,
+                    60,
+                    61,
+                    62,
+                    63,
+                ],
+                [
+                    64,
+                    65,
+                    66,
+                    67,
+                    68,
+                    -1,
+                    69,
+                    70,
+                    71,
+                    72,
+                    73,
+                    74,
+                    -1,
+                    75,
+                    76,
+                    77,
+                    78,
+                    79,
+                ],
             ],
         }
     )
@@ -633,14 +738,26 @@ class Glove80KConfigOptions:
                 "default": True,
                 "description": "Enable RGB underglow support",
             },
-            "CONFIG_ZMK_BLE": {"type": "bool", "default": True, "description": "Enable Bluetooth Low Energy support"},
-            "CONFIG_ZMK_USB": {"type": "bool", "default": True, "description": "Enable USB connectivity"},
+            "CONFIG_ZMK_BLE": {
+                "type": "bool",
+                "default": True,
+                "description": "Enable Bluetooth Low Energy support",
+            },
+            "CONFIG_ZMK_USB": {
+                "type": "bool",
+                "default": True,
+                "description": "Enable USB connectivity",
+            },
             "CONFIG_BT_CTLR_TX_PWR_PLUS_8": {
                 "type": "bool",
                 "default": True,
                 "description": "Increase Bluetooth transmit power",
             },
-            "CONFIG_ZMK_SLEEP": {"type": "bool", "default": True, "description": "Enable deep sleep power management"},
+            "CONFIG_ZMK_SLEEP": {
+                "type": "bool",
+                "default": True,
+                "description": "Enable deep sleep power management",
+            },
         }
     )
 
@@ -721,10 +838,19 @@ class Glove80ValidationRules:
     )
 
     bt_commands: list[str] = field(
-        default_factory=lambda: ["BT_CLR", "BT_CLR_ALL", "BT_NXT", "BT_PRV", "BT_SEL", "BT_DISC"]
+        default_factory=lambda: [
+            "BT_CLR",
+            "BT_CLR_ALL",
+            "BT_NXT",
+            "BT_PRV",
+            "BT_SEL",
+            "BT_DISC",
+        ]
     )
 
-    out_commands: list[str] = field(default_factory=lambda: ["OUT_BLE", "OUT_USB", "OUT_TOG"])
+    out_commands: list[str] = field(
+        default_factory=lambda: ["OUT_BLE", "OUT_USB", "OUT_TOG"]
+    )
 
 
 @dataclass
@@ -732,7 +858,9 @@ class CompleteGlove80Profile:
     """Complete Glove80 keyboard profile with all specifications."""
 
     hardware: Glove80HardwareConfig = field(default_factory=Glove80HardwareConfig)
-    behaviors: Glove80BehaviorDefinitions = field(default_factory=Glove80BehaviorDefinitions)
+    behaviors: Glove80BehaviorDefinitions = field(
+        default_factory=Glove80BehaviorDefinitions
+    )
     firmware: Glove80FirmwareConfig = field(default_factory=Glove80FirmwareConfig)
     keymap: Glove80KeymapConfig = field(default_factory=Glove80KeymapConfig)
     kconfig: Glove80KConfigOptions = field(default_factory=Glove80KConfigOptions)

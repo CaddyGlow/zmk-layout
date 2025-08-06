@@ -130,7 +130,9 @@ class TestDTParser:
     def test_parse_with_comments(self) -> None:
         """Test parsing with comments."""
         tokens = [
-            Token(TokenType.COMMENT, "// This is a comment", 1, 1, "// This is a comment"),
+            Token(
+                TokenType.COMMENT, "// This is a comment", 1, 1, "// This is a comment"
+            ),
             Token(TokenType.IDENTIFIER, "node", 2, 1, "node"),
             Token(TokenType.LBRACE, "{", 2, 6, "{"),
             Token(TokenType.RBRACE, "}", 2, 7, "}"),
@@ -144,12 +146,20 @@ class TestDTParser:
         node = list(root.children.values())[0]
         assert node.name == "node"
         # Comments should be associated with the node
-        assert len(node.comments) >= 0  # May or may not be associated based on proximity
+        assert (
+            len(node.comments) >= 0
+        )  # May or may not be associated based on proximity
 
     def test_parse_with_preprocessor_directives(self) -> None:
         """Test parsing with preprocessor directives."""
         tokens = [
-            Token(TokenType.PREPROCESSOR, "#include <dt-bindings.h>", 1, 1, "#include <dt-bindings.h>"),
+            Token(
+                TokenType.PREPROCESSOR,
+                "#include <dt-bindings.h>",
+                1,
+                1,
+                "#include <dt-bindings.h>",
+            ),
             Token(TokenType.IDENTIFIER, "node", 2, 1, "node"),
             Token(TokenType.LBRACE, "{", 2, 6, "{"),
             Token(TokenType.RBRACE, "}", 2, 7, "}"),
@@ -159,7 +169,9 @@ class TestDTParser:
         parser = DTParser(tokens)
         root = parser.parse()
 
-        assert len(parser.conditionals) >= 0  # Preprocessor directives stored as conditionals
+        assert (
+            len(parser.conditionals) >= 0
+        )  # Preprocessor directives stored as conditionals
         assert len(root.children) == 1
 
     def test_parse_property_string_value(self) -> None:
@@ -426,7 +438,9 @@ class TestDTParser:
         """Test handling of fatal parsing errors."""
         tokens = [Token(TokenType.EOF, "", 1, 1, "")]
 
-        with patch.object(DTParser, "_parse_root_node", side_effect=Exception("Fatal error")):
+        with patch.object(
+            DTParser, "_parse_root_node", side_effect=Exception("Fatal error")
+        ):
             parser = DTParser(tokens)
             with pytest.raises(DTParseError, match="Fatal parsing error"):
                 parser.parse()
@@ -586,7 +600,10 @@ class TestHelperFunctions:
         """Test parse_dt_safe with tokenizer exception."""
         dt_text = "test"
 
-        with patch("zmk_layout.parsers.dt_parser.tokenize_dt", side_effect=Exception("Tokenize error")):
+        with patch(
+            "zmk_layout.parsers.dt_parser.tokenize_dt",
+            side_effect=Exception("Tokenize error"),
+        ):
             root, errors = parse_dt_safe(dt_text)
 
             assert root is None
@@ -635,7 +652,9 @@ class TestHelperFunctions:
         """Test parse_dt_multiple_safe with exception."""
         dt_text = "test"
 
-        with patch("zmk_layout.parsers.dt_parser.tokenize_dt", side_effect=Exception("Error")):
+        with patch(
+            "zmk_layout.parsers.dt_parser.tokenize_dt", side_effect=Exception("Error")
+        ):
             roots, errors = parse_dt_multiple_safe(dt_text)
 
             assert roots == []
@@ -652,7 +671,9 @@ class TestHelperFunctions:
             mock_lark_module = Mock()
             mock_lark_module.parse_dt_lark.return_value = mock_nodes
 
-            with patch.dict("sys.modules", {"zmk_layout.parsers.lark_dt_parser": mock_lark_module}):
+            with patch.dict(
+                "sys.modules", {"zmk_layout.parsers.lark_dt_parser": mock_lark_module}
+            ):
                 result = parse_dt_lark(dt_text)
                 assert len(result) >= 0  # May fallback
 
@@ -692,7 +713,10 @@ class TestHelperFunctions:
         """Test parse_dt_lark_safe with exception."""
         dt_text = "test"
 
-        with patch("zmk_layout.parsers.dt_parser.parse_dt", side_effect=Exception("Parse error")):
+        with patch(
+            "zmk_layout.parsers.dt_parser.parse_dt",
+            side_effect=Exception("Parse error"),
+        ):
             nodes, errors = parse_dt_lark_safe(dt_text)
 
             assert nodes == []
@@ -854,7 +878,9 @@ class TestEdgeCases:
     def test_conditionals_collection(self) -> None:
         """Test that preprocessor directives are collected as conditionals."""
         tokens = [
-            Token(TokenType.PREPROCESSOR, "#ifdef CONFIG_TEST", 1, 1, "#ifdef CONFIG_TEST"),
+            Token(
+                TokenType.PREPROCESSOR, "#ifdef CONFIG_TEST", 1, 1, "#ifdef CONFIG_TEST"
+            ),
             Token(TokenType.IDENTIFIER, "node", 2, 1, "node"),
             Token(TokenType.LBRACE, "{", 2, 6, "{"),
             Token(TokenType.RBRACE, "}", 2, 7, "}"),

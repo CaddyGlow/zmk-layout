@@ -26,7 +26,9 @@ class Layout:
         layout.save("output.json")
     """
 
-    def __init__(self, layout_data: LayoutData, providers: "LayoutProviders | None" = None) -> None:
+    def __init__(
+        self, layout_data: LayoutData, providers: "LayoutProviders | None" = None
+    ) -> None:
         """Initialize Layout with data and providers.
 
         Args:
@@ -39,7 +41,9 @@ class Layout:
         self._behaviors = self._create_behavior_manager()
 
     @classmethod
-    def from_file(cls, source: str | Path, providers: "LayoutProviders | None" = None) -> "Layout":
+    def from_file(
+        cls, source: str | Path, providers: "LayoutProviders | None" = None
+    ) -> "Layout":
         """Create Layout from file.
 
         Args:
@@ -56,14 +60,22 @@ class Layout:
             layout_data = LayoutData.model_validate(data)
             return cls(layout_data, providers)
         except FileNotFoundError as e:
-            raise FileOperationError(f"Layout file not found: {source}", str(source), "read") from e
+            raise FileOperationError(
+                f"Layout file not found: {source}", str(source), "read"
+            ) from e
         except json.JSONDecodeError as e:
-            raise FileOperationError(f"Invalid JSON in layout file: {e}", str(source), "read") from e
+            raise FileOperationError(
+                f"Invalid JSON in layout file: {e}", str(source), "read"
+            ) from e
         except Exception as e:
-            raise FileOperationError(f"Failed to load layout file: {e}", str(source), "read") from e
+            raise FileOperationError(
+                f"Failed to load layout file: {e}", str(source), "read"
+            ) from e
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], providers: "LayoutProviders | None" = None) -> "Layout":
+    def from_dict(
+        cls, data: dict[str, Any], providers: "LayoutProviders | None" = None
+    ) -> "Layout":
         """Create Layout from dictionary.
 
         Args:
@@ -77,7 +89,9 @@ class Layout:
         return cls(layout_data, providers)
 
     @classmethod
-    def create_empty(cls, keyboard: str, title: str = "", providers: "LayoutProviders | None" = None) -> "Layout":
+    def create_empty(
+        cls, keyboard: str, title: str = "", providers: "LayoutProviders | None" = None
+    ) -> "Layout":
         """Create empty Layout.
 
         Args:
@@ -88,7 +102,12 @@ class Layout:
         Returns:
             Empty Layout instance
         """
-        layout_data = LayoutData(keyboard=keyboard, title=title or f"New {keyboard} Layout", layers=[], layer_names=[])
+        layout_data = LayoutData(
+            keyboard=keyboard,
+            title=title or f"New {keyboard} Layout",
+            layers=[],
+            layer_names=[],
+        )
         return cls(layout_data, providers)
 
     @property
@@ -124,9 +143,13 @@ class Layout:
             with output_path.open("w", encoding="utf-8") as f:
                 json.dump(layout_dict, f, indent=2, ensure_ascii=False)
         except OSError as e:
-            raise FileOperationError(f"Failed to write layout file: {e}", str(output_path), "write") from e
+            raise FileOperationError(
+                f"Failed to write layout file: {e}", str(output_path), "write"
+            ) from e
         except Exception as e:
-            raise FileOperationError(f"Unexpected error saving layout: {e}", str(output_path), "write") from e
+            raise FileOperationError(
+                f"Unexpected error saving layout: {e}", str(output_path), "write"
+            ) from e
 
         return self
 
@@ -147,7 +170,9 @@ class Layout:
             validation_errors.append("Keyboard name is required")
 
         if len(self._data.layers) != len(self._data.layer_names):
-            validation_errors.append("Layer count mismatch between layers and layer_names")
+            validation_errors.append(
+                "Layer count mismatch between layers and layer_names"
+            )
 
         # Check for duplicate layer names
         if len(set(self._data.layer_names)) != len(self._data.layer_names):
@@ -214,7 +239,12 @@ class Layout:
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
         """Context manager exit - could auto-save if configured."""
         # Implementation note: Auto-save on context exit is optional
         # Could be enabled via a flag in the future
@@ -270,7 +300,9 @@ class Layout:
                 "hold_taps": len(self._data.hold_taps) if self._data.hold_taps else 0,
                 "combos": len(self._data.combos) if self._data.combos else 0,
                 "macros": len(self._data.macros) if self._data.macros else 0,
-                "tap_dances": len(self._data.tap_dances) if self._data.tap_dances else 0,
+                "tap_dances": len(self._data.tap_dances)
+                if self._data.tap_dances
+                else 0,
             },
             "total_behaviors": self._behaviors.total_count,
         }
@@ -278,8 +310,12 @@ class Layout:
         # Add layer sizes
         if self._data.layers:
             layer_sizes = [len(layer) for layer in self._data.layers]
-            stats["layer_sizes"] = dict(zip(self._data.layer_names, layer_sizes, strict=False))
-            stats["avg_layer_size"] = sum(layer_sizes) / len(layer_sizes) if layer_sizes else 0
+            stats["layer_sizes"] = dict(
+                zip(self._data.layer_names, layer_sizes, strict=False)
+            )
+            stats["avg_layer_size"] = (
+                sum(layer_sizes) / len(layer_sizes) if layer_sizes else 0
+            )
             stats["max_layer_size"] = max(layer_sizes) if layer_sizes else 0
             stats["min_layer_size"] = min(layer_sizes) if layer_sizes else 0
 

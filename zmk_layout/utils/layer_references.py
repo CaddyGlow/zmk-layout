@@ -30,7 +30,8 @@ class LayoutError(Exception):
 
 
 def prepare_output_paths(
-    output_file_prefix: str | Path, configuration_provider: "ConfigurationProvider | None" = None
+    output_file_prefix: str | Path,
+    configuration_provider: "ConfigurationProvider | None" = None,
 ) -> OutputPaths:
     """Prepare standardized output file paths.
 
@@ -117,7 +118,9 @@ def process_json_file(
 
 
 def resolve_template_file_path(
-    keyboard_name: str, template_file: str, configuration_provider: "ConfigurationProvider | None" = None
+    keyboard_name: str,
+    template_file: str,
+    configuration_provider: "ConfigurationProvider | None" = None,
 ) -> Path:
     """Resolve a template file path relative to keyboard configuration directories.
 
@@ -141,7 +144,11 @@ def resolve_template_file_path(
         raise LayoutError(f"Template file not found: {template_file}")
 
     # Get search paths from provider or use default
-    search_paths = configuration_provider.get_search_paths() if configuration_provider else [Path.cwd()]
+    search_paths = (
+        configuration_provider.get_search_paths()
+        if configuration_provider
+        else [Path.cwd()]
+    )
 
     # Try to resolve relative to keyboard configuration directories
     for search_path in search_paths:

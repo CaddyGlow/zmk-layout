@@ -21,9 +21,15 @@ class HoldTapBehavior(LayoutBaseModel):
     tapping_term_ms: TemplateNumeric = Field(default=None, alias="tappingTermMs")
     quick_tap_ms: TemplateNumeric = Field(default=None, alias="quickTapMs")
     flavor: str | None = None
-    hold_trigger_on_release: bool | None = Field(default=None, alias="holdTriggerOnRelease")
-    require_prior_idle_ms: TemplateNumeric = Field(default=None, alias="requirePriorIdleMs")
-    hold_trigger_key_positions: list[int] | None = Field(default=None, alias="holdTriggerKeyPositions")
+    hold_trigger_on_release: bool | None = Field(
+        default=None, alias="holdTriggerOnRelease"
+    )
+    require_prior_idle_ms: TemplateNumeric = Field(
+        default=None, alias="requirePriorIdleMs"
+    )
+    hold_trigger_key_positions: list[int] | None = Field(
+        default=None, alias="holdTriggerKeyPositions"
+    )
     retro_tap: bool | None = Field(default=None, alias="retroTap")
     tap_behavior: str | None = Field(default=None, alias="tapBehavior")
     hold_behavior: str | None = Field(default=None, alias="holdBehavior")
@@ -92,7 +98,9 @@ class MacroBehavior(LayoutBaseModel):
 
     @field_validator("params")
     @classmethod
-    def validate_params_count(cls, v: list[ParamValue] | None) -> list[ParamValue] | None:
+    def validate_params_count(
+        cls, v: list[ParamValue] | None
+    ) -> list[ParamValue] | None:
         """Validate macro parameter count."""
         max_params = 2
         if v is not None and len(v) > max_params:
@@ -178,14 +186,18 @@ class InputListenerNode(LayoutBaseModel):
     code: str
     description: str | None = ""
     layers: list[LayerIndex] = Field(default_factory=list)
-    input_processors: list[InputProcessor] = Field(default_factory=list, alias="inputProcessors")
+    input_processors: list[InputProcessor] = Field(
+        default_factory=list, alias="inputProcessors"
+    )
 
 
 class InputListener(LayoutBaseModel):
     """Model for input listeners."""
 
     code: str
-    input_processors: list[InputProcessor] = Field(default_factory=list, alias="inputProcessors")
+    input_processors: list[InputProcessor] = Field(
+        default_factory=list, alias="inputProcessors"
+    )
     nodes: list[InputListenerNode] = Field(default_factory=list)
 
 

@@ -135,7 +135,9 @@ class MacroBuilder:
             >>> builder = builder.tap("&kp A")
             >>> builder = builder.tap(LayoutBinding.from_str("&kp SPACE"))
         """
-        binding_obj = LayoutBinding.from_str(binding) if isinstance(binding, str) else binding
+        binding_obj = (
+            LayoutBinding.from_str(binding) if isinstance(binding, str) else binding
+        )
         return self._copy_with(bindings=self._bindings + (binding_obj,))
 
     def press(self, binding: str | LayoutBinding) -> Self:
@@ -259,7 +261,9 @@ class MacroBuilder:
         """
         # Validate parameter count
         if self._params and len(self._params) > 2:
-            raise ValueError(f"Macro cannot have more than 2 parameters, found {len(self._params)}")
+            raise ValueError(
+                f"Macro cannot have more than 2 parameters, found {len(self._params)}"
+            )
 
         # Build the macro
         return MacroBehavior(

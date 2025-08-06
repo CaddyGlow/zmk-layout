@@ -18,12 +18,16 @@ from .keymap_processors import FullKeymapProcessor, TemplateAwareProcessor
 from .parsing_models import ParsingContext
 
 
-def create_full_keymap_processor(logger: "LayoutLogger | None" = None) -> "ProcessorProtocol":
+def create_full_keymap_processor(
+    logger: "LayoutLogger | None" = None,
+) -> "ProcessorProtocol":
     """Create a full keymap processor with all features."""
     return FullKeymapProcessor(logger=logger)
 
 
-def create_template_aware_processor(logger: "LayoutLogger | None" = None) -> "ProcessorProtocol":
+def create_template_aware_processor(
+    logger: "LayoutLogger | None" = None,
+) -> "ProcessorProtocol":
     """Create a template-aware keymap processor."""
     return TemplateAwareProcessor(logger=logger)
 
@@ -221,7 +225,9 @@ class ZMKKeymapParser:
             if layout_data:
                 layout_data.date = datetime.now()
                 layout_data.creator = "glovebox"
-                layout_data.notes = f"Automatically generated from keymap file {keymap_file.name}"
+                layout_data.notes = (
+                    f"Automatically generated from keymap file {keymap_file.name}"
+                )
 
                 result.layout_data = layout_data
                 result.success = True
@@ -283,7 +289,11 @@ class ZMKKeymapParser:
         """
         try:
             # Check if profile has keymap template configuration
-            if hasattr(profile, "keymap") and profile.keymap and hasattr(profile.keymap, "keymap_dtsi_file"):
+            if (
+                hasattr(profile, "keymap")
+                and profile.keymap
+                and hasattr(profile.keymap, "keymap_dtsi_file")
+            ):
                 # External template file
                 template_file = profile.keymap.keymap_dtsi_file
                 if template_file:
@@ -298,7 +308,9 @@ class ZMKKeymapParser:
 
             # Fallback to default template location in the project
             project_root = Path(__file__).parent.parent.parent.parent
-            return Path(project_root / "keyboards" / "config" / "templates" / "keymap.dtsi.j2")
+            return Path(
+                project_root / "keyboards" / "config" / "templates" / "keymap.dtsi.j2"
+            )
 
         except Exception as e:
             if self.logger:
@@ -435,7 +447,9 @@ class ZMKKeymapParser:
 
         return None
 
-    def _log_ast_structure(self, node: DTNode, level: int = 0, max_level: int = 2) -> None:
+    def _log_ast_structure(
+        self, node: DTNode, level: int = 0, max_level: int = 2
+    ) -> None:
         """Log AST structure for debugging.
 
         Args:
@@ -512,10 +526,14 @@ class ZMKKeymapParser:
 
                     try:
                         # Preprocess for MoErgo edge cases
-                        preprocessed_binding_str = self._preprocess_moergo_binding_edge_cases(binding_str)
+                        preprocessed_binding_str = (
+                            self._preprocess_moergo_binding_edge_cases(binding_str)
+                        )
 
                         # Resolve defines in the binding string
-                        resolved_binding_str = self._resolve_binding_string(preprocessed_binding_str)
+                        resolved_binding_str = self._resolve_binding_string(
+                            preprocessed_binding_str
+                        )
 
                         # Use the existing LayoutBinding.from_str method
                         binding = LayoutBinding.from_str(resolved_binding_str)
@@ -538,7 +556,9 @@ class ZMKKeymapParser:
                                 exc_info=True,
                             )
                         # Create fallback binding with empty params
-                        bindings.append(LayoutBinding(value=binding_parts[0], params=[]))
+                        bindings.append(
+                            LayoutBinding(value=binding_parts[0], params=[])
+                        )
                 else:
                     # Standalone parameter without behavior - this shouldn't happen in well-formed keymap
                     if self.logger:
@@ -553,10 +573,14 @@ class ZMKKeymapParser:
             if binding_str:
                 try:
                     # Preprocess for MoErgo edge cases
-                    preprocessed_binding_str = self._preprocess_moergo_binding_edge_cases(binding_str)
+                    preprocessed_binding_str = (
+                        self._preprocess_moergo_binding_edge_cases(binding_str)
+                    )
 
                     # Resolve defines in the binding string
-                    resolved_binding_str = self._resolve_binding_string(preprocessed_binding_str)
+                    resolved_binding_str = self._resolve_binding_string(
+                        preprocessed_binding_str
+                    )
 
                     binding = LayoutBinding.from_str(resolved_binding_str)
                     bindings.append(binding)
@@ -572,7 +596,9 @@ class ZMKKeymapParser:
 
         return bindings
 
-    def _convert_comment_to_model(self, comment_dict: dict[str, object]) -> "KeymapComment":
+    def _convert_comment_to_model(
+        self, comment_dict: dict[str, object]
+    ) -> "KeymapComment":
         """Convert comment dictionary to KeymapComment model instance.
 
         Args:
@@ -594,7 +620,9 @@ class ZMKKeymapParser:
             raise TypeError(f"Expected KeymapComment, got {type(result)}")
         return result
 
-    def _convert_include_to_model(self, include_dict: dict[str, object]) -> "KeymapInclude":
+    def _convert_include_to_model(
+        self, include_dict: dict[str, object]
+    ) -> "KeymapInclude":
         """Convert include dictionary to KeymapInclude model instance.
 
         Args:
@@ -616,7 +644,9 @@ class ZMKKeymapParser:
             raise TypeError(f"Expected KeymapInclude, got {type(result)}")
         return result
 
-    def _convert_directive_to_model(self, directive_dict: dict[str, object]) -> "ConfigDirective":
+    def _convert_directive_to_model(
+        self, directive_dict: dict[str, object]
+    ) -> "ConfigDirective":
         """Convert config directive dictionary to ConfigDirective model instance.
 
         Args:
@@ -650,7 +680,9 @@ class ZMKKeymapParser:
         # Edge case 1: Transform &sys_reset to &reset
         if binding_str == "&sys_reset":
             if self.logger:
-                self.logger.debug("Transforming &sys_reset to &reset for MoErgo compatibility")
+                self.logger.debug(
+                    "Transforming &sys_reset to &reset for MoErgo compatibility"
+                )
             return "&reset"
 
         # Edge case 2: Handle &magic parameter cleanup

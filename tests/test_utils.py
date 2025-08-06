@@ -39,7 +39,9 @@ class TestValidation:
 
         # Valid layout should pass
         valid_layout = LayoutData(
-            keyboard="test_board", title="Test Layout", layers=[[LayoutBinding.from_str("&kp A")]]
+            keyboard="test_board",
+            title="Test Layout",
+            layers=[[LayoutBinding.from_str("&kp A")]],
         )
         errors = validator.validate_layout(valid_layout)
         assert len(errors) == 0
@@ -107,9 +109,14 @@ class TestValidation:
                 errors = []
 
                 if not layer_name.replace("_", "").replace("-", "").isalnum():
-                    errors.append("Layer name must be alphanumeric (with _ or - allowed)")
+                    errors.append(
+                        "Layer name must be alphanumeric (with _ or - allowed)"
+                    )
 
-                if expected_binding_count and len(layer_bindings) != expected_binding_count:
+                if (
+                    expected_binding_count
+                    and len(layer_bindings) != expected_binding_count
+                ):
                     errors.append(
                         f"Layer '{layer_name}' has {len(layer_bindings)} bindings, expected {expected_binding_count}"
                     )
@@ -119,8 +126,13 @@ class TestValidation:
         validator = MockLayerValidator(providers)
 
         # Valid layer
-        valid_layer_bindings = [LayoutBinding.from_str("&kp A"), LayoutBinding.from_str("&kp B")]
-        errors = validator.validate_layer(valid_layer_bindings, "default", expected_binding_count=2)
+        valid_layer_bindings = [
+            LayoutBinding.from_str("&kp A"),
+            LayoutBinding.from_str("&kp B"),
+        ]
+        errors = validator.validate_layer(
+            valid_layer_bindings, "default", expected_binding_count=2
+        )
         assert len(errors) == 0
 
         # Invalid layer name
@@ -161,7 +173,9 @@ class TestJSONOperations:
         json_ops = MockJSONOperations(providers)
 
         # Test serialization
-        layout_data = LayoutData(keyboard="test_board", title="Test Layout", layers=[[]])
+        layout_data = LayoutData(
+            keyboard="test_board", title="Test Layout", layers=[[]]
+        )
 
         json_str = json_ops.serialize_layout(layout_data)
         assert isinstance(json_str, str)
@@ -187,7 +201,9 @@ class TestJSONOperations:
                 try:
                     return json.dumps(data, indent=2, default=str)
                 except TypeError as e:
-                    self.providers.logger.warning("Using default serialization", error=str(e))
+                    self.providers.logger.warning(
+                        "Using default serialization", error=str(e)
+                    )
                     return json.dumps(data, indent=2, default=str)
 
         json_ops = MockJSONOperations(providers)
@@ -200,7 +216,10 @@ class TestJSONOperations:
                     "name": "default",
                     "bindings": [
                         {"value": "&kp", "params": [{"value": "A"}]},
-                        {"value": "&mt", "params": [{"value": "LCTRL"}, {"value": "B"}]},
+                        {
+                            "value": "&mt",
+                            "params": [{"value": "LCTRL"}, {"value": "B"}],
+                        },
                     ],
                 }
             ],
@@ -255,7 +274,9 @@ class TestLayerReferences:
             def __init__(self, providers: LayoutProviders):
                 self.providers = providers
 
-            def resolve_layer_references(self, layout_data: LayoutData) -> dict[str, list[int]]:
+            def resolve_layer_references(
+                self, layout_data: LayoutData
+            ) -> dict[str, list[int]]:
                 """Resolve layer references in bindings."""
                 references = {}
 
@@ -265,7 +286,9 @@ class TestLayerReferences:
                         if binding.value == "&lt" and binding.params:
                             # Layer tap reference
                             layer_name = binding.params[0].value
-                            if isinstance(layer_name, int) or (isinstance(layer_name, str) and layer_name.isdigit()):
+                            if isinstance(layer_name, int) or (
+                                isinstance(layer_name, str) and layer_name.isdigit()
+                            ):
                                 layer_refs.append(int(layer_name))
                     references[f"layer_{i}"] = layer_refs
 
@@ -276,7 +299,9 @@ class TestLayerReferences:
             title="Test",
             layers=[
                 [
-                    LayoutBinding.from_str("&lt lower SPACE"),  # Reference to lower layer
+                    LayoutBinding.from_str(
+                        "&lt lower SPACE"
+                    ),  # Reference to lower layer
                     LayoutBinding.from_str("&kp A"),
                 ],
                 [
@@ -292,7 +317,9 @@ class TestLayerReferences:
         assert "layer_0" in references
         assert "layer_1" in references
         # Should find layer references in bindings
-        assert len(references["layer_0"]) >= 0  # May or may not find layer refs depending on parsing
+        assert (
+            len(references["layer_0"]) >= 0
+        )  # May or may not find layer refs depending on parsing
 
     def test_circular_reference_detection(self) -> None:
         """Test detection of circular layer references."""
@@ -302,11 +329,15 @@ class TestLayerReferences:
             def __init__(self, providers: LayoutProviders):
                 self.providers = providers
 
-            def detect_circular_references(self, layer_refs: dict[str, list[str]]) -> list[str]:
+            def detect_circular_references(
+                self, layer_refs: dict[str, list[str]]
+            ) -> list[str]:
                 """Detect circular references between layers."""
                 circular_refs = []
 
-                def has_circular_path(start_layer: str, target_layer: str, visited: set[str]) -> bool:
+                def has_circular_path(
+                    start_layer: str, target_layer: str, visited: set[str]
+                ) -> bool:
                     if start_layer in visited:
                         return True
                     if start_layer not in layer_refs:
@@ -317,13 +348,17 @@ class TestLayerReferences:
                         if isinstance(ref_layer, str):
                             if ref_layer == target_layer:
                                 return True
-                            if has_circular_path(ref_layer, target_layer, visited.copy()):
+                            if has_circular_path(
+                                ref_layer, target_layer, visited.copy()
+                            ):
                                 return True
                     return False
 
                 for layer in layer_refs:
                     if has_circular_path(layer, layer, set()):
-                        circular_refs.append(f"Circular reference involving layer '{layer}'")
+                        circular_refs.append(
+                            f"Circular reference involving layer '{layer}'"
+                        )
 
                 return circular_refs
 
@@ -366,7 +401,9 @@ class TestCoreOperations:
 
         core_ops = MockCoreOperations(providers)
 
-        layout_data = LayoutData(keyboard="TEST-BOARD", title="Test Layout", layers=[[], []])
+        layout_data = LayoutData(
+            keyboard="TEST-BOARD", title="Test Layout", layers=[[], []]
+        )
 
         normalized = core_ops.normalize_layout(layout_data)
 
@@ -385,7 +422,9 @@ class TestCoreOperations:
                 stats = {
                     "keyboard": layout_data.keyboard,
                     "layer_count": len(layout_data.layers),
-                    "total_bindings": sum(len(layer_bindings) for layer_bindings in layout_data.layers),
+                    "total_bindings": sum(
+                        len(layer_bindings) for layer_bindings in layout_data.layers
+                    ),
                     "behavior_counts": {
                         "hold_taps": len(layout_data.hold_taps),
                         "combos": len(layout_data.combos),

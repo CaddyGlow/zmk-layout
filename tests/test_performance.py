@@ -41,7 +41,9 @@ class TestPerformance:
         per_iteration = duration / iterations
 
         # Should be fast - less than 1ms per creation
-        assert per_iteration < 0.001, f"Model creation took {per_iteration:.4f}s per iteration"
+        assert per_iteration < 0.001, (
+            f"Model creation took {per_iteration:.4f}s per iteration"
+        )
 
     def test_serialization_performance(self) -> None:
         """Test JSON serialization performance."""
@@ -55,7 +57,12 @@ class TestPerformance:
                 ]
                 for i in range(5)
             ],
-            holdTaps=[HoldTapBehavior(name=f"mt_{i}", bindings=["&kp", "&kp"], tappingTermMs=200) for i in range(3)],
+            holdTaps=[
+                HoldTapBehavior(
+                    name=f"mt_{i}", bindings=["&kp", "&kp"], tappingTermMs=200
+                )
+                for i in range(3)
+            ],
         )
 
         # Benchmark serialization
@@ -72,7 +79,9 @@ class TestPerformance:
         per_iteration = duration / iterations
 
         # Should be fast - less than 10ms per serialization
-        assert per_iteration < 0.01, f"Serialization took {per_iteration:.4f}s per iteration"
+        assert per_iteration < 0.01, (
+            f"Serialization took {per_iteration:.4f}s per iteration"
+        )
 
     def test_parsing_performance(self) -> None:
         """Test binding parsing performance."""
@@ -108,7 +117,9 @@ class TestPerformance:
         per_iteration = duration / iterations
 
         # Should be fast - less than 1ms per batch of 15 bindings
-        assert per_iteration < 0.001, f"Binding parsing took {per_iteration:.4f}s per iteration"
+        assert per_iteration < 0.001, (
+            f"Binding parsing took {per_iteration:.4f}s per iteration"
+        )
 
     def test_provider_creation_performance(self) -> None:
         """Test provider creation performance."""
@@ -126,7 +137,9 @@ class TestPerformance:
         per_iteration = duration / iterations
 
         # Should be fast - less than 5ms per provider creation
-        assert per_iteration < 0.005, f"Provider creation took {per_iteration:.4f}s per iteration"
+        assert per_iteration < 0.005, (
+            f"Provider creation took {per_iteration:.4f}s per iteration"
+        )
 
     def test_round_trip_performance(self) -> None:
         """Test round-trip serialization/deserialization performance."""
@@ -162,7 +175,9 @@ class TestPerformance:
         per_iteration = duration / iterations
 
         # Should be fast - less than 10ms per round-trip
-        assert per_iteration < 0.01, f"Round-trip took {per_iteration:.4f}s per iteration"
+        assert per_iteration < 0.01, (
+            f"Round-trip took {per_iteration:.4f}s per iteration"
+        )
 
     def test_memory_usage_reasonable(self) -> None:
         """Test that memory usage is reasonable for large layouts."""
@@ -178,7 +193,9 @@ class TestPerformance:
                 for i in range(10)  # 10 layers
             ],
             holdTaps=[
-                HoldTapBehavior(name=f"ht_{i}", bindings=["&kp", "&kp"], tappingTermMs=200 + i * 10)
+                HoldTapBehavior(
+                    name=f"ht_{i}", bindings=["&kp", "&kp"], tappingTermMs=200 + i * 10
+                )
                 for i in range(20)  # 20 hold-taps
             ],
         )

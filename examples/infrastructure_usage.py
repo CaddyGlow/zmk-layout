@@ -102,12 +102,17 @@ def template_context_example():
         # Generation metadata
         .with_generation_metadata(author="Example Author", version="1.0.0")
         # Custom variables
-        .with_custom_vars(theme="dark", layout_style="ergonomic", custom_setting="value")
+        .with_custom_vars(
+            theme="dark", layout_style="ergonomic", custom_setting="value"
+        )
         # Feature flags
-        .with_features(home_row_mods=True, mouse_keys=False, rgb_underglow=True, oled_display=False)
+        .with_features(
+            home_row_mods=True, mouse_keys=False, rgb_underglow=True, oled_display=False
+        )
         # DTSI content
         .with_dtsi_content(
-            layer_defines="#define BASE 0\n#define LOWER 1", keymap_node='keymap { compatible = "zmk,keymap"; }'
+            layer_defines="#define BASE 0\n#define LOWER 1",
+            keymap_node='keymap { compatible = "zmk,keymap"; }',
         )
         # Validate and build
         .validate_completeness()
@@ -284,7 +289,9 @@ def debug_tools_example():
     from zmk_layout.infrastructure.debug_tools import BuilderState
 
     # Create builder
-    test_builder = LayoutBindingBuilder("&mt").hold_tap("LCTRL", "A").with_tapping_term(200)
+    test_builder = (
+        LayoutBindingBuilder("&mt").hold_tap("LCTRL", "A").with_tapping_term(200)
+    )
 
     # Capture state
     state = BuilderState.from_builder(test_builder)
@@ -417,7 +424,12 @@ def full_integration_example():
 
     with monitor.measure("full_workflow"):
         # 1. Configure providers
-        providers = ProviderBuilder().enable_caching(size=256).enable_performance_tracking().build()
+        providers = (
+            ProviderBuilder()
+            .enable_caching(size=256)
+            .enable_performance_tracking()
+            .build()
+        )
 
         print("1. Providers configured")
 

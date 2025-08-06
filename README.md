@@ -71,21 +71,26 @@ pip install zmk-layout[parsing]     # Lark parser for devicetree files
 git clone https://github.com/CaddyGlow/zmk-layout.git
 cd zmk-layout
 
-# Install with development dependencies using uv (recommended)
-uv pip install -e ".[dev]"
+# Install with development dependencies using uv
+uv sync --all-extras --dev
 
-# Or using pip
-pip install -e ".[dev]"
+# Or use make
+make install
 
-# Run tests
-pytest tests/ -v --cov=zmk_layout --cov-report=term-missing
+# Run all checks (ruff, mypy, tests)
+make check
 
-# Type checking
-mypy src/zmk_layout/ --strict
+# Auto-fix and format code
+make fix
 
-# Code formatting
-ruff format src/ tests/
-ruff check src/ tests/ --fix
+# Run tests only
+make test
+
+# Build packages
+make build
+
+# Clean build artifacts
+make clean
 ```
 
 ## API Examples
@@ -184,11 +189,11 @@ zmk_layout/
 Comprehensive test coverage with 200+ tests:
 
 ```bash
-# Run all tests
-pytest tests/ -v
+# Run all tests with coverage
+make test
 
-# Run with coverage
-pytest tests/ -v --cov=zmk_layout --cov-report=html
+# Run all checks (ruff, mypy, tests)
+make check
 
 # Run specific test categories
 pytest tests/core/ -v        # Core functionality tests
@@ -216,10 +221,8 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 3. Make your changes with tests
 4. Ensure quality gates pass:
    ```bash
-   ruff format src/ tests/
-   ruff check src/ tests/ --fix
-   mypy src/zmk_layout/ --strict
-   pytest tests/ -v
+   make fix    # Auto-fix and format code
+   make check  # Run all checks (must pass)
    ```
 5. Commit your changes (`git commit -m 'feat: add amazing feature'`)
 6. Push to your fork (`git push origin feature/amazing-feature`)

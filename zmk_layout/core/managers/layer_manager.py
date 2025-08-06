@@ -178,7 +178,10 @@ class LayerManager:
         source_layer = self._data.layers[source_index]
 
         # Create copy of layer data
-        copied_layer = [LayoutBinding.model_validate(binding.model_dump()) for binding in source_layer]
+        copied_layer = [
+            LayoutBinding.model_validate(binding.model_dump())
+            for binding in source_layer
+        ]
 
         # Add new layer
         self._data.layer_names.append(target_name)

@@ -34,10 +34,14 @@ def example_2_modify_layer_bindings():
     layout = Layout.create_empty("planck", "My Planck Layout")
 
     # Add a base layer and set some key bindings
-    layout.layers.add("base").set(0, "&kp Q").set(1, "&kp W").set(2, "&kp E").set(3, "&kp R")
+    layout.layers.add("base").set(0, "&kp Q").set(1, "&kp W").set(2, "&kp E").set(
+        3, "&kp R"
+    )
 
     # Add gaming layer with different bindings
-    layout.layers.add("gaming").set(0, "&kp T").set(1, "&kp A").set(2, "&kp B").set(3, "&trans")
+    layout.layers.add("gaming").set(0, "&kp T").set(1, "&kp A").set(2, "&kp B").set(
+        3, "&trans"
+    )
 
     # Get specific layer and modify it
     base_layer = layout.layers.get("base")
@@ -68,7 +72,9 @@ def example_3_batch_operations():
 
     def setup_nav_layer(layout):
         layer = layout.layers.add("nav")
-        layer.set(0, "&kp HOME").set(1, "&kp END").set(2, "&kp PG_UP").set(3, "&kp PG_DN")
+        layer.set(0, "&kp HOME").set(1, "&kp END").set(2, "&kp PG_UP").set(
+            3, "&kp PG_DN"
+        )
         return layout
 
     def setup_sym_layer(layout):
@@ -95,12 +101,18 @@ def example_4_behavior_management():
     layout = Layout.create_empty("iris", "Iris with Behaviors")
 
     # Add different types of behaviors using fluent API
-    layout.behaviors.add_hold_tap(name="mt_ctrl_a", tap="&kp A", hold="&kp LCTRL", tapping_term_ms=200).add_combo(
+    layout.behaviors.add_hold_tap(
+        name="mt_ctrl_a", tap="&kp A", hold="&kp LCTRL", tapping_term_ms=200
+    ).add_combo(
         name="combo_esc", keys=[0, 1], binding="&kp ESC", timeout_ms=50
-    ).add_macro(name="email_macro", sequence=["&kp H", "&kp E", "&kp L", "&kp L", "&kp O"])
+    ).add_macro(
+        name="email_macro", sequence=["&kp H", "&kp E", "&kp L", "&kp L", "&kp O"]
+    )
 
     # Add layer and use the custom behaviors
-    layout.layers.add("base").set(0, "&mt_ctrl_a").set(1, "&kp S").set(10, "&email_macro")
+    layout.layers.add("base").set(0, "&mt_ctrl_a").set(1, "&kp S").set(
+        10, "&email_macro"
+    )
 
     stats = layout.get_statistics()
     print(f"Added {len(stats['behaviors_used'])} custom behaviors:")
@@ -122,7 +134,9 @@ def example_5_context_manager():
         layout.layers.add("fn").set(0, "&kp F1").set(1, "&kp F2").set(2, "&kp F3")
 
         # Add some behaviors
-        layout.behaviors.add_hold_tap(name="sft_spc", tap="&kp SPACE", hold="&kp LSHIFT")
+        layout.behaviors.add_hold_tap(
+            name="sft_spc", tap="&kp SPACE", hold="&kp LSHIFT"
+        )
 
         print("Context manager operations completed successfully")
         print(f"Final layer count: {len(layout.get_layer_names())}")
@@ -180,7 +194,9 @@ def example_7_save_and_load():
     # Load layout from file
     try:
         loaded_layout = Layout.from_file(output_file)
-        print(f"Successfully loaded layout with {len(loaded_layout.get_layer_names())} layers")
+        print(
+            f"Successfully loaded layout with {len(loaded_layout.get_layer_names())} layers"
+        )
 
         # Verify data integrity
         original_stats = layout.get_statistics()

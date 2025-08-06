@@ -81,7 +81,9 @@ class ProcessingPipeline:
             warnings: Immutable tuple of collected warnings
         """
         self._processor = processor
-        self._operations: tuple[Callable[[LayoutData], LayoutData], ...] = operations or ()
+        self._operations: tuple[Callable[[LayoutData], LayoutData], ...] = (
+            operations or ()
+        )
         self._errors: tuple[ProcessingError, ...] = errors or ()
         self._warnings: tuple[ProcessingWarning, ...] = warnings or ()
 
@@ -287,7 +289,11 @@ class ProcessingPipeline:
                     substituted_bindings = []
                     for binding in layer:
                         # Apply defines to binding strings
-                        binding_str = binding.to_str() if hasattr(binding, "to_str") else str(binding)
+                        binding_str = (
+                            binding.to_str()
+                            if hasattr(binding, "to_str")
+                            else str(binding)
+                        )
                         for define_name, define_value in defines.items():
                             binding_str = binding_str.replace(define_name, define_value)
                         substituted_bindings.append(LayoutBinding.from_str(binding_str))
@@ -325,7 +331,9 @@ class ProcessingPipeline:
                         filtered_layers.append(data.layers[i])
                         filtered_names.append(name)
 
-                return data.model_copy(update={"layers": filtered_layers, "layer_names": filtered_names})
+                return data.model_copy(
+                    update={"layers": filtered_layers, "layer_names": filtered_names}
+                )
             except Exception:
                 return data
 
@@ -352,7 +360,9 @@ class ProcessingPipeline:
             # Create empty layout data
             from zmk_layout.models.metadata import LayoutData
 
-            data = LayoutData(keyboard="unknown", title="untitled", layers=[], layer_names=[])
+            data = LayoutData(
+                keyboard="unknown", title="untitled", layers=[], layer_names=[]
+            )
 
         # Track errors and warnings for this execution
         execution_errors: list[ProcessingError] = []
@@ -365,7 +375,10 @@ class ProcessingPipeline:
             except Exception as e:
                 # Collect error and continue
                 execution_errors.append(
-                    ProcessingError(f"Operation {i + 1} failed", context={"operation_index": i, "error": str(e)})
+                    ProcessingError(
+                        f"Operation {i + 1} failed",
+                        context={"operation_index": i, "error": str(e)},
+                    )
                 )
                 # Continue with unchanged data
 

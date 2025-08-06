@@ -51,13 +51,17 @@ def fluent_chaining_demo():
     # Demonstrate fluent chaining on a single layer
     print("Creating base layer with chained operations...")
 
-    layout.layers.add("base").set(0, "&kp Q").set(1, "&kp W").set(2, "&kp E").set(3, "&kp R").set(4, "&kp T")
+    layout.layers.add("base").set(0, "&kp Q").set(1, "&kp W").set(2, "&kp E").set(
+        3, "&kp R"
+    ).set(4, "&kp T")
 
     # Show multiple layer operations
     print("Adding and configuring multiple layers...")
 
     nav_layer = layout.layers.add("nav")
-    nav_layer.set(0, "&kp HOME").set(1, "&kp END").set(2, "&kp PG_UP").set(3, "&kp PG_DN")
+    nav_layer.set(0, "&kp HOME").set(1, "&kp END").set(2, "&kp PG_UP").set(
+        3, "&kp PG_DN"
+    )
 
     sym_layer = layout.layers.add("sym")
     sym_layer.set(0, "&kp EXCL").set(1, "&kp AT").set(2, "&kp HASH").set(3, "&kp DLLR")
@@ -80,7 +84,9 @@ def behavior_fluent_demo():
     # Add behaviors with fluent interface
     print("Adding behaviors...")
 
-    layout.behaviors.add_hold_tap(name="hm_a", tap="&kp A", hold="&kp LGUI", tapping_term_ms=200)
+    layout.behaviors.add_hold_tap(
+        name="hm_a", tap="&kp A", hold="&kp LGUI", tapping_term_ms=200
+    )
 
     layout.behaviors.add_combo(name="esc_combo", keys=[0, 1], binding="&kp ESC")
 
@@ -107,7 +113,9 @@ def context_manager_demo():
 
         layout.layers.add("lower").set(0, "&kp N1").set(1, "&kp N2").set(2, "&kp N3")
 
-        layout.behaviors.add_hold_tap(name="mt_space", tap="&kp SPACE", hold="&kp LSHIFT")
+        layout.behaviors.add_hold_tap(
+            name="mt_space", tap="&kp SPACE", hold="&kp LSHIFT"
+        )
 
         # Save within context
         layout.save("/tmp/context_demo.json")

@@ -19,7 +19,9 @@ class StubFileProvider:
         path_key = Path(path)
         return self._files[path_key]
 
-    def write_text(self, path: Path | str, content: str, encoding: str = "utf-8") -> None:
+    def write_text(
+        self, path: Path | str, content: str, encoding: str = "utf-8"
+    ) -> None:
         """Write text content to a file."""
         path_key = Path(path)
         self._files[path_key] = content
@@ -34,7 +36,9 @@ class StubFileProvider:
         path_key = Path(path)
         return path_key in self._files
 
-    def mkdir(self, path: Path | str, parents: bool = False, exist_ok: bool = False) -> None:
+    def mkdir(
+        self, path: Path | str, parents: bool = False, exist_ok: bool = False
+    ) -> None:
         """Create a directory."""
         pass
 
@@ -43,7 +47,9 @@ class StubTemplateProvider:
     """TemplateProvider stub that renders {var} or {{var}} style placeholders."""
 
     def __init__(self) -> None:
-        self.render_calls: list[tuple[str, dict[str, str | int | float | bool | None]]] = []
+        self.render_calls: list[
+            tuple[str, dict[str, str | int | float | bool | None]]
+        ] = []
 
     def has_template_syntax(self, content: str) -> bool:
         # Simple template detection - look for {variable} patterns, not JSON braces
@@ -51,7 +57,9 @@ class StubTemplateProvider:
 
         return bool(re.search(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}", content))
 
-    def render_string(self, template: str, context: dict[str, str | int | float | bool | None]) -> str:
+    def render_string(
+        self, template: str, context: dict[str, str | int | float | bool | None]
+    ) -> str:
         self.render_calls.append((template, context))
         # very naive replace to keep dependency-free
         return template.replace("{name}", "Rendered")
@@ -63,12 +71,16 @@ class StubTemplateProvider:
 @pytest.fixture()
 def valid_layout_json() -> str:
     # Minimal JSON that satisfies LayoutData.model_validate
-    return json.dumps({"keyboard": "kb", "title": "Sample", "layers": [], "layer_names": []})
+    return json.dumps(
+        {"keyboard": "kb", "title": "Sample", "layers": [], "layer_names": []}
+    )
 
 
 def test_happy_path_renders_template(tmp_path: Path, valid_layout_json: str) -> None:
     path = tmp_path / "layout.json"
-    file_provider = StubFileProvider({path: valid_layout_json.replace("Sample", "{name}")})
+    file_provider = StubFileProvider(
+        {path: valid_layout_json.replace("Sample", "{name}")}
+    )
     template_provider = StubTemplateProvider()
 
     result = load_layout_file(
@@ -84,7 +96,9 @@ def test_happy_path_renders_template(tmp_path: Path, valid_layout_json: str) -> 
 
 def test_skip_template_processing_flag(tmp_path: Path, valid_layout_json: str) -> None:
     path = tmp_path / "layout.json"
-    file_provider = StubFileProvider({path: valid_layout_json.replace("Sample", "{name}")})
+    file_provider = StubFileProvider(
+        {path: valid_layout_json.replace("Sample", "{name}")}
+    )
     template_provider = StubTemplateProvider()
 
     result = load_layout_file(
@@ -101,7 +115,9 @@ def test_skip_template_processing_flag(tmp_path: Path, valid_layout_json: str) -
 def test_provider_none_no_render(tmp_path: Path, valid_layout_json: str) -> None:
     """If no template provider is supplied, content must bypass rendering."""
     path = tmp_path / "layout.json"
-    file_provider = StubFileProvider({path: valid_layout_json.replace("Sample", "{name}")})
+    file_provider = StubFileProvider(
+        {path: valid_layout_json.replace("Sample", "{name}")}
+    )
 
     result = load_layout_file(
         path,
@@ -111,7 +127,9 @@ def test_provider_none_no_render(tmp_path: Path, valid_layout_json: str) -> None
     assert result.title == "{name}"
 
 
-def test_no_template_syntax_skips_rendering(tmp_path: Path, valid_layout_json: str) -> None:
+def test_no_template_syntax_skips_rendering(
+    tmp_path: Path, valid_layout_json: str
+) -> None:
     """Content without template syntax should skip rendering even with provider."""
     path = tmp_path / "layout.json"
     file_provider = StubFileProvider({path: valid_layout_json})
@@ -126,16 +144,22 @@ def test_no_template_syntax_skips_rendering(tmp_path: Path, valid_layout_json: s
     assert template_provider.render_calls == []
 
 
-def test_template_provider_render_exception(tmp_path: Path, valid_layout_json: str) -> None:
+def test_template_provider_render_exception(
+    tmp_path: Path, valid_layout_json: str
+) -> None:
     """Template provider render failures should propagate as ValueError."""
     path = tmp_path / "layout.json"
-    file_provider = StubFileProvider({path: valid_layout_json.replace("Sample", "{name}")})
+    file_provider = StubFileProvider(
+        {path: valid_layout_json.replace("Sample", "{name}")}
+    )
 
     class FailingTemplateProvider:
         def has_template_syntax(self, content: str) -> bool:
             return True
 
-        def render_string(self, template: str, context: dict[str, str | int | float | bool | None]) -> str:
+        def render_string(
+            self, template: str, context: dict[str, str | int | float | bool | None]
+        ) -> str:
             raise RuntimeError("Template render failed")
 
         def escape_content(self, content: str) -> str:
@@ -174,7 +198,9 @@ def test_file_not_found(tmp_path: Path) -> None:
 def test_template_context_is_empty_dict(tmp_path: Path, valid_layout_json: str) -> None:
     """Verify that template context is currently an empty dict."""
     path = tmp_path / "layout.json"
-    file_provider = StubFileProvider({path: valid_layout_json.replace("Sample", "{name}")})
+    file_provider = StubFileProvider(
+        {path: valid_layout_json.replace("Sample", "{name}")}
+    )
     template_provider = StubTemplateProvider()
 
     load_layout_file(
@@ -189,7 +215,9 @@ def test_template_context_is_empty_dict(tmp_path: Path, valid_layout_json: str) 
     assert context == {}
 
 
-def test_variable_resolution_flag_isolation(tmp_path: Path, valid_layout_json: str) -> None:
+def test_variable_resolution_flag_isolation(
+    tmp_path: Path, valid_layout_json: str
+) -> None:
     """Ensure global flag is properly restored after processing."""
     from zmk_layout.utils.json_operations import _skip_variable_resolution
 

@@ -87,7 +87,9 @@ class DTWalker:
         """
         return self.find_nodes(lambda node: pattern in node.path)
 
-    def find_properties(self, predicate: Callable[[DTProperty], bool]) -> list[tuple[DTNode, DTProperty]]:
+    def find_properties(
+        self, predicate: Callable[[DTProperty], bool]
+    ) -> list[tuple[DTNode, DTProperty]]:
         """Find all properties matching predicate.
 
         Args:
@@ -189,7 +191,9 @@ class DTMultiWalker:
         """
         return self.find_nodes(lambda node: pattern in node.path)
 
-    def find_properties(self, predicate: Callable[[DTProperty], bool]) -> list[tuple[DTNode, DTProperty]]:
+    def find_properties(
+        self, predicate: Callable[[DTProperty], bool]
+    ) -> list[tuple[DTNode, DTProperty]]:
         """Find all properties matching predicate across all roots.
 
         Args:
@@ -326,7 +330,10 @@ class MacroExtractor(StructlogMixin):
                 compatible_prop = child.get_property("compatible")
                 if compatible_prop and compatible_prop.value:
                     compatible_value = compatible_prop.value.value
-                    if isinstance(compatible_value, str) and "zmk,behavior-macro" in compatible_value:
+                    if (
+                        isinstance(compatible_value, str)
+                        and "zmk,behavior-macro" in compatible_value
+                    ):
                         macros.append(child)
 
         return macros
@@ -360,7 +367,10 @@ class HoldTapExtractor(StructlogMixin):
                 compatible_prop = child.get_property("compatible")
                 if compatible_prop and compatible_prop.value:
                     compatible_value = compatible_prop.value.value
-                    if isinstance(compatible_value, str) and "zmk,behavior-hold-tap" in compatible_value:
+                    if (
+                        isinstance(compatible_value, str)
+                        and "zmk,behavior-hold-tap" in compatible_value
+                    ):
                         hold_taps.append(child)
 
         return hold_taps
@@ -471,7 +481,9 @@ class UniversalBehaviorExtractor(StructlogMixin):
         """
         return self._extract_behaviors_from_roots([root])
 
-    def extract_all_behaviors_multiple(self, roots: list[DTNode]) -> dict[str, list[DTNode]]:
+    def extract_all_behaviors_multiple(
+        self, roots: list[DTNode]
+    ) -> dict[str, list[DTNode]]:
         """Extract all behavior types from multiple device tree roots.
 
         Args:
@@ -573,7 +585,9 @@ class UniversalBehaviorExtractor(StructlogMixin):
 
         # Check if any input listeners were found in the normal behavior extraction
         multi_walker = DTMultiWalker(roots)
-        input_listener_nodes = multi_walker.find_nodes_by_compatible("zmk,input-listener")
+        input_listener_nodes = multi_walker.find_nodes_by_compatible(
+            "zmk,input-listener"
+        )
 
         # Convert input listener nodes found through normal behavior extraction
         for node in input_listener_nodes:
@@ -617,7 +631,9 @@ class UniversalBehaviorExtractor(StructlogMixin):
 
         return behavior_models
 
-    def _extract_behaviors_from_roots(self, roots: list[DTNode]) -> dict[str, list[DTNode]]:
+    def _extract_behaviors_from_roots(
+        self, roots: list[DTNode]
+    ) -> dict[str, list[DTNode]]:
         """Extract all behavior types from multiple device tree roots using enhanced patterns.
 
         Args:
@@ -736,7 +752,9 @@ class UniversalBehaviorExtractor(StructlogMixin):
                     combos.append(child)
 
         # Method 2: Find nodes with combo-like properties
-        combo_nodes = multi_walker.find_properties(lambda prop: prop.name == "key-positions" and prop.value is not None)
+        combo_nodes = multi_walker.find_properties(
+            lambda prop: prop.name == "key-positions" and prop.value is not None
+        )
 
         for node, _ in combo_nodes:
             # Verify this has bindings property too
@@ -749,7 +767,10 @@ class UniversalBehaviorExtractor(StructlogMixin):
                 prop.name == "compatible"
                 and prop.value
                 and isinstance(prop.value.value, str)
-                and any(pattern in prop.value.value for pattern in self.behavior_patterns["combos"])
+                and any(
+                    pattern in prop.value.value
+                    for pattern in self.behavior_patterns["combos"]
+                )
             )
         )
 
@@ -800,7 +821,9 @@ class UniversalBehaviorExtractor(StructlogMixin):
         patterns["input_listeners"] = input_listeners
 
         # Detect sensor configurations
-        sensor_nodes = multi_walker.find_nodes_by_compatible("zmk,behavior-sensor-rotate")
+        sensor_nodes = multi_walker.find_nodes_by_compatible(
+            "zmk,behavior-sensor-rotate"
+        )
         patterns["sensor_configs"] = sensor_nodes
 
         # Detect underglow/RGB configurations
@@ -814,7 +837,9 @@ class UniversalBehaviorExtractor(StructlogMixin):
         patterns["mouse_configs"] = mouse_nodes
 
         # Detect conditional layers (layers with specific activation conditions)
-        conditional_nodes = multi_walker.find_properties(lambda prop: prop.name == "layers" and prop.value is not None)
+        conditional_nodes = multi_walker.find_properties(
+            lambda prop: prop.name == "layers" and prop.value is not None
+        )
         patterns["conditional_layers"] = [node for node, _ in conditional_nodes]
 
         # Detect custom behavior implementations
@@ -845,7 +870,9 @@ def create_behavior_extractor() -> BehaviorExtractor:
     return BehaviorExtractor()
 
 
-def create_universal_behavior_extractor(logger: "LayoutLogger | None" = None) -> UniversalBehaviorExtractor:
+def create_universal_behavior_extractor(
+    logger: "LayoutLogger | None" = None,
+) -> UniversalBehaviorExtractor:
     """Create universal behavior extractor instance.
 
     Args:

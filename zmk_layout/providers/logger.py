@@ -21,7 +21,12 @@ class LayoutLogger(Protocol):
         """
         ...
 
-    def error(self, message: str, exc_info: bool = False, **kwargs: str | int | float | bool | None) -> None:
+    def error(
+        self,
+        message: str,
+        exc_info: bool = False,
+        **kwargs: str | int | float | bool | None,
+    ) -> None:
         """Log an error message.
 
         Args:
@@ -49,7 +54,9 @@ class LayoutLogger(Protocol):
         """
         ...
 
-    def exception(self, message: str, **kwargs: str | int | float | bool | None) -> None:
+    def exception(
+        self, message: str, **kwargs: str | int | float | bool | None
+    ) -> None:
         """Log an exception with traceback.
 
         Args:

@@ -42,7 +42,9 @@ class DefaultLogger:
         self._logger = logging.getLogger(name)
         if not self._logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             handler.setFormatter(formatter)
             self._logger.addHandler(handler)
             self._logger.setLevel(logging.INFO)
@@ -51,7 +53,12 @@ class DefaultLogger:
         extra: dict[str, str | int | float | bool | None] = kwargs
         self._logger.info(message, extra=extra)
 
-    def error(self, message: str, exc_info: bool = False, **kwargs: str | int | float | bool | None) -> None:
+    def error(
+        self,
+        message: str,
+        exc_info: bool = False,
+        **kwargs: str | int | float | bool | None,
+    ) -> None:
         extra: dict[str, str | int | float | bool | None] = kwargs
         self._logger.error(message, exc_info=exc_info, extra=extra)
 
@@ -63,7 +70,9 @@ class DefaultLogger:
         extra: dict[str, str | int | float | bool | None] = kwargs
         self._logger.debug(message, extra=extra)
 
-    def exception(self, message: str, **kwargs: str | int | float | bool | None) -> None:
+    def exception(
+        self, message: str, **kwargs: str | int | float | bool | None
+    ) -> None:
         extra: dict[str, str | int | float | bool | None] = kwargs
         self._logger.exception(message, extra=extra)
 
@@ -74,7 +83,9 @@ class DefaultFileProvider:
     def read_text(self, path: Path | str, encoding: str = "utf-8") -> str:
         return Path(path).read_text(encoding=encoding)
 
-    def write_text(self, path: Path | str, content: str, encoding: str = "utf-8") -> None:
+    def write_text(
+        self, path: Path | str, content: str, encoding: str = "utf-8"
+    ) -> None:
         Path(path).write_text(content, encoding=encoding)
 
     def exists(self, path: Path | str) -> bool:
@@ -83,14 +94,18 @@ class DefaultFileProvider:
     def is_file(self, path: Path | str) -> bool:
         return Path(path).is_file()
 
-    def mkdir(self, path: Path | str, parents: bool = False, exist_ok: bool = False) -> None:
+    def mkdir(
+        self, path: Path | str, parents: bool = False, exist_ok: bool = False
+    ) -> None:
         Path(path).mkdir(parents=parents, exist_ok=exist_ok)
 
 
 class DefaultTemplateProvider:
     """Default template provider with basic string substitution."""
 
-    def render_string(self, template: str, context: dict[str, str | int | float | bool | None]) -> str:
+    def render_string(
+        self, template: str, context: dict[str, str | int | float | bool | None]
+    ) -> str:
         """Basic template rendering using str.format()."""
         try:
             return template.format(**context)
@@ -123,7 +138,10 @@ class DefaultConfigurationProvider:
         ]
 
     def get_include_files(self) -> list[str]:
-        return ["zmk/include/dt-bindings/zmk/keys.h", "zmk/include/dt-bindings/zmk/bt.h"]
+        return [
+            "zmk/include/dt-bindings/zmk/keys.h",
+            "zmk/include/dt-bindings/zmk/bt.h",
+        ]
 
     def get_validation_rules(self) -> dict[str, int | list[int] | list[str]]:
         return {

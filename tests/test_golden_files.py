@@ -32,8 +32,21 @@ class TestGoldenFiles:
                     LayoutBinding.from_str("&trans"),
                 ],
             ],
-            holdTaps=[HoldTapBehavior(name="mt", bindings=["&kp", "&kp"], tappingTermMs=200, flavor="balanced")],
-            combos=[ComboBehavior(name="esc_combo", keyPositions=[0, 1], binding=LayoutBinding.from_str("&kp ESC"))],
+            holdTaps=[
+                HoldTapBehavior(
+                    name="mt",
+                    bindings=["&kp", "&kp"],
+                    tappingTermMs=200,
+                    flavor="balanced",
+                )
+            ],
+            combos=[
+                ComboBehavior(
+                    name="esc_combo",
+                    keyPositions=[0, 1],
+                    binding=LayoutBinding.from_str("&kp ESC"),
+                )
+            ],
         )
 
         # Serialize to JSON
@@ -54,7 +67,9 @@ class TestGoldenFiles:
         original_normalized = normalize_for_comparison(json_data)
         roundtrip_normalized = normalize_for_comparison(json_data_roundtrip)
 
-        assert original_normalized == roundtrip_normalized, "Round-trip serialization should be identical"
+        assert original_normalized == roundtrip_normalized, (
+            "Round-trip serialization should be identical"
+        )
 
     def test_round_trip_complex_bindings(self) -> None:
         """Test round-trip with complex nested bindings."""
@@ -67,9 +82,15 @@ class TestGoldenFiles:
             "&trans",  # No parameters
         ]
 
-        layer_bindings = [LayoutBinding.from_str(binding) for binding in complex_bindings]
+        layer_bindings = [
+            LayoutBinding.from_str(binding) for binding in complex_bindings
+        ]
 
-        layout_data = LayoutData(keyboard="complex_test", title="Complex Bindings Test", layers=[layer_bindings])
+        layout_data = LayoutData(
+            keyboard="complex_test",
+            title="Complex Bindings Test",
+            layers=[layer_bindings],
+        )
 
         # Round-trip test
         json_data = layout_data.model_dump(mode="json")
@@ -108,11 +129,15 @@ class TestGoldenFiles:
     def test_file_persistence(self) -> None:
         """Test saving and loading from actual files."""
         layout_data = LayoutData(
-            keyboard="file_test", title="File Persistence Test", layers=[[LayoutBinding.from_str("&kp SPACE")]]
+            keyboard="file_test",
+            title="File Persistence Test",
+            layers=[[LayoutBinding.from_str("&kp SPACE")]],
         )
 
         # Test with temporary file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as tmp_file:
             # Save to file
             json.dump(layout_data.model_dump(mode="json"), tmp_file, indent=2)
             tmp_path = Path(tmp_file.name)
@@ -142,11 +167,19 @@ class TestGoldenFiles:
             keyboard="behavior_test",
             title="Behavior Validation Test",
             holdTaps=[
-                HoldTapBehavior(name="test_mt", bindings=["&kp", "&kp"], tappingTermMs=150, flavor="tap-preferred")
+                HoldTapBehavior(
+                    name="test_mt",
+                    bindings=["&kp", "&kp"],
+                    tappingTermMs=150,
+                    flavor="tap-preferred",
+                )
             ],
             combos=[
                 ComboBehavior(
-                    name="test_combo", keyPositions=[0, 1, 2], binding=LayoutBinding.from_str("&kp TAB"), timeoutMs=50
+                    name="test_combo",
+                    keyPositions=[0, 1, 2],
+                    binding=LayoutBinding.from_str("&kp TAB"),
+                    timeoutMs=50,
                 )
             ],
         )
@@ -189,6 +222,8 @@ class TestProviderIntegration:
 
         # Test template provider (using fallback behavior)
         if hasattr(providers.template, "render_string"):
-            result = providers.template.render_string("Hello {{ name }}", {"name": "World"})
+            result = providers.template.render_string(
+                "Hello {{ name }}", {"name": "World"}
+            )
             # With fallback template provider, it returns the template as-is
             assert "Hello" in result  # Basic test that something was returned

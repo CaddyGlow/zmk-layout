@@ -29,7 +29,9 @@ class FileProvider(Protocol):
         """
         ...
 
-    def write_text(self, path: Path | str, content: str, encoding: str = "utf-8") -> None:
+    def write_text(
+        self, path: Path | str, content: str, encoding: str = "utf-8"
+    ) -> None:
         """Write text content to a file.
 
         Args:
@@ -64,7 +66,9 @@ class FileProvider(Protocol):
         """
         ...
 
-    def mkdir(self, path: Path | str, parents: bool = False, exist_ok: bool = False) -> None:
+    def mkdir(
+        self, path: Path | str, parents: bool = False, exist_ok: bool = False
+    ) -> None:
         """Create a directory.
 
         Args:

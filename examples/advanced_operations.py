@@ -30,11 +30,18 @@ def example_1_complex_behaviors():
     )
 
     layout.behaviors.add_hold_tap(
-        name="hm_s", tap="&kp S", hold="&kp LALT", tapping_term_ms=280, quick_tap_ms=175, flavor="balanced"
+        name="hm_s",
+        tap="&kp S",
+        hold="&kp LALT",
+        tapping_term_ms=280,
+        quick_tap_ms=175,
+        flavor="balanced",
     )
 
     # Add tap-dance behavior
-    layout.behaviors.add_tap_dance(name="td_caps", bindings=["&kp LSHIFT", "&caps_word"], tapping_term_ms=200)
+    layout.behaviors.add_tap_dance(
+        name="td_caps", bindings=["&kp LSHIFT", "&caps_word"], tapping_term_ms=200
+    )
 
     # Add complex combo behaviors
     layout.behaviors.add_combo(
@@ -56,14 +63,26 @@ def example_1_complex_behaviors():
 
     # Create macro sequence
     layout.behaviors.add_macro(
-        name="macro_qu", sequence=["&macro_press &kp Q", "&macro_tap &kp U", "&macro_release &kp Q"]
+        name="macro_qu",
+        sequence=["&macro_press &kp Q", "&macro_tap &kp U", "&macro_release &kp Q"],
     )
 
     # Build base layer with home row mods
     base_layer = layout.layers.add("base")
 
     # Top row: Q W E R T Y U I O P
-    qwerty_top = ["&kp Q", "&kp W", "&kp E", "&kp R", "&kp T", "&kp Y", "&kp U", "&kp I", "&kp O", "&kp P"]
+    qwerty_top = [
+        "&kp Q",
+        "&kp W",
+        "&kp E",
+        "&kp R",
+        "&kp T",
+        "&kp Y",
+        "&kp U",
+        "&kp I",
+        "&kp O",
+        "&kp P",
+    ]
     base_layer.set_range(0, len(qwerty_top), qwerty_top)
 
     # Home row with mods: A S D F G H J K L ;
@@ -82,7 +101,18 @@ def example_1_complex_behaviors():
     base_layer.set_range(10, len(home_row), home_row)
 
     # Bottom row with tap-dance
-    bottom_row = ["&td_caps", "&kp X", "&kp C", "&kp V", "&kp B", "&kp N", "&kp M", "&kp COMMA", "&kp DOT", "&kp SLASH"]
+    bottom_row = [
+        "&td_caps",
+        "&kp X",
+        "&kp C",
+        "&kp V",
+        "&kp B",
+        "&kp N",
+        "&kp M",
+        "&kp COMMA",
+        "&kp DOT",
+        "&kp SLASH",
+    ]
     base_layer.set_range(20, len(bottom_row), bottom_row)
 
     # Thumb keys
@@ -242,7 +272,18 @@ def example_2_layer_manipulation():
     gaming_fn = layout.layers.add("gaming_fn")
     gaming_fn.copy_from("nav")  # Start with nav layout
     # Customize for gaming (F-keys, etc.)
-    f_keys = ["&kp F1", "&kp F2", "&kp F3", "&kp F4", "&kp F5", "&kp F6", "&kp F7", "&kp F8", "&kp F9", "&kp F10"]
+    f_keys = [
+        "&kp F1",
+        "&kp F2",
+        "&kp F3",
+        "&kp F4",
+        "&kp F5",
+        "&kp F6",
+        "&kp F7",
+        "&kp F8",
+        "&kp F9",
+        "&kp F10",
+    ]
     gaming_fn.set_range(0, len(f_keys), f_keys)
 
     # Reorder layers - put gaming layers together
@@ -318,7 +359,9 @@ def example_4_custom_providers():
     # custom_providers.configuration = MyCustomConfigurationProvider()
     # custom_providers.template = MyCustomTemplateProvider()
 
-    layout = Layout.create_empty("dactyl", "Custom Provider Demo", providers=custom_providers)
+    layout = Layout.create_empty(
+        "dactyl", "Custom Provider Demo", providers=custom_providers
+    )
 
     # Add behaviors that might use template processing
     layout.behaviors.add_macro(
@@ -366,7 +409,9 @@ def example_5_performance_testing():
         layout.layers.add(name)
 
     layer_creation_time = time.time()
-    print(f"Created {len(layer_names)} layers in {layer_creation_time - start_time:.3f}s")
+    print(
+        f"Created {len(layer_names)} layers in {layer_creation_time - start_time:.3f}s"
+    )
 
     # Add many bindings to each layer
     binding_start = time.time()
@@ -392,7 +437,9 @@ def example_5_performance_testing():
 
     # Memory usage check
     stats = layout.get_statistics()
-    print(f"Final layout: {stats['layer_count']} layers, {stats['total_bindings']} bindings")
+    print(
+        f"Final layout: {stats['layer_count']} layers, {stats['total_bindings']} bindings"
+    )
 
     total_time = time.time() - start_time
     print(f"Total operation time: {total_time:.3f}s")
@@ -415,11 +462,13 @@ def example_6_file_operations():
         },
         "lower": {
             "description": "Numbers and symbols",
-            "bindings": ["&kp N1", "&kp N2", "&kp N3", "&kp N4", "&kp N5"] + ["&trans"] * 55,
+            "bindings": ["&kp N1", "&kp N2", "&kp N3", "&kp N4", "&kp N5"]
+            + ["&trans"] * 55,
         },
         "raise": {
             "description": "Function keys and navigation",
-            "bindings": ["&kp F1", "&kp F2", "&kp F3", "&kp F4", "&kp F5"] + ["&trans"] * 55,
+            "bindings": ["&kp F1", "&kp F2", "&kp F3", "&kp F4", "&kp F5"]
+            + ["&trans"] * 55,
         },
     }
 
@@ -469,9 +518,18 @@ def example_6_file_operations():
         loaded_stats = loaded_layout.get_statistics()
 
         integrity_checks = [
-            ("Layer count", original_stats["layer_count"] == loaded_stats["layer_count"]),
-            ("Behavior count", original_stats["behavior_count"] == loaded_stats["behavior_count"]),
-            ("Keyboard name", original_stats["keyboard_name"] == loaded_stats["keyboard_name"]),
+            (
+                "Layer count",
+                original_stats["layer_count"] == loaded_stats["layer_count"],
+            ),
+            (
+                "Behavior count",
+                original_stats["behavior_count"] == loaded_stats["behavior_count"],
+            ),
+            (
+                "Keyboard name",
+                original_stats["keyboard_name"] == loaded_stats["keyboard_name"],
+            ),
         ]
 
         print("File integrity checks:")
@@ -522,7 +580,9 @@ def main():
         for name, result in results.items():
             if hasattr(result, "get_statistics"):
                 stats = result.get_statistics()
-                print(f"  {name}: {stats['layer_count']} layers, {stats['total_bindings']} bindings")
+                print(
+                    f"  {name}: {stats['layer_count']} layers, {stats['total_bindings']} bindings"
+                )
 
 
 if __name__ == "__main__":

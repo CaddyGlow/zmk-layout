@@ -31,7 +31,7 @@ class TokenType(Enum):
     # Special
     COMMENT = "COMMENT"  # Generic comment (kept for backward compatibility)
     SINGLE_LINE_COMMENT = "SINGLE_LINE_COMMENT"  # // comments
-    MULTI_LINE_COMMENT = "MULTI_LINE_COMMENT"    # /* */ comments
+    MULTI_LINE_COMMENT = "MULTI_LINE_COMMENT"  # /* */ comments
     PREPROCESSOR = "PREPROCESSOR"  # #include, #define, #ifdef, etc.
     NEWLINE = "NEWLINE"
     WHITESPACE = "WHITESPACE"
@@ -113,7 +113,9 @@ class DTTokenizer:
         self.tokens: list[Token] = []
 
         # Compile patterns for efficiency
-        self.compiled_patterns = [(token_type, re.compile(pattern)) for token_type, pattern in self.PATTERNS]
+        self.compiled_patterns = [
+            (token_type, re.compile(pattern)) for token_type, pattern in self.PATTERNS
+        ]
 
     def tokenize(self, preserve_whitespace: bool = False) -> list[Token]:
         """Tokenize the input text.
@@ -139,7 +141,9 @@ class DTTokenizer:
         # Filter out whitespace if not preserving
         if not preserve_whitespace:
             self.tokens = [
-                token for token in self.tokens if token.type not in (TokenType.WHITESPACE, TokenType.NEWLINE)
+                token
+                for token in self.tokens
+                if token.type not in (TokenType.WHITESPACE, TokenType.NEWLINE)
             ]
 
         # Add EOF token

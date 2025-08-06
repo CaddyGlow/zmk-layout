@@ -162,7 +162,11 @@ class LayoutFormatter:
         pass
 
     def generate_layer_layout(
-        self, layer_data: Any, profile: Any = None, base_indent: str = "            ", **kwargs: Any
+        self,
+        layer_data: Any,
+        profile: Any = None,
+        base_indent: str = "            ",
+        **kwargs: Any,
     ) -> str:
         """Generate formatted layout grid for a layer's bindings.
 
@@ -213,7 +217,9 @@ class LayoutFormatter:
 
         return "\n".join(grid_lines)
 
-    def _determine_grid_layout(self, binding_count: int, profile: Any = None) -> tuple[int, int]:
+    def _determine_grid_layout(
+        self, binding_count: int, profile: Any = None
+    ) -> tuple[int, int]:
         """Determine the grid layout (rows, cols) for the given binding count.
 
         Args:
@@ -225,7 +231,10 @@ class LayoutFormatter:
         """
         # Common keyboard layouts
         if binding_count == 42:  # Corne 3x6+3
-            return (4, 12)  # 3 main rows + 1 thumb row, but format as 4x12 for simplicity
+            return (
+                4,
+                12,
+            )  # 3 main rows + 1 thumb row, but format as 4x12 for simplicity
         elif binding_count == 36:  # Planck/similar
             return (3, 12)
         elif binding_count == 58:  # Lily58
@@ -266,7 +275,9 @@ class ZMKGenerator:
         self._behavior_registry = BehaviorRegistry()
         self._layout_formatter = LayoutFormatter()
 
-    def generate_layer_defines(self, profile: KeyboardProfile, layer_names: list[str]) -> str:
+    def generate_layer_defines(
+        self, profile: KeyboardProfile, layer_names: list[str]
+    ) -> str:
         """Generate #define statements for layers.
 
         Args:
@@ -280,11 +291,15 @@ class ZMKGenerator:
         layer_define_pattern = profile.keyboard_config.zmk.patterns.layer_define
         for i, name in enumerate(layer_names):
             define_name = re.sub(r"\W|^(?=\d)", "_", name)
-            define_line = layer_define_pattern.format(layer_name=define_name, layer_index=i)
+            define_line = layer_define_pattern.format(
+                layer_name=define_name, layer_index=i
+            )
             defines.append(define_line)
         return "\n".join(defines)
 
-    def generate_behaviors_dtsi(self, profile: KeyboardProfile, hold_taps_data: Sequence[HoldTapBehavior]) -> str:
+    def generate_behaviors_dtsi(
+        self, profile: KeyboardProfile, hold_taps_data: Sequence[HoldTapBehavior]
+    ) -> str:
         """Generate ZMK behaviors node string from hold-tap behavior models.
 
         Args:
@@ -309,7 +324,9 @@ class ZMKGenerator:
             name = ht.name
             if not name:
                 if self.logger:
-                    self.logger.warning("Skipping hold-tap behavior with missing 'name'.")
+                    self.logger.warning(
+                        "Skipping hold-tap behavior with missing 'name'."
+                    )
                 continue
 
             node_name = name[1:] if name.startswith("&") else name
@@ -321,7 +338,9 @@ class ZMKGenerator:
             hold_on_release = ht.hold_trigger_on_release
             hold_key_positions_indices = ht.hold_trigger_key_positions
 
-            required_bindings = profile.keyboard_config.zmk.validation_limits.required_holdtap_bindings
+            required_bindings = (
+                profile.keyboard_config.zmk.validation_limits.required_holdtap_bindings
+            )
             if len(bindings) != required_bindings:
                 if self.logger:
                     self.logger.warning(
@@ -373,7 +392,9 @@ class ZMKGenerator:
 
             if len(formatted_bindings) == required_bindings:
                 if required_bindings == 2:
-                    dtsi_parts.append(f"    bindings = <{formatted_bindings[0]}>, <{formatted_bindings[1]}>;")
+                    dtsi_parts.append(
+                        f"    bindings = <{formatted_bindings[0]}>, <{formatted_bindings[1]}>;"
+                    )
                 else:
                     # Handle other cases if required_bindings is configurable to other values
                     bindings_str = ", ".join(f"<{b}>" for b in formatted_bindings)
@@ -399,9 +420,14 @@ class ZMKGenerator:
             if require_idle is not None:
                 dtsi_parts.append(f"    require-prior-idle-ms = <{require_idle}>;")
 
-            if hold_key_positions_indices is not None and len(hold_key_positions_indices) > 0:
+            if (
+                hold_key_positions_indices is not None
+                and len(hold_key_positions_indices) > 0
+            ):
                 pos_numbers = [str(idx) for idx in hold_key_positions_indices]
-                dtsi_parts.append(f"    hold-trigger-key-positions = <{' '.join(pos_numbers)}>;")
+                dtsi_parts.append(
+                    f"    hold-trigger-key-positions = <{' '.join(pos_numbers)}>;"
+                )
 
             if hold_on_release:
                 dtsi_parts.append("    hold-trigger-on-release;")
@@ -417,7 +443,9 @@ class ZMKGenerator:
             dtsi_parts.pop()
         return "\n".join(self._indent_array(dtsi_parts, " " * 8))
 
-    def generate_tap_dances_dtsi(self, profile: KeyboardProfile, tap_dances_data: Sequence[TapDanceBehavior]) -> str:
+    def generate_tap_dances_dtsi(
+        self, profile: KeyboardProfile, tap_dances_data: Sequence[TapDanceBehavior]
+    ) -> str:
         """Generate ZMK tap dance behaviors from tap dance behavior models.
 
         Args:
@@ -525,7 +553,9 @@ class ZMKGenerator:
 
         return "\n".join(dtsi_parts)
 
-    def generate_macros_dtsi(self, profile: KeyboardProfile, macros_data: Sequence[MacroBehavior]) -> str:
+    def generate_macros_dtsi(
+        self, profile: KeyboardProfile, macros_data: Sequence[MacroBehavior]
+    ) -> str:
         """Generate ZMK macros node string from macro behavior models.
 
         Args:
@@ -575,9 +605,13 @@ class ZMKGenerator:
                 compatible = compatible_strings.macro_two_param
                 binding_cells = "2"
             else:
-                max_params = profile.keyboard_config.zmk.validation_limits.max_macro_params
+                max_params = (
+                    profile.keyboard_config.zmk.validation_limits.max_macro_params
+                )
                 if self.logger:
-                    self.logger.warning(f"Macro '{name}' has {len(params)} params, not supported. Max: {max_params}.")
+                    self.logger.warning(
+                        f"Macro '{name}' has {len(params)} params, not supported. Max: {max_params}."
+                    )
                 continue
             # Register the macro behavior (placeholder)
             if self._behavior_registry:
@@ -607,10 +641,13 @@ class ZMKGenerator:
             if bindings:
                 if self._behavior_formatter:
                     bindings_str = "\n                , ".join(
-                        f"<{self._behavior_formatter.format_binding(b)}>" for b in bindings
+                        f"<{self._behavior_formatter.format_binding(b)}>"
+                        for b in bindings
                     )
                 else:
-                    bindings_str = "\n                , ".join(f"<{str(b)}>" for b in bindings)
+                    bindings_str = "\n                , ".join(
+                        f"<{str(b)}>" for b in bindings
+                    )
                 macro_parts.append(f"    bindings = {bindings_str};")
             macro_parts.append("};")
             dtsi_parts.extend(self._indent_array(macro_parts, "        "))
@@ -661,11 +698,17 @@ class ZMKGenerator:
 
             if not binding_data or not key_positions_indices:
                 if self.logger:
-                    self.logger.warning(f"Combo '{name}' is missing binding or keyPositions. Skipping.")
+                    self.logger.warning(
+                        f"Combo '{name}' is missing binding or keyPositions. Skipping."
+                    )
                 continue
 
             # Check for empty bindings like &none
-            if binding_data and hasattr(binding_data, "value") and binding_data.value in ["&none"]:
+            if (
+                binding_data
+                and hasattr(binding_data, "value")
+                and binding_data.value in ["&none"]
+            ):
                 if self.logger:
                     self.logger.warning(f"Combo '{name}' has no bindings. Skipping.")
                 continue
@@ -707,11 +750,16 @@ class ZMKGenerator:
             if timeout is not None:
                 dtsi_parts.append(f"        timeout-ms = <{timeout}>;")
 
-            key_pos_defines = [str(key_position_map.get(str(idx), idx)) for idx in key_positions_indices]
+            key_pos_defines = [
+                str(key_position_map.get(str(idx), idx))
+                for idx in key_positions_indices
+            ]
             dtsi_parts.append(f"        key-positions = <{' '.join(key_pos_defines)}>;")
 
             if self._behavior_formatter:
-                formatted_binding = self._behavior_formatter.format_binding(binding_data)
+                formatted_binding = self._behavior_formatter.format_binding(
+                    binding_data
+                )
             else:
                 formatted_binding = str(binding_data)  # Fallback
             dtsi_parts.append(f"        bindings = <{formatted_binding}>;")
@@ -730,7 +778,9 @@ class ZMKGenerator:
                             )
 
                 if combo_layer_indices:
-                    dtsi_parts.append(f"        layers = <{' '.join(combo_layer_indices)}>;")
+                    dtsi_parts.append(
+                        f"        layers = <{' '.join(combo_layer_indices)}>;"
+                    )
 
             dtsi_parts.append("    };")
             dtsi_parts.append("")
@@ -768,20 +818,27 @@ class ZMKGenerator:
 
             global_processors = listener.input_processors
             if global_processors:
-                processors_str = " ".join(f"{p.code} {' '.join(map(str, p.params))}".strip() for p in global_processors)
+                processors_str = " ".join(
+                    f"{p.code} {' '.join(map(str, p.params))}".strip()
+                    for p in global_processors
+                )
                 if processors_str:
                     dtsi_parts.append(f"    input-processors = <{processors_str}>;")
 
             nodes = listener.nodes
             if not nodes:
                 if self.logger:
-                    self.logger.warning(f"Input listener '{listener_code}' has no nodes defined.")
+                    self.logger.warning(
+                        f"Input listener '{listener_code}' has no nodes defined."
+                    )
             else:
                 for node in nodes:
                     node_code = node.code
                     if not node_code:
                         if self.logger:
-                            self.logger.warning(f"Skipping node in listener '{listener_code}' with missing 'code'.")
+                            self.logger.warning(
+                                f"Skipping node in listener '{listener_code}' with missing 'code'."
+                            )
                         continue
 
                     # dtsi_parts.append("")
@@ -796,10 +853,13 @@ class ZMKGenerator:
                     node_processors = node.input_processors
                     if node_processors:
                         node_processors_str = " ".join(
-                            f"{p.code} {' '.join(map(str, p.params))}".strip() for p in node_processors
+                            f"{p.code} {' '.join(map(str, p.params))}".strip()
+                            for p in node_processors
                         )
                         if node_processors_str:
-                            dtsi_parts.append(f"        input-processors = <{node_processors_str}>;")
+                            dtsi_parts.append(
+                                f"        input-processors = <{node_processors_str}>;"
+                            )
 
                     dtsi_parts.append("    };")
 
@@ -834,7 +894,9 @@ class ZMKGenerator:
             return "\n".join(self._indent_array(dtsi_parts))
 
         # Process each layer
-        for _i, (layer_name, layer_bindings) in enumerate(zip(layer_names, layers_data, strict=False)):
+        for _i, (layer_name, layer_bindings) in enumerate(
+            zip(layer_names, layers_data, strict=False)
+        ):
             # Format layer comment and opening
             define_name = re.sub(r"\W|^(?=\d)", "_", layer_name)
             dtsi_parts.append("")
@@ -858,10 +920,14 @@ class ZMKGenerator:
                     formatted_bindings, profile=profile, base_indent=""
                 )
                 # Split the formatted string into lines for consistent handling
-                formatted_grid = formatted_grid_str.split("\n") if formatted_grid_str else []
+                formatted_grid = (
+                    formatted_grid_str.split("\n") if formatted_grid_str else []
+                )
             else:
                 # Fallback: simple grid formatting
-                formatted_grid = [f"            {binding}" for binding in formatted_bindings]
+                formatted_grid = [
+                    f"            {binding}" for binding in formatted_bindings
+                ]
 
             # Add the formatted grid
             dtsi_parts.extend(formatted_grid)
@@ -895,7 +961,11 @@ class ZMKGenerator:
             "# This is a basic configuration for ZMK",
             "",
             'CONFIG_ZMK_KEYBOARD_NAME="'
-            + (profile.keyboard_name if profile and hasattr(profile, "keyboard_name") else "unknown")
+            + (
+                profile.keyboard_name
+                if profile and hasattr(profile, "keyboard_name")
+                else "unknown"
+            )
             + '"',
             "",
         ]

@@ -27,7 +27,11 @@ class MockKeymapConfig:
     """Mock keymap configuration."""
 
     def __init__(self):
-        self.header_includes = ["behaviors.dtsi", "dt-bindings/zmk/keys.h", "dt-bindings/zmk/bt.h"]
+        self.header_includes = [
+            "behaviors.dtsi",
+            "dt-bindings/zmk/keys.h",
+            "dt-bindings/zmk/bt.h",
+        ]
         self.key_position_header = ""
         self.system_behaviors_dts = ""
 
@@ -86,23 +90,59 @@ def create_simple_corne_layout():
     layout = Layout.create_empty(keyboard="corne", title="Simple Corne Layout")
 
     # Add hold-tap behaviors for home row mods
-    layout.behaviors.add_hold_tap(name="hm_a", tap="&kp A", hold="&kp LGUI", tapping_term_ms=280, quick_tap_ms=175)
-    layout.behaviors.add_hold_tap(name="hm_s", tap="&kp S", hold="&kp LALT", tapping_term_ms=280, quick_tap_ms=175)
-    layout.behaviors.add_hold_tap(name="hm_d", tap="&kp D", hold="&kp LCTRL", tapping_term_ms=280, quick_tap_ms=175)
-    layout.behaviors.add_hold_tap(name="hm_f", tap="&kp F", hold="&kp LSHIFT", tapping_term_ms=280, quick_tap_ms=175)
+    layout.behaviors.add_hold_tap(
+        name="hm_a", tap="&kp A", hold="&kp LGUI", tapping_term_ms=280, quick_tap_ms=175
+    )
+    layout.behaviors.add_hold_tap(
+        name="hm_s", tap="&kp S", hold="&kp LALT", tapping_term_ms=280, quick_tap_ms=175
+    )
+    layout.behaviors.add_hold_tap(
+        name="hm_d",
+        tap="&kp D",
+        hold="&kp LCTRL",
+        tapping_term_ms=280,
+        quick_tap_ms=175,
+    )
+    layout.behaviors.add_hold_tap(
+        name="hm_f",
+        tap="&kp F",
+        hold="&kp LSHIFT",
+        tapping_term_ms=280,
+        quick_tap_ms=175,
+    )
 
     # Layer toggle behaviors
-    layout.behaviors.add_hold_tap(name="lt_spc", tap="&kp SPACE", hold="&mo 1", tapping_term_ms=200)
-    layout.behaviors.add_hold_tap(name="lt_ent", tap="&kp ENTER", hold="&mo 2", tapping_term_ms=200)
+    layout.behaviors.add_hold_tap(
+        name="lt_spc", tap="&kp SPACE", hold="&mo 1", tapping_term_ms=200
+    )
+    layout.behaviors.add_hold_tap(
+        name="lt_ent", tap="&kp ENTER", hold="&mo 2", tapping_term_ms=200
+    )
 
     # Add useful combos
-    layout.behaviors.add_combo(name="combo_esc", keys=[0, 1], binding="&kp ESC", timeout_ms=50)
-    layout.behaviors.add_combo(name="combo_tab", keys=[10, 11], binding="&kp TAB", timeout_ms=50)
+    layout.behaviors.add_combo(
+        name="combo_esc", keys=[0, 1], binding="&kp ESC", timeout_ms=50
+    )
+    layout.behaviors.add_combo(
+        name="combo_tab", keys=[10, 11], binding="&kp TAB", timeout_ms=50
+    )
 
     # Add a useful macro
     layout.behaviors.add_macro(
         name="email_macro",
-        sequence=["&kp U", "&kp S", "&kp E", "&kp R", "&kp AT", "&kp D", "&kp O", "&kp M", "&kp A", "&kp I", "&kp N"],
+        sequence=[
+            "&kp U",
+            "&kp S",
+            "&kp E",
+            "&kp R",
+            "&kp AT",
+            "&kp D",
+            "&kp O",
+            "&kp M",
+            "&kp A",
+            "&kp I",
+            "&kp N",
+        ],
     )
 
     print("Adding base layer (QWERTY)...")
@@ -329,7 +369,9 @@ def generate_zmk_keymap_file(layout: Layout, output_dir: str = "/tmp/zmk_output"
 
     # Create the ZMK generator with providers
     generator = create_zmk_generator(
-        configuration_provider=providers.configuration, template_provider=providers.template, logger=providers.logger
+        configuration_provider=providers.configuration,
+        template_provider=providers.template,
+        logger=providers.logger,
     )
 
     # Get layout data
@@ -342,13 +384,19 @@ def generate_zmk_keymap_file(layout: Layout, output_dir: str = "/tmp/zmk_output"
     # Generate individual DTSI components
     behaviors_dtsi = ""
     if layout_data.hold_taps:
-        print(f"Generating behaviors DTSI for {len(layout_data.hold_taps)} hold-tap behaviors...")
-        behaviors_dtsi = generator.generate_behaviors_dtsi(profile, layout_data.hold_taps)
+        print(
+            f"Generating behaviors DTSI for {len(layout_data.hold_taps)} hold-tap behaviors..."
+        )
+        behaviors_dtsi = generator.generate_behaviors_dtsi(
+            profile, layout_data.hold_taps
+        )
 
     combos_dtsi = ""
     if layout_data.combos:
         print(f"Generating combos DTSI for {len(layout_data.combos)} combos...")
-        combos_dtsi = generator.generate_combos_dtsi(profile, layout_data.combos, layer_names)
+        combos_dtsi = generator.generate_combos_dtsi(
+            profile, layout_data.combos, layer_names
+        )
 
     macros_dtsi = ""
     if layout_data.macros:
@@ -364,7 +412,12 @@ def generate_zmk_keymap_file(layout: Layout, output_dir: str = "/tmp/zmk_output"
 
     # Build the complete keymap file
     keymap_content = generate_complete_keymap_file(
-        layout_data, behaviors_dtsi, combos_dtsi, macros_dtsi, keymap_node, layer_defines
+        layout_data,
+        behaviors_dtsi,
+        combos_dtsi,
+        macros_dtsi,
+        keymap_node,
+        layer_defines,
     )
 
     # Write keymap file
@@ -376,7 +429,12 @@ def generate_zmk_keymap_file(layout: Layout, output_dir: str = "/tmp/zmk_output"
 
 
 def generate_complete_keymap_file(
-    layout_data: Any, behaviors_dtsi: str, combos_dtsi: str, macros_dtsi: str, keymap_node: str, layer_defines: str
+    layout_data: Any,
+    behaviors_dtsi: str,
+    combos_dtsi: str,
+    macros_dtsi: str,
+    keymap_node: str,
+    layer_defines: str,
 ) -> str:
     """Assemble all generated components into a complete keymap file."""
 
@@ -453,7 +511,10 @@ def validate_keymap_file(keymap_file: Path):
         ("keymap {", "keymap block present"),
         ("bindings = <", "bindings defined"),
         ("&kp", "key presses defined"),
-        ("Generated by zmk-layout library using real ZMK generators", "generated using real generators"),
+        (
+            "Generated by zmk-layout library using real ZMK generators",
+            "generated using real generators",
+        ),
     ]
 
     print("Validation Results:")
@@ -512,12 +573,16 @@ def example_keymap_workflow():
         print(f"  Combos: {stats['behavior_counts']['combos']}")
         print(f"  Macros: {stats['behavior_counts']['macros']}")
 
-        print("\n✓ Keymap generation workflow completed successfully using REAL GENERATORS!")
+        print(
+            "\n✓ Keymap generation workflow completed successfully using REAL GENERATORS!"
+        )
         print("Generated files:")
         print("  - Layout JSON: /tmp/corne_layout.json")
         if keymap_file:
             print(f"  - ZMK Keymap: {keymap_file}")
-            print("\n🎉 This keymap was generated using the actual ZMK generators, not manual string formatting!")
+            print(
+                "\n🎉 This keymap was generated using the actual ZMK generators, not manual string formatting!"
+            )
 
         return layout, keymap_file
 
@@ -560,7 +625,9 @@ def main():
         print("🎉 ZMK Keymap Generation Complete - Using Real Generators!")
         print("\nYou now have:")
         print("  1. A complete ZMK layout created with the fluent API")
-        print("  2. Generated .keymap file using REAL ZMK generators (not manual formatting)")
+        print(
+            "  2. Generated .keymap file using REAL ZMK generators (not manual formatting)"
+        )
         print("  3. JSON layout file for backup/reference")
         print("\nThe keymap file was generated using:")
         print("  • ZMKGenerator.generate_behaviors_dtsi() for hold-tap behaviors")
@@ -611,10 +678,14 @@ def add_zmk_export_to_layout():
         macros_dtsi = ""
 
         if layout_data.hold_taps:
-            behaviors_dtsi = generator.generate_behaviors_dtsi(profile, layout_data.hold_taps)
+            behaviors_dtsi = generator.generate_behaviors_dtsi(
+                profile, layout_data.hold_taps
+            )
 
         if layout_data.combos:
-            combos_dtsi = generator.generate_combos_dtsi(profile, layout_data.combos, layer_names)
+            combos_dtsi = generator.generate_combos_dtsi(
+                profile, layout_data.combos, layer_names
+            )
 
         if layout_data.macros:
             macros_dtsi = generator.generate_macros_dtsi(profile, layout_data.macros)
@@ -624,7 +695,12 @@ def add_zmk_export_to_layout():
 
         # Generate complete keymap
         keymap_content = generate_complete_keymap_file(
-            layout_data, behaviors_dtsi, combos_dtsi, macros_dtsi, keymap_node, layer_defines
+            layout_data,
+            behaviors_dtsi,
+            combos_dtsi,
+            macros_dtsi,
+            keymap_node,
+            layer_defines,
         )
 
         # Write file

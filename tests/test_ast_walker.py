@@ -31,7 +31,9 @@ class TestDTWalker:
         self.root = DTNode(name="root")
 
         # Add properties to root
-        compatible_prop = DTProperty(name="compatible", value=DTValue.string("test,device"))
+        compatible_prop = DTProperty(
+            name="compatible", value=DTValue.string("test,device")
+        )
         self.root.add_property(compatible_prop)
 
         # Create child nodes
@@ -39,11 +41,15 @@ class TestDTWalker:
         self.child1.add_property(DTProperty(name="prop1", value=DTValue.integer(42)))
 
         self.child2 = DTNode(name="child2", unit_address="deadbeef")
-        self.child2.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro")))
+        self.child2.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro"))
+        )
 
         # Create grandchild
         self.grandchild = DTNode(name="grandchild")
-        self.grandchild.add_property(DTProperty(name="test-prop", value=DTValue.array([1, 2, 3])))
+        self.grandchild.add_property(
+            DTProperty(name="test-prop", value=DTValue.array([1, 2, 3]))
+        )
 
         # Build tree structure
         self.child1.add_child(self.grandchild)
@@ -85,7 +91,9 @@ class TestDTWalker:
         walker = DTWalker(self.root)
 
         # Test delegation to root.find_nodes_by_compatible
-        with patch.object(self.root, "find_nodes_by_compatible", return_value=[self.child2]) as mock_find:
+        with patch.object(
+            self.root, "find_nodes_by_compatible", return_value=[self.child2]
+        ) as mock_find:
             result = walker.find_nodes_by_compatible("zmk,behavior-macro")
             mock_find.assert_called_once_with("zmk,behavior-macro")
             assert result == [self.child2]
@@ -139,7 +147,10 @@ class TestDTWalker:
         assert "child2" in node_names
 
         # Find properties with integer values
-        result = walker.find_properties(lambda prop: prop.value is not None and prop.value.type == DTValueType.INTEGER)
+        result = walker.find_properties(
+            lambda prop: prop.value is not None
+            and prop.value.type == DTValueType.INTEGER
+        )
         assert len(result) == 1
         assert result[0][0] == self.child1
 
@@ -161,10 +172,14 @@ class TestDTMultiWalker:
         """Set up test fixtures."""
         # Create multiple root nodes
         self.root1 = DTNode(name="root1")
-        self.root1.add_property(DTProperty(name="compatible", value=DTValue.string("test,device1")))
+        self.root1.add_property(
+            DTProperty(name="compatible", value=DTValue.string("test,device1"))
+        )
 
         self.root2 = DTNode(name="root2")
-        self.root2.add_property(DTProperty(name="compatible", value=DTValue.string("test,device2")))
+        self.root2.add_property(
+            DTProperty(name="compatible", value=DTValue.string("test,device2"))
+        )
 
         # Add children
         self.child1 = DTNode(name="shared_child", label="label1")
@@ -201,8 +216,12 @@ class TestDTMultiWalker:
 
         # Mock find_nodes_by_compatible for each root
         with (
-            patch.object(self.root1, "find_nodes_by_compatible", return_value=[self.root1]) as mock1,
-            patch.object(self.root2, "find_nodes_by_compatible", return_value=[self.root2]) as mock2,
+            patch.object(
+                self.root1, "find_nodes_by_compatible", return_value=[self.root1]
+            ) as mock1,
+            patch.object(
+                self.root2, "find_nodes_by_compatible", return_value=[self.root2]
+            ) as mock2,
         ):
             result = walker.find_nodes_by_compatible("test,device")
 
@@ -262,13 +281,21 @@ class TestBehaviorExtractor:
 
         # Create test nodes with different behavior types
         self.hold_tap_node = DTNode(name="my_mt")
-        self.hold_tap_node.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-hold-tap")))
+        self.hold_tap_node.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-hold-tap"))
+        )
 
         self.macro_node = DTNode(name="my_macro")
-        self.macro_node.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro")))
+        self.macro_node.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro"))
+        )
 
         self.tap_dance_node = DTNode(name="my_td")
-        self.tap_dance_node.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-tap-dance")))
+        self.tap_dance_node.add_property(
+            DTProperty(
+                name="compatible", value=DTValue.string("zmk,behavior-tap-dance")
+            )
+        )
 
         self.generic_behavior_node = DTNode(name="my_behavior")
         self.generic_behavior_node.add_property(
@@ -276,7 +303,9 @@ class TestBehaviorExtractor:
         )
 
         self.non_behavior_node = DTNode(name="other")
-        self.non_behavior_node.add_property(DTProperty(name="compatible", value=DTValue.string("other,device")))
+        self.non_behavior_node.add_property(
+            DTProperty(name="compatible", value=DTValue.string("other,device"))
+        )
 
     def test_init(self) -> None:
         """Test BehaviorExtractor initialization."""
@@ -386,11 +415,15 @@ class TestMacroExtractor:
 
         # Create macro node with correct compatible
         macro1 = DTNode(name="macro1")
-        macro1.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro")))
+        macro1.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro"))
+        )
 
         # Create non-macro node in macros section
         non_macro = DTNode(name="not_macro")
-        non_macro.add_property(DTProperty(name="compatible", value=DTValue.string("other,device")))
+        non_macro.add_property(
+            DTProperty(name="compatible", value=DTValue.string("other,device"))
+        )
 
         # Create macro without compatible
         macro_no_compat = DTNode(name="macro_no_compat")
@@ -423,11 +456,15 @@ class TestHoldTapExtractor:
 
         # Create hold-tap node
         hold_tap1 = DTNode(name="my_mt")
-        hold_tap1.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-hold-tap")))
+        hold_tap1.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-hold-tap"))
+        )
 
         # Create non-hold-tap behavior
         other_behavior = DTNode(name="other")
-        other_behavior.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro")))
+        other_behavior.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro"))
+        )
 
         behaviors_section.add_child(hold_tap1)
         behaviors_section.add_child(other_behavior)
@@ -463,16 +500,24 @@ class TestComboExtractor:
 
         # Create valid combo
         valid_combo = DTNode(name="combo1")
-        valid_combo.add_property(DTProperty(name="key-positions", value=DTValue.array([0, 1])))
-        valid_combo.add_property(DTProperty(name="bindings", value=DTValue.string("&kp A")))
+        valid_combo.add_property(
+            DTProperty(name="key-positions", value=DTValue.array([0, 1]))
+        )
+        valid_combo.add_property(
+            DTProperty(name="bindings", value=DTValue.string("&kp A"))
+        )
 
         # Create invalid combo (missing key-positions)
         invalid_combo1 = DTNode(name="combo2")
-        invalid_combo1.add_property(DTProperty(name="bindings", value=DTValue.string("&kp B")))
+        invalid_combo1.add_property(
+            DTProperty(name="bindings", value=DTValue.string("&kp B"))
+        )
 
         # Create invalid combo (missing bindings)
         invalid_combo2 = DTNode(name="combo3")
-        invalid_combo2.add_property(DTProperty(name="key-positions", value=DTValue.array([2, 3])))
+        invalid_combo2.add_property(
+            DTProperty(name="key-positions", value=DTValue.array([2, 3]))
+        )
 
         combos_section.add_child(valid_combo)
         combos_section.add_child(invalid_combo1)
@@ -495,7 +540,9 @@ class TestComboExtractor:
 
         # Create invalid combo
         invalid_combo = DTNode(name="combo1")
-        invalid_combo.add_property(DTProperty(name="bindings", value=DTValue.string("&kp A")))
+        invalid_combo.add_property(
+            DTProperty(name="bindings", value=DTValue.string("&kp A"))
+        )
 
         combos_section.add_child(invalid_combo)
         root.add_child(combos_section)
@@ -518,14 +565,22 @@ class TestUniversalBehaviorExtractor:
 
         # Create various behavior nodes
         self.hold_tap = DTNode(name="my_mt")
-        self.hold_tap.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-hold-tap")))
+        self.hold_tap.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-hold-tap"))
+        )
 
         self.macro = DTNode(name="my_macro")
-        self.macro.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro")))
+        self.macro.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-macro"))
+        )
 
         self.combo = DTNode(name="my_combo")
-        self.combo.add_property(DTProperty(name="key-positions", value=DTValue.array([0, 1])))
-        self.combo.add_property(DTProperty(name="bindings", value=DTValue.string("&kp A")))
+        self.combo.add_property(
+            DTProperty(name="key-positions", value=DTValue.array([0, 1]))
+        )
+        self.combo.add_property(
+            DTProperty(name="bindings", value=DTValue.string("&kp A"))
+        )
 
         # Create combos section
         combos_section = DTNode(name="combos")
@@ -583,7 +638,11 @@ class TestUniversalBehaviorExtractor:
         """Test extracting behaviors from multiple roots."""
         root2 = DTNode(name="root2")
         tap_dance = DTNode(name="my_td")
-        tap_dance.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-tap-dance")))
+        tap_dance.add_property(
+            DTProperty(
+                name="compatible", value=DTValue.string("zmk,behavior-tap-dance")
+            )
+        )
         root2.add_child(tap_dance)
 
         result = self.extractor.extract_all_behaviors_multiple([self.root, root2])
@@ -607,7 +666,8 @@ class TestUniversalBehaviorExtractor:
         mock_converter.convert_input_listener_node.return_value = None
 
         with patch(
-            "zmk_layout.parsers.ast_behavior_converter.create_ast_behavior_converter", return_value=mock_converter
+            "zmk_layout.parsers.ast_behavior_converter.create_ast_behavior_converter",
+            return_value=mock_converter,
         ):
             result = self.extractor.extract_behaviors_as_models([self.root])
 
@@ -686,19 +746,33 @@ class TestUniversalBehaviorExtractor:
 
     def test_categorize_behavior(self) -> None:
         """Test behavior categorization."""
-        assert self.extractor._categorize_behavior("zmk,behavior-hold-tap") == "hold_taps"
+        assert (
+            self.extractor._categorize_behavior("zmk,behavior-hold-tap") == "hold_taps"
+        )
         assert self.extractor._categorize_behavior("zmk,behavior-macro") == "macros"
-        assert self.extractor._categorize_behavior("zmk,behavior-tap-dance") == "tap_dances"
-        assert self.extractor._categorize_behavior("zmk,behavior-unknown") == "other_behaviors"
+        assert (
+            self.extractor._categorize_behavior("zmk,behavior-tap-dance")
+            == "tap_dances"
+        )
+        assert (
+            self.extractor._categorize_behavior("zmk,behavior-unknown")
+            == "other_behaviors"
+        )
 
     def test_is_valid_combo(self) -> None:
         """Test combo validation."""
         valid_combo = DTNode(name="combo")
-        valid_combo.add_property(DTProperty(name="key-positions", value=DTValue.array([0, 1])))
-        valid_combo.add_property(DTProperty(name="bindings", value=DTValue.string("&kp A")))
+        valid_combo.add_property(
+            DTProperty(name="key-positions", value=DTValue.array([0, 1]))
+        )
+        valid_combo.add_property(
+            DTProperty(name="bindings", value=DTValue.string("&kp A"))
+        )
 
         invalid_combo = DTNode(name="combo")
-        invalid_combo.add_property(DTProperty(name="key-positions", value=DTValue.array([0, 1])))
+        invalid_combo.add_property(
+            DTProperty(name="key-positions", value=DTValue.array([0, 1]))
+        )
 
         assert self.extractor._is_valid_combo(valid_combo)
         assert not self.extractor._is_valid_combo(invalid_combo)
@@ -715,7 +789,11 @@ class TestUniversalBehaviorExtractor:
         # Create nodes with advanced patterns
         input_listener = DTNode(name="mouse_input_listener")
         sensor_node = DTNode(name="sensor")
-        sensor_node.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-sensor-rotate")))
+        sensor_node.add_property(
+            DTProperty(
+                name="compatible", value=DTValue.string("zmk,behavior-sensor-rotate")
+            )
+        )
 
         rgb_node = DTNode(name="rgb_ug")
         mouse_node = DTNode(name="mmv")
@@ -765,13 +843,16 @@ class TestFactoryFunctions:
         mock_converter = Mock()
 
         with patch(
-            "zmk_layout.parsers.ast_behavior_converter.create_ast_behavior_converter", return_value=mock_converter
+            "zmk_layout.parsers.ast_behavior_converter.create_ast_behavior_converter",
+            return_value=mock_converter,
         ):
             extractor = create_universal_behavior_extractor_with_converter()
             assert isinstance(extractor, UniversalBehaviorExtractor)
             assert extractor.ast_converter == mock_converter
 
-            extractor_with_logger = create_universal_behavior_extractor_with_converter(mock_logger)
+            extractor_with_logger = create_universal_behavior_extractor_with_converter(
+                mock_logger
+            )
             assert extractor_with_logger.logger == mock_logger
             assert extractor_with_logger.ast_converter == mock_converter
 
@@ -811,7 +892,9 @@ class TestEdgeCases:
 
         root = DTNode(name="root")
         hold_tap = DTNode(name="mt")
-        hold_tap.add_property(DTProperty(name="compatible", value=DTValue.string("zmk,behavior-hold-tap")))
+        hold_tap.add_property(
+            DTProperty(name="compatible", value=DTValue.string("zmk,behavior-hold-tap"))
+        )
         root.add_child(hold_tap)
 
         extractor.extract_all_behaviors(root)
@@ -828,7 +911,10 @@ class TestEdgeCases:
 
         # Test partial matches
         assert extractor._categorize_behavior("zmk,behavior") == "other_behaviors"
-        assert extractor._categorize_behavior("zmk,behavior-hold-tap-custom") == "hold_taps"
+        assert (
+            extractor._categorize_behavior("zmk,behavior-hold-tap-custom")
+            == "hold_taps"
+        )
 
     def test_combo_extraction_with_no_combos_section(self) -> None:
         """Test combo extraction when no combos section exists."""

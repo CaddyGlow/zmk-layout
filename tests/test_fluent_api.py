@@ -52,13 +52,17 @@ class TestFluentAPISpecification:
         layout = Layout.create_empty("crkbd", "Complete Test Layout")
 
         # Create a complete workflow
-        layout.layers.add("base").set_range(0, 3, ["&kp Q", "&kp W", "&kp E"]).pad_to(42, "&trans")
+        layout.layers.add("base").set_range(0, 3, ["&kp Q", "&kp W", "&kp E"]).pad_to(
+            42, "&trans"
+        )
         layout.layers.add("gaming")
 
         # Add behaviors
         layout.behaviors.add_hold_tap("hm", "&kp A", "&mo 1", tapping_term_ms=200)
         layout.behaviors.add_combo("esc_combo", [0, 1], "&kp ESC", timeout_ms=50)
-        layout.behaviors.add_macro("hello", ["&kp H", "&kp E", "&kp L", "&kp L", "&kp O"])
+        layout.behaviors.add_macro(
+            "hello", ["&kp H", "&kp E", "&kp L", "&kp L", "&kp O"]
+        )
 
         # Verify the complete layout
         assert len(layout.layers.names) == 2
@@ -255,7 +259,9 @@ class TestPerformanceRequirements:
         elapsed = end_time - start_time
 
         # Should complete well under 1 second for this size
-        assert elapsed < 1.0, f"Fluent API operations took {elapsed:.3f}s, expected <1.0s"
+        assert elapsed < 1.0, (
+            f"Fluent API operations took {elapsed:.3f}s, expected <1.0s"
+        )
 
     def test_memory_usage_reasonable(self) -> None:
         """Test that fluent API doesn't create excessive objects."""
@@ -278,7 +284,9 @@ class TestPerformanceRequirements:
 
         # Allow reasonable object growth but not excessive
         object_growth = final_objects - initial_objects
-        assert object_growth < 1000, f"Created {object_growth} objects, may indicate memory leak"
+        assert object_growth < 1000, (
+            f"Created {object_growth} objects, may indicate memory leak"
+        )
 
 
 class TestBackwardCompatibility:

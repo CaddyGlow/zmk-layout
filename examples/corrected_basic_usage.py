@@ -67,7 +67,9 @@ def example_3_batch_operations():
 
     def setup_nav_layer(layout):
         layer = layout.layers.add("nav")
-        layer.set(0, "&kp HOME").set(1, "&kp END").set(2, "&kp PG_UP").set(3, "&kp PG_DN")
+        layer.set(0, "&kp HOME").set(1, "&kp END").set(2, "&kp PG_UP").set(
+            3, "&kp PG_DN"
+        )
         return layout
 
     def setup_sym_layer(layout):
@@ -94,11 +96,17 @@ def example_4_behavior_management():
     layout = Layout.create_empty(keyboard="iris", title="Iris with Behaviors")
 
     # Add different types of behaviors using fluent API
-    layout.behaviors.add_hold_tap(name="mt_ctrl_a", tap="&kp A", hold="&kp LCTRL", tapping_term_ms=200)
+    layout.behaviors.add_hold_tap(
+        name="mt_ctrl_a", tap="&kp A", hold="&kp LCTRL", tapping_term_ms=200
+    )
 
-    layout.behaviors.add_combo(name="combo_esc", keys=[0, 1], binding="&kp ESC", timeout_ms=50)
+    layout.behaviors.add_combo(
+        name="combo_esc", keys=[0, 1], binding="&kp ESC", timeout_ms=50
+    )
 
-    layout.behaviors.add_macro(name="email_macro", sequence=["&kp H", "&kp E", "&kp L", "&kp L", "&kp O"])
+    layout.behaviors.add_macro(
+        name="email_macro", sequence=["&kp H", "&kp E", "&kp L", "&kp L", "&kp O"]
+    )
 
     # Add layer and use the custom behaviors
     base_layer = layout.layers.add("base")
@@ -115,7 +123,9 @@ def example_5_context_manager():
     print("\n=== Example 5: Context Manager Usage ===")
 
     # Create layout using context manager
-    with Layout.create_empty(keyboard="moonlander", title="Moonlander Layout") as layout:
+    with Layout.create_empty(
+        keyboard="moonlander", title="Moonlander Layout"
+    ) as layout:
         # All operations within context are automatically managed
         base_layer = layout.layers.add("base")
         base_layer.set_range(0, 4, ["&kp Q", "&kp W", "&kp E", "&kp R"])
@@ -124,7 +134,9 @@ def example_5_context_manager():
         fn_layer.set(0, "&kp F1").set(1, "&kp F2").set(2, "&kp F3")
 
         # Add some behaviors
-        layout.behaviors.add_hold_tap(name="sft_spc", tap="&kp SPACE", hold="&kp LSHIFT")
+        layout.behaviors.add_hold_tap(
+            name="sft_spc", tap="&kp SPACE", hold="&kp LSHIFT"
+        )
 
         print("Context manager operations completed successfully")
         print(f"Final layer count: {len(layout.layers.get_names())}")
@@ -184,7 +196,9 @@ def example_7_save_and_load():
     # Load layout from file
     try:
         loaded_layout = Layout.from_file(output_file)
-        print(f"Successfully loaded layout with {len(loaded_layout.layers.get_names())} layers")
+        print(
+            f"Successfully loaded layout with {len(loaded_layout.layers.get_names())} layers"
+        )
 
         # Verify data integrity
         original_stats = layout.get_statistics()

@@ -197,7 +197,9 @@ class LayoutBinding(LayoutBaseModel):
             for i in range(1, len(tokens)):
                 param_value = cls._parse_param_value(tokens[i])
                 params.append(LayoutParam(value=param_value, params=[]))
-        elif behavior_name in ("&kp", "&key_repeat") and not any("(" in token for token in tokens[1:]):
+        elif behavior_name in ("&kp", "&key_repeat") and not any(
+            "(" in token for token in tokens[1:]
+        ):
             # These behaviors use nested structure for modifier patterns
             # Check if this is a modifier chain (LC, LS, G -> LC(LS(G)))
             modifier_commands = ("lc", "la", "lg", "ls", "rc", "ra", "rg", "rs")
@@ -249,7 +251,9 @@ class LayoutBinding(LayoutBaseModel):
             return LayoutParam(value=param_value, params=[])
 
         # Start with the last parameter (the actual key)
-        innermost_param = LayoutParam(value=cls._parse_param_value(param_tokens[-1]), params=[])
+        innermost_param = LayoutParam(
+            value=cls._parse_param_value(param_tokens[-1]), params=[]
+        )
 
         # Work backwards through modifiers, wrapping each level
         current_param = innermost_param
@@ -306,7 +310,9 @@ class LayoutBinding(LayoutBaseModel):
         return tokens
 
     @classmethod
-    def _parse_nested_parameter(cls, tokens: list[str], start_index: int) -> tuple[Union["LayoutParam", None], int]:
+    def _parse_nested_parameter(
+        cls, tokens: list[str], start_index: int
+    ) -> tuple[Union["LayoutParam", None], int]:
         """Parse a single parameter which may contain nested sub-parameters.
 
         Handles tokens like:
@@ -480,7 +486,9 @@ class LayoutBinding(LayoutBaseModel):
             return self.model_copy(update={"params": [modified_param]})
         return self
 
-    def as_hold_tap(self, hold_behavior: str, tapping_term: int | None = None) -> "LayoutBinding":
+    def as_hold_tap(
+        self, hold_behavior: str, tapping_term: int | None = None
+    ) -> "LayoutBinding":
         """Convert to hold-tap behavior (immutable).
 
         Args:
@@ -498,7 +506,9 @@ class LayoutBinding(LayoutBaseModel):
             value="&mt",
             params=[
                 LayoutParam(value=hold_behavior, params=[]),
-                LayoutParam(value=self.to_str().replace(self.value + " ", ""), params=[]),
+                LayoutParam(
+                    value=self.to_str().replace(self.value + " ", ""), params=[]
+                ),
             ],
         )
 
@@ -516,7 +526,9 @@ class LayoutBinding(LayoutBaseModel):
             >>> # Result: &lt 1 SPACE
         """
         # Extract just the key part without behavior
-        key_part = self.to_str().replace(self.value + " ", "") if self.params else "NONE"
+        key_part = (
+            self.to_str().replace(self.value + " ", "") if self.params else "NONE"
+        )
         return LayoutBinding(
             value="&lt",
             params=[

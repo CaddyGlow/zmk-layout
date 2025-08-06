@@ -24,7 +24,11 @@ class TestResolveTemplateFilePath:
             # Truthy template_file inputs should return Path object
             ("test_keyboard", "template.txt", Path("template.txt")),
             ("glove80", "keymap.keymap", Path("keymap.keymap")),
-            ("split_keyboard", "/absolute/path/template.j2", Path("/absolute/path/template.j2")),
+            (
+                "split_keyboard",
+                "/absolute/path/template.j2",
+                Path("/absolute/path/template.j2"),
+            ),
             ("crkbd", "relative/path/config.conf", Path("relative/path/config.conf")),
             ("ferris", "sub/dir/template.dtsi.j2", Path("sub/dir/template.dtsi.j2")),
         ],
@@ -70,7 +74,9 @@ class TestResolveTemplateFilePath:
         # Different keyboard names should produce identical results
         result1 = resolve_template_file_path("keyboard_one", template_file)
         result2 = resolve_template_file_path("keyboard_two", template_file)
-        result3 = resolve_template_file_path("completely_different_keyboard", template_file)
+        result3 = resolve_template_file_path(
+            "completely_different_keyboard", template_file
+        )
 
         assert result1 == result2 == result3 == Path(template_file)
 
@@ -158,16 +164,22 @@ class TestResolveTemplateFilePath:
         # When the real implementation is added, this test may need updates
 
         # Test 1: keyboard_name is completely ignored
-        assert resolve_template_file_path("kbd1", "file.txt") == resolve_template_file_path("kbd2", "file.txt")
+        assert resolve_template_file_path(
+            "kbd1", "file.txt"
+        ) == resolve_template_file_path("kbd2", "file.txt")
 
         # Test 2: Only template_file truthiness matters
         assert resolve_template_file_path("any_keyboard", "") is None
-        assert resolve_template_file_path("any_keyboard", "anything") == Path("anything")
+        assert resolve_template_file_path("any_keyboard", "anything") == Path(
+            "anything"
+        )
 
         # Test 3: No actual file resolution occurs (stub behavior)
         non_existent_file = "definitely_does_not_exist_12345.txt"
         result = resolve_template_file_path("keyboard", non_existent_file)
-        assert result == Path(non_existent_file)  # Returns Path even if file doesn't exist
+        assert result == Path(
+            non_existent_file
+        )  # Returns Path even if file doesn't exist
 
     @pytest.mark.parametrize(
         "keyboard_name",

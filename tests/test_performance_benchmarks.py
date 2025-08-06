@@ -38,12 +38,18 @@ class TestPerformanceBenchmarks:
         overhead_percent = ((fluent_time - traditional_time) / traditional_time) * 100
 
         print(f"\n=== Binding Creation Performance ({iterations} iterations) ===")
-        print(f"Traditional: {traditional_time:.3f}s ({traditional_time / iterations * 1000:.3f}ms per op)")
-        print(f"Fluent API:  {fluent_time:.3f}s ({fluent_time / iterations * 1000:.3f}ms per op)")
+        print(
+            f"Traditional: {traditional_time:.3f}s ({traditional_time / iterations * 1000:.3f}ms per op)"
+        )
+        print(
+            f"Fluent API:  {fluent_time:.3f}s ({fluent_time / iterations * 1000:.3f}ms per op)"
+        )
         print(f"Overhead:    {overhead_percent:.1f}%")
 
         # Assert reasonable overhead for fluent API convenience
-        assert overhead_percent < 35.0, f"Overhead {overhead_percent:.1f}% exceeds 35% limit"
+        assert overhead_percent < 35.0, (
+            f"Overhead {overhead_percent:.1f}% exceeds 35% limit"
+        )
 
     def test_validation_pipeline_performance(self) -> None:
         """Benchmark: Validation pipeline performance on large layouts."""
@@ -83,7 +89,9 @@ class TestPerformanceBenchmarks:
         print(f"Warnings found: {len(result.collect_warnings())}")
 
         # Assert <500ms for large layout
-        assert validation_time < 0.5, f"Validation took {validation_time:.3f}s, exceeds 500ms limit"
+        assert validation_time < 0.5, (
+            f"Validation took {validation_time:.3f}s, exceeds 500ms limit"
+        )
 
     def test_memory_usage_small_layout(self) -> None:
         """Benchmark: Memory usage for small layouts (<50 bindings)."""
@@ -134,7 +142,13 @@ class TestPerformanceBenchmarks:
         for layer_idx in range(4):
             layer = layout.layers.add(f"layer_{layer_idx}")
             for key_idx in range(50):
-                binding = LayoutBindingBuilder("&kp").modifier("LC").modifier("LS").key(f"KEY_{key_idx}").build()
+                binding = (
+                    LayoutBindingBuilder("&kp")
+                    .modifier("LC")
+                    .modifier("LS")
+                    .key(f"KEY_{key_idx}")
+                    .build()
+                )
                 layer.set(key_idx, binding.to_str())
 
         # Measure memory after creation
@@ -169,12 +183,20 @@ class TestPerformanceBenchmarks:
         for layer_idx in range(10):
             layer = layout.layers.add(f"layer_{layer_idx}")
             for key_idx in range(100):
-                binding = LayoutBindingBuilder("&mt").hold_tap("LCTRL", f"KEY_{key_idx}").build()
+                binding = (
+                    LayoutBindingBuilder("&mt")
+                    .hold_tap("LCTRL", f"KEY_{key_idx}")
+                    .build()
+                )
                 layer.set(key_idx, binding.to_str())
 
         # Run validation on large layout
         validator = ValidationPipeline(layout)
-        (validator.validate_bindings().validate_layer_references().validate_key_positions())
+        (
+            validator.validate_bindings()
+            .validate_layer_references()
+            .validate_key_positions()
+        )
 
         # Measure memory after creation and validation
         gc.collect()
@@ -191,7 +213,9 @@ class TestPerformanceBenchmarks:
         print(f"Traced peak:     {peak / (1024 * 1024):.2f} MB")
 
         # Assert <10MB for large layouts
-        assert memory_used < 10.0, f"Memory usage {memory_used:.2f}MB exceeds 10MB limit"
+        assert memory_used < 10.0, (
+            f"Memory usage {memory_used:.2f}MB exceeds 10MB limit"
+        )
 
     def test_builder_cache_effectiveness(self) -> None:
         """Benchmark: Cache effectiveness in LayoutBindingBuilder."""
@@ -221,7 +245,9 @@ class TestPerformanceBenchmarks:
         cached_run_time = time.perf_counter() - start_time
 
         # Calculate speedup
-        speedup = first_run_time / cached_run_time if cached_run_time > 0 else float("inf")
+        speedup = (
+            first_run_time / cached_run_time if cached_run_time > 0 else float("inf")
+        )
 
         print(f"\n=== Builder Cache Effectiveness ({iterations} iterations) ===")
         print(f"First run:   {first_run_time:.3f}s")
@@ -262,7 +288,9 @@ class TestPerformanceBenchmarks:
         print(f"Overhead:  {overhead_percent:.1f}%")
 
         # Immutability adds some overhead but should be reasonable
-        assert overhead_percent < 200.0, f"Immutability overhead {overhead_percent:.1f}% is too high"
+        assert overhead_percent < 200.0, (
+            f"Immutability overhead {overhead_percent:.1f}% is too high"
+        )
 
     def test_validation_pipeline_scaling(self) -> None:
         """Benchmark: Validation pipeline scaling with layout size."""
@@ -303,7 +331,9 @@ class TestPerformanceBenchmarks:
         print(f"\nScaling factor: {scaling_factor:.2f}x")
 
         # Assert roughly linear scaling (allow up to 5x slowdown)
-        assert scaling_factor < 5.0, f"Non-linear scaling detected: {scaling_factor:.2f}x"
+        assert scaling_factor < 5.0, (
+            f"Non-linear scaling detected: {scaling_factor:.2f}x"
+        )
 
     @pytest.mark.parametrize("complexity", ["simple", "moderate", "complex"])
     def test_binding_complexity_performance(self, complexity: str) -> None:
@@ -378,10 +408,18 @@ class TestPerformanceBenchmarks:
 
         for _ in range(iterations):
             # Create behaviors
-            behavior = BehaviorBuilder("test").bindings("&kp", "&kp").tapping_term(200).build()
+            behavior = (
+                BehaviorBuilder("test").bindings("&kp", "&kp").tapping_term(200).build()
+            )
 
             # Create combo
-            combo = ComboBuilder("test").positions([0, 1]).binding("&kp A").timeout(50).build()
+            combo = (
+                ComboBuilder("test")
+                .positions([0, 1])
+                .binding("&kp A")
+                .timeout(50)
+                .build()
+            )
 
             # Create macro
             macro = MacroBuilder("test").tap("&kp A").tap("&kp B").build()
@@ -424,11 +462,13 @@ class TestPerformanceBenchmarks:
             "layers": [["&kp A"] * 100 for _ in range(10)],
             "layer_names": [f"layer_{i}" for i in range(10)],
         }
-        processor._transform_behavior_references_to_definitions.return_value = LayoutData(
-            keyboard="test",
-            title="test",
-            layers=[[LayoutBinding.from_str("&kp A")] * 100 for _ in range(10)],
-            layer_names=[f"layer_{i}" for i in range(10)],
+        processor._transform_behavior_references_to_definitions.return_value = (
+            LayoutData(
+                keyboard="test",
+                title="test",
+                layers=[[LayoutBinding.from_str("&kp A")] * 100 for _ in range(10)],
+                layer_names=[f"layer_{i}" for i in range(10)],
+            )
         )
 
         iterations = 100
@@ -446,7 +486,9 @@ class TestPerformanceBenchmarks:
                 .transform_behaviors()
             )
 
-            initial_data = LayoutData(keyboard="test", title="test", layers=[], layer_names=[])
+            initial_data = LayoutData(
+                keyboard="test", title="test", layers=[], layer_names=[]
+            )
             pipeline.execute(initial_data)
 
         elapsed = time.perf_counter() - start_time
@@ -469,7 +511,10 @@ class TestPerformanceBenchmarks:
         layout_data = LayoutData(
             keyboard="test",
             title="test",
-            layers=[[LayoutBinding.from_str(f"&kp KEY_{j}") for j in range(100)] for i in range(10)],
+            layers=[
+                [LayoutBinding.from_str(f"&kp KEY_{j}") for j in range(100)]
+                for i in range(10)
+            ],
             layer_names=[f"layer_{i}" for i in range(10)],
         )
 
@@ -491,13 +536,19 @@ class TestPerformanceBenchmarks:
         elapsed = time.perf_counter() - start_time
         per_op = (elapsed / iterations) * 1000
 
-        print(f"\n=== Transformation Pipeline Performance ({iterations} iterations) ===")
+        print(
+            f"\n=== Transformation Pipeline Performance ({iterations} iterations) ==="
+        )
         print(f"Total time: {elapsed:.3f}s")
         print(f"Per operation: {per_op:.3f}ms")
-        print(f"Layout size: {len(layout_data.layers)} layers × {len(layout_data.layers[0])} keys")
+        print(
+            f"Layout size: {len(layout_data.layers)} layers × {len(layout_data.layers[0])} keys"
+        )
 
         # Should complete in reasonable time
-        assert per_op < 100.0, f"Transformation pipeline takes {per_op:.3f}ms per operation"
+        assert per_op < 100.0, (
+            f"Transformation pipeline takes {per_op:.3f}ms per operation"
+        )
 
     def test_validation_pipeline_enhancements_performance(self) -> None:
         """Benchmark: Performance of enhanced validation features."""
@@ -544,7 +595,9 @@ class TestPerformanceBenchmarks:
         print(f"Warnings found: {len(result.collect_warnings())}")
 
         # Assert reasonable performance
-        assert per_op < 20.0, f"Enhanced validation took {per_op:.3f}ms, exceeds 20ms limit"
+        assert per_op < 20.0, (
+            f"Enhanced validation took {per_op:.3f}ms, exceeds 20ms limit"
+        )
 
     def test_pipeline_composition_overhead(self) -> None:
         """Benchmark: Overhead of pipeline composition."""
@@ -592,7 +645,11 @@ class TestPerformanceBenchmarks:
         composed_time = time.perf_counter() - start_time
 
         # Calculate overhead
-        overhead_percent = ((composed_time - direct_time) / direct_time) * 100 if direct_time > 0 else 0
+        overhead_percent = (
+            ((composed_time - direct_time) / direct_time) * 100
+            if direct_time > 0
+            else 0
+        )
 
         print(f"\n=== Pipeline Composition Overhead ({iterations} iterations) ===")
         print(f"Direct execution: {direct_time:.3f}s")
@@ -600,7 +657,9 @@ class TestPerformanceBenchmarks:
         print(f"Overhead: {overhead_percent:.1f}%")
 
         # Composition should have minimal overhead
-        assert overhead_percent < 50.0, f"Composition overhead {overhead_percent:.1f}% exceeds 50% limit"
+        assert overhead_percent < 50.0, (
+            f"Composition overhead {overhead_percent:.1f}% exceeds 50% limit"
+        )
 
     def test_workflow_builder_performance(self) -> None:
         """Benchmark: Performance of pre-built workflows."""
@@ -612,7 +671,11 @@ class TestPerformanceBenchmarks:
             keyboard="test",
             title="test",
             layers=[
-                [LayoutBinding.from_str("KC_A"), LayoutBinding.from_str("MO(1)"), LayoutBinding.from_str("_______")]
+                [
+                    LayoutBinding.from_str("KC_A"),
+                    LayoutBinding.from_str("MO(1)"),
+                    LayoutBinding.from_str("_______"),
+                ]
                 * 30
                 for _ in range(5)
             ],
@@ -637,7 +700,9 @@ class TestPerformanceBenchmarks:
         print(f"Per migration: {per_op:.3f}ms")
 
         # Should complete efficiently
-        assert per_op < 200.0, f"QMK migration workflow takes {per_op:.3f}ms per operation"
+        assert per_op < 200.0, (
+            f"QMK migration workflow takes {per_op:.3f}ms per operation"
+        )
 
     def test_infrastructure_provider_performance(self) -> None:
         """Benchmark: Performance of provider configuration."""
@@ -668,7 +733,9 @@ class TestPerformanceBenchmarks:
         print(f"Per operation: {per_op:.3f}ms")
 
         # Should complete efficiently
-        assert per_op < 5.0, f"Provider configuration takes {per_op:.3f}ms per operation"
+        assert per_op < 5.0, (
+            f"Provider configuration takes {per_op:.3f}ms per operation"
+        )
 
     def test_template_context_builder_performance(self) -> None:
         """Benchmark: Performance of template context building."""
@@ -703,13 +770,19 @@ class TestPerformanceBenchmarks:
         elapsed = time.perf_counter() - start_time
         per_op = (elapsed / iterations) * 1000
 
-        print(f"\n=== Template Context Building Performance ({iterations} iterations) ===")
+        print(
+            f"\n=== Template Context Building Performance ({iterations} iterations) ==="
+        )
         print(f"Total time: {elapsed:.3f}s")
         print(f"Per operation: {per_op:.3f}ms")
-        print(f"Layout size: {len(layout_data.layers)} layers × {len(layout_data.layers[0])} keys")
+        print(
+            f"Layout size: {len(layout_data.layers)} layers × {len(layout_data.layers[0])} keys"
+        )
 
         # Should complete efficiently
-        assert per_op < 10.0, f"Template context building takes {per_op:.3f}ms per operation"
+        assert per_op < 10.0, (
+            f"Template context building takes {per_op:.3f}ms per operation"
+        )
 
     def test_debug_inspector_overhead(self) -> None:
         """Benchmark: Overhead of debug inspection."""
@@ -747,7 +820,9 @@ class TestPerformanceBenchmarks:
         inspected_time = time.perf_counter() - start_time
 
         # Calculate overhead
-        overhead_percent = ((inspected_time - uninspected_time) / uninspected_time) * 100
+        overhead_percent = (
+            (inspected_time - uninspected_time) / uninspected_time
+        ) * 100
 
         print(f"\n=== Debug Inspector Overhead ({iterations} iterations) ===")
         print(f"Without inspection: {uninspected_time:.3f}s")
@@ -755,7 +830,9 @@ class TestPerformanceBenchmarks:
         print(f"Overhead: {overhead_percent:.1f}%")
 
         # Inspection should have reasonable overhead
-        assert overhead_percent < 200.0, f"Inspector overhead {overhead_percent:.1f}% is too high"
+        assert overhead_percent < 200.0, (
+            f"Inspector overhead {overhead_percent:.1f}% is too high"
+        )
 
     def test_caching_effectiveness(self) -> None:
         """Benchmark: Effectiveness of caching utilities."""
@@ -805,7 +882,9 @@ class TestPerformanceBenchmarks:
         print(f"\n=== Memoization Performance ({iterations} iterations) ===")
         print(f"Total time: {memoize_time:.3f}s")
         print(f"Function calls: {call_count}")
-        print(f"Cache hit rate: {((iterations * 10 - call_count) / (iterations * 10)):.2%}")
+        print(
+            f"Cache hit rate: {((iterations * 10 - call_count) / (iterations * 10)):.2%}"
+        )
 
         # Cache should provide good performance
         assert cache_time < 1.0, f"Cache operations too slow: {cache_time:.3f}s"
@@ -820,7 +899,13 @@ class TestPerformanceBenchmarks:
 
         configs: list[tuple[str, Callable[[BehaviorBuilder], HoldTapBehavior]]] = [
             ("minimal", lambda b: b.bindings("&kp", "&kp").build()),
-            ("basic", lambda b: b.bindings("&kp", "&kp").tapping_term(200).flavor("balanced").build()),
+            (
+                "basic",
+                lambda b: b.bindings("&kp", "&kp")
+                .tapping_term(200)
+                .flavor("balanced")
+                .build(),
+            ),
             (
                 "full",
                 lambda b: b.bindings("&kp", "&kp")

@@ -124,7 +124,9 @@ class TestParserIntegration:
                 self.providers = providers
 
             def parse(self, content: str) -> dict[str, Any]:
-                self.providers.logger.info("Parsing content", content_length=len(content))
+                self.providers.logger.info(
+                    "Parsing content", content_length=len(content)
+                )
                 return {"parsed": True, "content_length": len(content)}
 
         parser = MockParser(providers)
@@ -198,7 +200,12 @@ class TestParsingModels:
         assert isinstance(result["errors"], list)
 
         # If parsing models don't exist yet, create a mock structure
-        parsing_result: dict[str, Any] = {"success": True, "ast": None, "errors": [], "warnings": []}
+        parsing_result: dict[str, Any] = {
+            "success": True,
+            "ast": None,
+            "errors": [],
+            "warnings": [],
+        }
         assert parsing_result["success"] is True
         assert parsing_result["ast"] is None
 
@@ -208,7 +215,10 @@ class TestParsingModels:
 
         # Mock extraction
         sections = {
-            "keymap": {"compatible": "zmk,keymap", "layers": {"default_layer": {"bindings": ["&kp Q", "&kp W"]}}}
+            "keymap": {
+                "compatible": "zmk,keymap",
+                "layers": {"default_layer": {"bindings": ["&kp Q", "&kp W"]}},
+            }
         }
 
         assert "keymap" in sections
@@ -231,7 +241,11 @@ class TestDTParser:
                 # Simple property parsing
                 if "=" in line:
                     key, value = line.split("=", 1)
-                    return {"type": "property", "key": key.strip(), "value": value.strip().strip(";")}
+                    return {
+                        "type": "property",
+                        "key": key.strip(),
+                        "value": value.strip().strip(";"),
+                    }
                 return {"type": "unknown"}
 
         parser = MockDTParser(providers)

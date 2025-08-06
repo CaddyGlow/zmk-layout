@@ -46,7 +46,9 @@ class TemplateContext(BaseModel):
     split_central: bool = Field(default=False)
 
     # Generation metadata
-    generation_timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+    generation_timestamp: str = Field(
+        default_factory=lambda: datetime.now().isoformat()
+    )
     generator_version: str = Field(default="1.0.0")
     template_engine: str = Field(default="jinja2")
 
@@ -94,7 +96,9 @@ class TemplateContextBuilder:
             context: Initial template context
         """
         self._context = context or TemplateContext()
-        self._transformers: tuple[Callable[[TemplateContext], TemplateContext], ...] = ()
+        self._transformers: tuple[
+            Callable[[TemplateContext], TemplateContext], ...
+        ] = ()
 
     def _copy_with(self, **updates: Any) -> Self:
         """Create new instance with updated context (immutable pattern).
@@ -106,7 +110,11 @@ class TemplateContextBuilder:
             New TemplateContextBuilder instance
         """
         new_builder = self.__class__(self._context.model_copy())
-        new_builder._context = self._context.model_copy(update=updates) if updates else self._context.model_copy()
+        new_builder._context = (
+            self._context.model_copy(update=updates)
+            if updates
+            else self._context.model_copy()
+        )
         new_builder._transformers = self._transformers
         return new_builder
 
@@ -128,7 +136,10 @@ class TemplateContextBuilder:
             description=layout_data.notes,
             layer_names=layout_data.layer_names,
             layers=[
-                [binding.to_str() if hasattr(binding, "to_str") else str(binding) for binding in layer]
+                [
+                    binding.to_str() if hasattr(binding, "to_str") else str(binding)
+                    for binding in layer
+                ]
                 for layer in layout_data.layers
             ],
             layer_count=len(layout_data.layers),
@@ -149,7 +160,9 @@ class TemplateContextBuilder:
             >>> builder = builder.with_profile(keyboard_profile)
         """
         updates = {
-            "profile_name": profile.keyboard_name if hasattr(profile, "keyboard_name") else str(profile),
+            "profile_name": profile.keyboard_name
+            if hasattr(profile, "keyboard_name")
+            else str(profile),
         }
 
         if hasattr(profile, "keyboard_config"):
@@ -189,7 +202,9 @@ class TemplateContextBuilder:
         updates: dict[str, Any] = {}
         if behaviors is not None:
             updates["behaviors"] = behaviors
-            updates["hold_taps"] = behaviors  # Also store as hold_taps for compatibility
+            updates["hold_taps"] = (
+                behaviors  # Also store as hold_taps for compatibility
+            )
         if combos is not None:
             updates["combos"] = combos
         if macros is not None:
@@ -311,7 +326,9 @@ class TemplateContextBuilder:
         feature_flags.update(features)
         return self._copy_with(features=feature_flags)
 
-    def add_transformer(self, transformer: Callable[[TemplateContext], TemplateContext]) -> Self:
+    def add_transformer(
+        self, transformer: Callable[[TemplateContext], TemplateContext]
+    ) -> Self:
         """Add custom transformer function - returns new instance.
 
         Args:
@@ -347,10 +364,18 @@ class TemplateContextBuilder:
             # Merge dictionary directly
             merged = self._context.model_dump()
             for key, value in other_context.items():
-                if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+                if (
+                    key in merged
+                    and isinstance(merged[key], dict)
+                    and isinstance(value, dict)
+                ):
                     # Deep merge dictionaries
                     merged[key] = {**merged[key], **value}
-                elif key in merged and isinstance(merged[key], list) and isinstance(value, list):
+                elif (
+                    key in merged
+                    and isinstance(merged[key], list)
+                    and isinstance(value, list)
+                ):
                     # Extend lists
                     merged[key] = merged[key] + value
                 else:

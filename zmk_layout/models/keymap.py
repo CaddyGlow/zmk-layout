@@ -56,7 +56,9 @@ class KeymapMetadata(LayoutBaseModel):
     # File structure metadata
     comments: list[KeymapComment] = Field(default_factory=list)
     includes: list[KeymapInclude] = Field(default_factory=list)
-    config_directives: list[ConfigDirective] = Field(default_factory=list, alias="configDirectives")
+    config_directives: list[ConfigDirective] = Field(
+        default_factory=list, alias="configDirectives"
+    )
 
     # Parsing metadata
     parsing_method: str = Field(default="ast")  # "ast" or "regex"

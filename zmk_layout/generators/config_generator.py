@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 # Stub function until analysis module is implemented
-def get_required_includes_for_layout(profile: "KeyboardProfile", keymap_data: LayoutData) -> list[str]:
+def get_required_includes_for_layout(
+    profile: "KeyboardProfile", keymap_data: LayoutData
+) -> list[str]:
     """Get required includes for layout - stub implementation."""
     return []
 
@@ -95,10 +97,15 @@ def build_template_context(
         )
     ):
         # Format bare header names as #include <header_name>
-        resolved_includes = [f"#include <{include}>" for include in profile.keyboard_config.keymap.header_includes]
+        resolved_includes = [
+            f"#include <{include}>"
+            for include in profile.keyboard_config.keymap.header_includes
+        ]
 
     additional_includes = get_required_includes_for_layout(profile, keymap_data)
-    resolved_includes.extend([f"#include <{include}>" for include in additional_includes])
+    resolved_includes.extend(
+        [f"#include <{include}>" for include in additional_includes]
+    )
 
     # Prepare behaviors using the management service
     if behavior_manager is None:
@@ -130,11 +137,17 @@ def build_template_context(
     key_position_header = ""
     system_behaviors_dts = ""
 
-    if hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "keymap"):
+    if hasattr(profile, "keyboard_config") and hasattr(
+        profile.keyboard_config, "keymap"
+    ):
         if hasattr(profile.keyboard_config.keymap, "key_position_header"):
-            key_position_header = profile.keyboard_config.keymap.key_position_header or ""
+            key_position_header = (
+                profile.keyboard_config.keymap.key_position_header or ""
+            )
         if hasattr(profile.keyboard_config.keymap, "system_behaviors_dts"):
-            system_behaviors_dts = profile.keyboard_config.keymap.system_behaviors_dts or ""
+            system_behaviors_dts = (
+                profile.keyboard_config.keymap.system_behaviors_dts or ""
+            )
 
     # Profile identifiers - with safe access
     profile_name = "unknown"
@@ -200,8 +213,12 @@ def generate_kconfig_conf(
         if opt.param_name in kconfig_options:
             # Supported option - get the real option name
             option_config = kconfig_options[opt.param_name]
-            name = option_config.name if hasattr(option_config, "name") else opt.param_name
-            default_value = option_config.default if hasattr(option_config, "default") else None
+            name = (
+                option_config.name if hasattr(option_config, "name") else opt.param_name
+            )
+            default_value = (
+                option_config.default if hasattr(option_config, "default") else None
+            )
 
             if opt.value == default_value:
                 # User is setting same value as default
@@ -235,7 +252,9 @@ def generate_kconfig_conf(
 
             # Comment out unsupported options with explanation
             comment_prefix = "# "
-            lines.append(f"# Warning: '{opt.param_name}' is not a supported kconfig option")
+            lines.append(
+                f"# Warning: '{opt.param_name}' is not a supported kconfig option"
+            )
 
         line = f"{comment_prefix}{name}={opt.value}"
         lines.append(line)
@@ -277,12 +296,18 @@ def generate_keymap_file(
     )
 
     # Build template context using the function
-    context = build_template_context(keymap_data, profile, dtsi_generator, behavior_manager)
+    context = build_template_context(
+        keymap_data, profile, dtsi_generator, behavior_manager
+    )
 
     # Get template content from keymap configuration - support both inline and file templates
-    keymap_content = "/* Generated ZMK keymap */\n" + str(context)  # Placeholder content
+    keymap_content = "/* Generated ZMK keymap */\n" + str(
+        context
+    )  # Placeholder content
 
-    if hasattr(profile, "keyboard_config") and hasattr(profile.keyboard_config, "keymap"):
+    if hasattr(profile, "keyboard_config") and hasattr(
+        profile.keyboard_config, "keymap"
+    ):
         keymap_section = profile.keyboard_config.keymap
         inline_template = getattr(keymap_section, "keymap_dtsi", None)
         template_file = getattr(keymap_section, "keymap_dtsi_file", None)
@@ -295,7 +320,9 @@ def generate_keymap_file(
             # Resolve template file path
             from zmk_layout.utils import resolve_template_file_path
 
-            template_path = resolve_template_file_path(profile.keyboard_name, template_file)
+            template_path = resolve_template_file_path(
+                profile.keyboard_name, template_file
+            )
             keymap_content = template_adapter.render_template(template_path, context)
 
     file_adapter.write_text(output_path, keymap_content)
@@ -312,7 +339,9 @@ def convert_keymap_section_from_dict(keymap_dict: dict[str, Any]) -> dict[str, A
     """
     # Simplified stub implementation until proper models are available
     return {
-        "header_includes": keymap_dict.get("header_includes", keymap_dict.get("includes", [])),
+        "header_includes": keymap_dict.get(
+            "header_includes", keymap_dict.get("includes", [])
+        ),
         "system_behaviors": keymap_dict.get("system_behaviors", []),
         "kconfig_options": keymap_dict.get("kconfig_options", {}),
         "keymap_dtsi": keymap_dict.get("keymap_dtsi"),

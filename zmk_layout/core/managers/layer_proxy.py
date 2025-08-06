@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 class LayerProxy:
     """Proxy for individual layer operations with fluent interface."""
 
-    def __init__(self, layout_data: "LayoutData", layer_name: str, providers: "LayoutProviders") -> None:
+    def __init__(
+        self, layout_data: "LayoutData", layer_name: str, providers: "LayoutProviders"
+    ) -> None:
         """Initialize layer proxy.
 
         Args:
@@ -72,7 +74,9 @@ class LayerProxy:
 
         return self
 
-    def set_range(self, start: int, end: int, bindings: list[str | LayoutBinding]) -> "LayerProxy":
+    def set_range(
+        self, start: int, end: int, bindings: list[str | LayoutBinding]
+    ) -> "LayerProxy":
         """Set multiple bindings and return self for chaining.
 
         Args:
@@ -88,7 +92,9 @@ class LayerProxy:
             IndexError: If range out of bounds
         """
         if end - start != len(bindings):
-            raise ValueError(f"Range size {end - start} doesn't match bindings count {len(bindings)}")
+            raise ValueError(
+                f"Range size {end - start} doesn't match bindings count {len(bindings)}"
+            )
 
         layer = self._data.layers[self._layer_index]
 
@@ -125,7 +131,9 @@ class LayerProxy:
         # Clear current layer and copy bindings
         self._data.layers[self._layer_index].clear()
         for binding in source_bindings:
-            self._data.layers[self._layer_index].append(LayoutBinding.model_validate(binding.model_dump()))
+            self._data.layers[self._layer_index].append(
+                LayoutBinding.model_validate(binding.model_dump())
+            )
 
         return self
 
@@ -208,7 +216,9 @@ class LayerProxy:
 
         return self
 
-    def pad_to(self, size: int, padding: str | LayoutBinding = "&trans") -> "LayerProxy":
+    def pad_to(
+        self, size: int, padding: str | LayoutBinding = "&trans"
+    ) -> "LayerProxy":
         """Pad layer to specified size with padding binding.
 
         Args:

@@ -133,11 +133,15 @@ class ValidationPipeline:
                         "&out",
                     }
 
-                    behavior_base = binding.value.split("_")[0]  # Handle custom behaviors
+                    behavior_base = binding.value.split("_")[
+                        0
+                    ]  # Handle custom behaviors
                     if (
                         behavior_base not in known_behaviors
                         and not binding.value.startswith("&hm")
-                        and not (binding.value.startswith("&") and len(binding.value) > 1)
+                        and not (
+                            binding.value.startswith("&") and len(binding.value) > 1
+                        )
                     ):
                         new_errors.append(
                             ValidationError(
@@ -154,7 +158,11 @@ class ValidationPipeline:
                     new_errors.append(
                         ValidationError(
                             f"Binding validation failed: {e}",
-                            context={"exception": str(e), "layer": layer_name, "position": i},
+                            context={
+                                "exception": str(e),
+                                "layer": layer_name,
+                                "position": i,
+                            },
                         )
                     )
 
@@ -184,7 +192,11 @@ class ValidationPipeline:
             layer = self._layout.layers.get(layer_name)
             for i, binding in enumerate(layer.bindings):
                 # Check behaviors that reference layers
-                if binding.value in ("&mo", "&lt", "&sl", "&to", "&tog") and binding.params and len(binding.params) > 0:
+                if (
+                    binding.value in ("&mo", "&lt", "&sl", "&to", "&tog")
+                    and binding.params
+                    and len(binding.params) > 0
+                ):
                     layer_ref = binding.params[0].value
 
                     # Check numeric layer references
@@ -349,7 +361,9 @@ class ValidationPipeline:
             right_count = mod_counts.get(right_mod, 0)
 
             if left_count > 0 and right_count > 0:
-                ratio = max(left_count, right_count) / max(min(left_count, right_count), 1)
+                ratio = max(left_count, right_count) / max(
+                    min(left_count, right_count), 1
+                )
                 if ratio > 3:  # More than 3:1 imbalance
                     new_warnings.append(
                         ValidationWarning(
@@ -370,7 +384,9 @@ class ValidationPipeline:
         )
         return ValidationPipeline(self._layout, new_state)
 
-    def validate_hold_tap_timing(self, recommended_min: int = 150, recommended_max: int = 250) -> ValidationPipeline:
+    def validate_hold_tap_timing(
+        self, recommended_min: int = 150, recommended_max: int = 250
+    ) -> ValidationPipeline:
         """Validate hold-tap timing parameters - returns new instance.
 
         Args:
@@ -387,7 +403,10 @@ class ValidationPipeline:
             try:
                 behaviors = self._layout.data.hold_taps
                 for behavior in behaviors:
-                    if hasattr(behavior, "tapping_term_ms") and behavior.tapping_term_ms:
+                    if (
+                        hasattr(behavior, "tapping_term_ms")
+                        and behavior.tapping_term_ms
+                    ):
                         term = behavior.tapping_term_ms
                         # Skip validation if term is a template string
                         if isinstance(term, str):
@@ -450,7 +469,10 @@ class ValidationPipeline:
             layer = self._layout.layers.get(layer_name)
             for binding in layer.bindings:
                 # Check for layer activation behaviors
-                if binding.value in ("&mo", "&lt", "&sl", "&to", "&tog") and binding.params:
+                if (
+                    binding.value in ("&mo", "&lt", "&sl", "&to", "&tog")
+                    and binding.params
+                ):
                     layer_ref = binding.params[0].value
                     if isinstance(layer_ref, int) and 0 <= layer_ref < layer_count:
                         layer_graph[layer_idx].add(layer_ref)
@@ -531,7 +553,9 @@ class ValidationPipeline:
                                     context={
                                         "position": pos,
                                         "max_position": max_position,
-                                        "combo": combo.name if hasattr(combo, "name") else "unknown",
+                                        "combo": combo.name
+                                        if hasattr(combo, "name")
+                                        else "unknown",
                                     },
                                 )
                             )

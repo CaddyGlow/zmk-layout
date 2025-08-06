@@ -51,7 +51,9 @@ class TransformationPipeline:
             metadata: Transformation metadata and context
         """
         self._layout_data = layout_data
-        self._transformations: tuple[Callable[[LayoutData], LayoutData], ...] = transformations or ()
+        self._transformations: tuple[Callable[[LayoutData], LayoutData], ...] = (
+            transformations or ()
+        )
         self._metadata: dict[str, Any] = metadata or {}
 
     def _copy_with(self, **updates: Any) -> Self:
@@ -114,7 +116,9 @@ class TransformationPipeline:
             for layer in data.layers:
                 transformed_bindings = []
                 for binding in layer:
-                    binding_str = binding.to_str() if hasattr(binding, "to_str") else str(binding)
+                    binding_str = (
+                        binding.to_str() if hasattr(binding, "to_str") else str(binding)
+                    )
 
                     # Handle bindings that already have & prefix
                     if binding_str.startswith("&KC_"):
@@ -139,7 +143,9 @@ class TransformationPipeline:
                     else:
                         # Apply other QMK to ZMK conversions for non-& prefixed codes
                         for qmk_pattern, zmk_replacement in qmk_to_zmk.items():
-                            binding_str = binding_str.replace(qmk_pattern, zmk_replacement)
+                            binding_str = binding_str.replace(
+                                qmk_pattern, zmk_replacement
+                            )
 
                     transformed_bindings.append(LayoutBinding.from_str(binding_str))
                 transformed_layers.append(transformed_bindings)
@@ -148,9 +154,13 @@ class TransformationPipeline:
             new_variables = data.variables.copy()
             new_variables["migrated_from"] = "qmk"
 
-            return data.model_copy(update={"layers": transformed_layers, "variables": new_variables})
+            return data.model_copy(
+                update={"layers": transformed_layers, "variables": new_variables}
+            )
 
-        return self._copy_with(transformations=self._transformations + (transformation,))
+        return self._copy_with(
+            transformations=self._transformations + (transformation,)
+        )
 
     def remap_keys(self, key_mapping: dict[str, str]) -> Self:
         """Add key remapping transformation - returns new instance.
@@ -174,20 +184,26 @@ class TransformationPipeline:
             for layer in data.layers:
                 remapped_bindings = []
                 for binding in layer:
-                    binding_str = binding.to_str() if hasattr(binding, "to_str") else str(binding)
+                    binding_str = (
+                        binding.to_str() if hasattr(binding, "to_str") else str(binding)
+                    )
 
                     # Apply key mappings
                     for old_key, new_key in key_mapping.items():
                         # Handle both bare keys and within binding contexts
                         binding_str = binding_str.replace(f" {old_key}", f" {new_key}")
-                        binding_str = binding_str.replace(f"({old_key})", f"({new_key})")
+                        binding_str = binding_str.replace(
+                            f"({old_key})", f"({new_key})"
+                        )
 
                     remapped_bindings.append(LayoutBinding.from_str(binding_str))
                 remapped_layers.append(remapped_bindings)
 
             return data.model_copy(update={"layers": remapped_layers})
 
-        return self._copy_with(transformations=self._transformations + (transformation,))
+        return self._copy_with(
+            transformations=self._transformations + (transformation,)
+        )
 
     def optimize_layers(self, max_layer_count: int = 10) -> Self:
         """Add layer optimization transformation - returns new instance.
@@ -213,12 +229,18 @@ class TransformationPipeline:
                 non_trans = sum(
                     1
                     for binding in data.layers[i]
-                    if not (hasattr(binding, "value") and binding.value == "&trans" or str(binding) == "&trans")
+                    if not (
+                        hasattr(binding, "value")
+                        and binding.value == "&trans"
+                        or str(binding) == "&trans"
+                    )
                 )
                 layer_usage[layer_name] = non_trans
 
             # Sort layers by usage (most used first)
-            sorted_layers = sorted(layer_usage.items(), key=lambda x: x[1], reverse=True)
+            sorted_layers = sorted(
+                layer_usage.items(), key=lambda x: x[1], reverse=True
+            )
 
             # Keep only the most used layers up to max_layer_count
             optimized_names = []
@@ -252,16 +274,24 @@ class TransformationPipeline:
                         new_layer = layer_mapping.get(old_layer, old_layer)
                         binding = binding.model_copy(
                             update={
-                                "params": [binding.params[0].model_copy(update={"value": str(new_layer)})]
+                                "params": [
+                                    binding.params[0].model_copy(
+                                        update={"value": str(new_layer)}
+                                    )
+                                ]
                                 + list(binding.params[1:])
                             }
                         )
                     fixed_bindings.append(binding)
                 fixed_layers.append(fixed_bindings)
 
-            return data.model_copy(update={"layers": fixed_layers, "layer_names": optimized_names})
+            return data.model_copy(
+                update={"layers": fixed_layers, "layer_names": optimized_names}
+            )
 
-        return self._copy_with(transformations=self._transformations + (transformation,))
+        return self._copy_with(
+            transformations=self._transformations + (transformation,)
+        )
 
     def apply_home_row_mods(self, mod_config: dict[str, Any] | None = None) -> Self:
         """Add home row mods transformation - returns new instance.
@@ -282,8 +312,14 @@ class TransformationPipeline:
             ... })
         """
         mod_config = mod_config or {
-            "left": {"positions": [10, 11, 12, 13], "mods": ["LSFT", "LCTL", "LALT", "LGUI"]},
-            "right": {"positions": [16, 17, 18, 19], "mods": ["RGUI", "RALT", "RCTL", "RSFT"]},
+            "left": {
+                "positions": [10, 11, 12, 13],
+                "mods": ["LSFT", "LCTL", "LALT", "LGUI"],
+            },
+            "right": {
+                "positions": [16, 17, 18, 19],
+                "mods": ["RGUI", "RALT", "RCTL", "RSFT"],
+            },
             "tapping_term": 200,
             "flavor": "balanced",
         }
@@ -305,7 +341,11 @@ class TransformationPipeline:
                         if pos < len(base_layer):
                             # Get the original key
                             original = base_layer[pos]
-                            original_str = original.to_str() if hasattr(original, "to_str") else str(original)
+                            original_str = (
+                                original.to_str()
+                                if hasattr(original, "to_str")
+                                else str(original)
+                            )
 
                             # Extract the key code
                             if original_str.startswith("&kp "):
@@ -325,9 +365,13 @@ class TransformationPipeline:
                 "config": mod_config,
             }
 
-            return data.model_copy(update={"layers": updated_layers, "variables": new_variables})
+            return data.model_copy(
+                update={"layers": updated_layers, "variables": new_variables}
+            )
 
-        return self._copy_with(transformations=self._transformations + (transformation,))
+        return self._copy_with(
+            transformations=self._transformations + (transformation,)
+        )
 
     def add_combo_layer(self, combos: list[ComboBehavior]) -> Self:
         """Add combo layer transformation - returns new instance.
@@ -353,7 +397,9 @@ class TransformationPipeline:
 
             return data.model_copy(update={"combos": new_combos})
 
-        return self._copy_with(transformations=self._transformations + (transformation,))
+        return self._copy_with(
+            transformations=self._transformations + (transformation,)
+        )
 
     def add_macro_layer(self, macros: list[MacroBehavior]) -> Self:
         """Add macro layer transformation - returns new instance.
@@ -379,7 +425,9 @@ class TransformationPipeline:
 
             return data.model_copy(update={"macros": new_macros})
 
-        return self._copy_with(transformations=self._transformations + (transformation,))
+        return self._copy_with(
+            transformations=self._transformations + (transformation,)
+        )
 
     def rename_layers(self, name_mapping: dict[str, str]) -> Self:
         """Add layer renaming transformation - returns new instance.
@@ -404,7 +452,9 @@ class TransformationPipeline:
 
             return data.model_copy(update={"layer_names": new_names})
 
-        return self._copy_with(transformations=self._transformations + (transformation,))
+        return self._copy_with(
+            transformations=self._transformations + (transformation,)
+        )
 
     def merge_layers(self, source_layer: str | int, target_layer: str | int) -> Self:
         """Add layer merging transformation - returns new instance.
@@ -425,8 +475,16 @@ class TransformationPipeline:
 
         def transformation(data: LayoutData) -> LayoutData:
             # Resolve layer indices
-            source_idx = source_layer if isinstance(source_layer, int) else data.layer_names.index(source_layer)
-            target_idx = target_layer if isinstance(target_layer, int) else data.layer_names.index(target_layer)
+            source_idx = (
+                source_layer
+                if isinstance(source_layer, int)
+                else data.layer_names.index(source_layer)
+            )
+            target_idx = (
+                target_layer
+                if isinstance(target_layer, int)
+                else data.layer_names.index(target_layer)
+            )
 
             # Merge layers
             merged_layer = []
@@ -436,7 +494,11 @@ class TransformationPipeline:
             for i in range(max(len(source), len(target))):
                 if i < len(source):
                     source_binding = source[i]
-                    source_str = source_binding.to_str() if hasattr(source_binding, "to_str") else str(source_binding)
+                    source_str = (
+                        source_binding.to_str()
+                        if hasattr(source_binding, "to_str")
+                        else str(source_binding)
+                    )
                     if source_str != "&trans":
                         merged_layer.append(source_binding)
                     elif i < len(target):
@@ -449,7 +511,9 @@ class TransformationPipeline:
             # Update layers (remove source, update target)
             new_layers = []
             new_names = []
-            for i, (name, layer) in enumerate(zip(data.layer_names, data.layers, strict=False)):
+            for i, (name, layer) in enumerate(
+                zip(data.layer_names, data.layers, strict=False)
+            ):
                 if i == source_idx:
                     continue  # Skip source layer
                 elif i == target_idx:
@@ -459,9 +523,13 @@ class TransformationPipeline:
                     new_layers.append(layer)
                     new_names.append(name)
 
-            return data.model_copy(update={"layers": new_layers, "layer_names": new_names})
+            return data.model_copy(
+                update={"layers": new_layers, "layer_names": new_names}
+            )
 
-        return self._copy_with(transformations=self._transformations + (transformation,))
+        return self._copy_with(
+            transformations=self._transformations + (transformation,)
+        )
 
     def execute(self) -> LayoutData:
         """Execute all transformations in sequence.
@@ -503,6 +571,4 @@ class TransformationPipeline:
         Returns:
             String representation of pipeline state
         """
-        return (
-            f"TransformationPipeline(layout='{self._layout_data.title}', transformations={len(self._transformations)})"
-        )
+        return f"TransformationPipeline(layout='{self._layout_data.title}', transformations={len(self._transformations)})"

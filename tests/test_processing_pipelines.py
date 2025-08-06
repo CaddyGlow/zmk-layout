@@ -26,7 +26,10 @@ class TestProcessingPipeline:
         """Test define extraction from AST."""
         # Create mock processor
         processor = MagicMock()
-        processor._extract_defines_from_ast.return_value = {"HYPER": "LC(LS(LA(LGUI)))", "MEH": "LC(LS(LA))"}
+        processor._extract_defines_from_ast.return_value = {
+            "HYPER": "LC(LS(LA(LGUI)))",
+            "MEH": "LC(LS(LA))",
+        }
         processor._create_base_layout_data.return_value = LayoutData(
             keyboard="test", title="Test Layout", layers=[], layer_names=[]
         )
@@ -73,7 +76,11 @@ class TestProcessingPipeline:
             keyboard="test",
             title="Test",
             layers=[
-                [LayoutBinding.from_str("&kp A"), LayoutBinding.from_str("&trans"), LayoutBinding.from_str("&kp LC(C)")]
+                [
+                    LayoutBinding.from_str("&kp A"),
+                    LayoutBinding.from_str("&trans"),
+                    LayoutBinding.from_str("&kp LC(C)"),
+                ]
             ],
             layer_names=["base"],
         )
@@ -82,7 +89,11 @@ class TestProcessingPipeline:
         result = pipeline.normalize_bindings().execute(initial_data)
 
         # All bindings should be LayoutBinding objects
-        assert all(isinstance(binding, LayoutBinding) for layer in result.layers for binding in layer)
+        assert all(
+            isinstance(binding, LayoutBinding)
+            for layer in result.layers
+            for binding in layer
+        )
 
         # Check specific binding values
         assert result.layers[0][0].value == "&kp"
@@ -94,14 +105,18 @@ class TestProcessingPipeline:
         initial_data = LayoutData(
             keyboard="test",
             title="test",
-            layers=[[LayoutBinding.from_str("&kp HYPER"), LayoutBinding.from_str("&kp MEH")]],
+            layers=[
+                [LayoutBinding.from_str("&kp HYPER"), LayoutBinding.from_str("&kp MEH")]
+            ],
             layer_names=["base"],
         )
 
         defines = {"HYPER": "LC(LS(LA(LGUI)))", "MEH": "LC(LS(LA))"}
 
         pipeline = ProcessingPipeline(processor)
-        result = pipeline.apply_preprocessor_substitutions(defines).execute(initial_data)
+        result = pipeline.apply_preprocessor_substitutions(defines).execute(
+            initial_data
+        )
 
         # Check substitutions were applied
         assert "LC(LS(LA(LGUI)))" in result.layers[0][0].to_str()
@@ -135,8 +150,12 @@ class TestProcessingPipeline:
     def test_error_collection(self) -> None:
         """Test that errors are collected rather than failing fast."""
         processor = MagicMock()
-        processor._extract_defines_from_ast.side_effect = Exception("Define extraction failed")
-        initial_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
+        processor._extract_defines_from_ast.side_effect = Exception(
+            "Define extraction failed"
+        )
+        initial_data = LayoutData(
+            keyboard="test", title="Test", layers=[], layer_names=[]
+        )
 
         pipeline = ProcessingPipeline(processor)
         ast_roots = [MagicMock()]
@@ -151,9 +170,17 @@ class TestProcessingPipeline:
         """Test chaining multiple operations."""
         processor = MagicMock()
         processor._extract_defines_from_ast.return_value = {"TEST": "value"}
-        processor._extract_layers_from_roots.return_value = {"layers": [["&kp A"]], "layer_names": ["base"]}
-        processor._transform_behavior_references_to_definitions.return_value = LayoutData(
-            keyboard="test", title="test", layers=[[LayoutBinding.from_str("&kp A")]], layer_names=["base"]
+        processor._extract_layers_from_roots.return_value = {
+            "layers": [["&kp A"]],
+            "layer_names": ["base"],
+        }
+        processor._transform_behavior_references_to_definitions.return_value = (
+            LayoutData(
+                keyboard="test",
+                title="test",
+                layers=[[LayoutBinding.from_str("&kp A")]],
+                layer_names=["base"],
+            )
         )
         processor._create_base_layout_data.return_value = LayoutData(
             keyboard="test", title="Test", layers=[], layer_names=[]
@@ -183,7 +210,11 @@ class TestTransformationPipeline:
             keyboard="test",
             title="test",
             layers=[
-                [LayoutBinding.from_str("KC_A"), LayoutBinding.from_str("MO(1)"), LayoutBinding.from_str("_______")]
+                [
+                    LayoutBinding.from_str("KC_A"),
+                    LayoutBinding.from_str("MO(1)"),
+                    LayoutBinding.from_str("_______"),
+                ]
             ],
             layer_names=["base"],
         )
@@ -205,7 +236,12 @@ class TestTransformationPipeline:
         layout_data = LayoutData(
             keyboard="test",
             title="test",
-            layers=[[LayoutBinding.from_str("&kp SPACE"), LayoutBinding.from_str("&kp ENTER")]],
+            layers=[
+                [
+                    LayoutBinding.from_str("&kp SPACE"),
+                    LayoutBinding.from_str("&kp ENTER"),
+                ]
+            ],
             layer_names=["base"],
         )
 
@@ -248,7 +284,10 @@ class TestTransformationPipeline:
         )
 
         mod_config = {
-            "left": {"positions": [10, 11, 12, 13], "mods": ["LSFT", "LCTL", "LALT", "LGUI"]},
+            "left": {
+                "positions": [10, 11, 12, 13],
+                "mods": ["LSFT", "LCTL", "LALT", "LGUI"],
+            },
             "tapping_term": 200,
         }
 
@@ -265,11 +304,19 @@ class TestTransformationPipeline:
 
     def test_add_combo_layer(self) -> None:
         """Test adding combo definitions."""
-        layout_data = LayoutData(keyboard="test", title="Test", layers=[[]], layer_names=["base"])
+        layout_data = LayoutData(
+            keyboard="test", title="Test", layers=[[]], layer_names=["base"]
+        )
 
         from zmk_layout.builders import ComboBuilder
 
-        combo = ComboBuilder("copy").positions([12, 13]).binding("&kp LC(C)").timeout(50).build()
+        combo = (
+            ComboBuilder("copy")
+            .positions([12, 13])
+            .binding("&kp LC(C)")
+            .timeout(50)
+            .build()
+        )
 
         pipeline = TransformationPipeline(layout_data)
         result = pipeline.add_combo_layer([combo]).execute()
@@ -287,7 +334,11 @@ class TestTransformationPipeline:
             layer_names=["layer_0", "layer_1", "layer_2"],
         )
 
-        name_mapping = {"layer_0": "base", "layer_1": "navigation", "layer_2": "symbols"}
+        name_mapping = {
+            "layer_0": "base",
+            "layer_1": "navigation",
+            "layer_2": "symbols",
+        }
 
         pipeline = TransformationPipeline(layout_data)
         result = pipeline.rename_layers(name_mapping).execute()
@@ -395,7 +446,9 @@ class TestPipelineComposer:
         )
 
         processing = ProcessingPipeline(processor)
-        layout_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
+        layout_data = LayoutData(
+            keyboard="test", title="Test", layers=[], layer_names=[]
+        )
         transformation = TransformationPipeline(layout_data)
 
         # Compose pipelines
@@ -410,7 +463,9 @@ class TestPipelineComposer:
 
     def test_checkpoint_and_rollback(self) -> None:
         """Test checkpoint creation and rollback on error."""
-        layout_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
+        layout_data = LayoutData(
+            keyboard="test", title="Test", layers=[], layer_names=[]
+        )
 
         # Create composer with rollback
         composer = PipelineComposer()
@@ -419,13 +474,17 @@ class TestPipelineComposer:
         composer.checkpoint("before_modify")
 
         # Add successful stage
-        composer.add_custom_stage("modify", lambda data: data.model_copy(update={"title": "modified"}))
+        composer.add_custom_stage(
+            "modify", lambda data: data.model_copy(update={"title": "modified"})
+        )
 
         # Add checkpoint after the modification
         composer.checkpoint("after_modify")
 
         # Add another successful stage
-        composer.add_custom_stage("modify2", lambda data: data.model_copy(update={"title": "modified2"}))
+        composer.add_custom_stage(
+            "modify2", lambda data: data.model_copy(update={"title": "modified2"})
+        )
 
         # Add failing stage
         def failing_stage(data: LayoutData) -> LayoutData:
@@ -451,11 +510,15 @@ class TestPipelineComposer:
 
         # Check rollback worked - should roll back to "after_modify" checkpoint which has "modified"
         assert error_called
-        assert result.title == "modified"  # Should have rolled back to after_modify checkpoint
+        assert (
+            result.title == "modified"
+        )  # Should have rolled back to after_modify checkpoint
 
     def test_custom_error_handler(self) -> None:
         """Test custom error handler."""
-        layout_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
+        layout_data = LayoutData(
+            keyboard="test", title="Test", layers=[], layer_names=[]
+        )
 
         composer = PipelineComposer()
 
@@ -539,7 +602,9 @@ class TestComposeFunction:
         processor = MagicMock()
         processing = ProcessingPipeline(processor)
 
-        layout_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
+        layout_data = LayoutData(
+            keyboard="test", title="Test", layers=[], layer_names=[]
+        )
         transformation = TransformationPipeline(layout_data)
 
         layout = Layout.create_empty("test", "Test")

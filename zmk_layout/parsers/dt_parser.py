@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 class DTParser:
     """Recursive descent parser for device tree source."""
 
-    def __init__(self, tokens: list[Token], logger: "LayoutLogger | None" = None) -> None:
+    def __init__(
+        self, tokens: list[Token], logger: "LayoutLogger | None" = None
+    ) -> None:
         """Initialize parser.
 
         Args:
@@ -54,12 +56,16 @@ class DTParser:
 
             # If no root node was parsed, create an empty one
             if root is None:
-                root = DTNode("", line=self._current_line(), column=self._current_column())
+                root = DTNode(
+                    "", line=self._current_line(), column=self._current_column()
+                )
 
             if self.errors:
                 # Return partial result with errors
                 if self.logger:
-                    self.logger.warning("Parsing completed with errors", error_count=len(self.errors))
+                    self.logger.warning(
+                        "Parsing completed with errors", error_count=len(self.errors)
+                    )
                 for error in self.errors:
                     if self.logger:
                         self.logger.warning("Parse error", error=str(error))
@@ -147,7 +153,9 @@ class DTParser:
             if self.errors:
                 # Return partial result with errors
                 if self.logger:
-                    self.logger.warning("Parsing completed with errors", error_count=len(self.errors))
+                    self.logger.warning(
+                        "Parsing completed with errors", error_count=len(self.errors)
+                    )
                 for error in self.errors:
                     if self.logger:
                         self.logger.warning("Parse error", error=str(error))
@@ -350,7 +358,9 @@ class DTParser:
                 actual_values.extend(v.value)
             else:
                 # Otherwise append the value itself
-                actual_values.append(v.value if v.type != DTValueType.REFERENCE else f"&{v.value}")
+                actual_values.append(
+                    v.value if v.type != DTValueType.REFERENCE else f"&{v.value}"
+                )
 
         return DTValue.array(actual_values, raw)
 
@@ -376,7 +386,9 @@ class DTParser:
             self._advance()
             try:
                 # Handle hex numbers
-                int_value = int(value_str, 16) if value_str.startswith("0x") else int(value_str)
+                int_value = (
+                    int(value_str, 16) if value_str.startswith("0x") else int(value_str)
+                )
                 return DTValue.integer(int_value, raw)
             except ValueError:
                 self._error(f"Invalid number: {value_str}")
@@ -582,7 +594,12 @@ class DTParser:
         max_iterations = 10000  # Reasonable limit for preprocessor/comment chains
         iterations = 0
 
-        while self._match(TokenType.SINGLE_LINE_COMMENT) or self._match(TokenType.MULTI_LINE_COMMENT) or self._match(TokenType.COMMENT) or self._match(TokenType.PREPROCESSOR):
+        while (
+            self._match(TokenType.SINGLE_LINE_COMMENT)
+            or self._match(TokenType.MULTI_LINE_COMMENT)
+            or self._match(TokenType.COMMENT)
+            or self._match(TokenType.PREPROCESSOR)
+        ):
             iterations += 1
             if iterations > max_iterations:
                 if self.logger:
@@ -611,7 +628,9 @@ class DTParser:
                 # Safety check: if _advance() didn't actually advance, force break
                 if self.pos == old_pos:
                     if self.logger:
-                        self.logger.error("_advance() failed to advance position, breaking loop")
+                        self.logger.error(
+                            "_advance() failed to advance position, breaking loop"
+                        )
                     break
 
             elif self._match(TokenType.MULTI_LINE_COMMENT):
@@ -630,7 +649,9 @@ class DTParser:
                 # Safety check: if _advance() didn't actually advance, force break
                 if self.pos == old_pos:
                     if self.logger:
-                        self.logger.error("_advance() failed to advance position, breaking loop")
+                        self.logger.error(
+                            "_advance() failed to advance position, breaking loop"
+                        )
                     break
 
             elif self._match(TokenType.COMMENT):
@@ -651,7 +672,9 @@ class DTParser:
                 # Safety check: if _advance() didn't actually advance, force break
                 if self.pos == old_pos:
                     if self.logger:
-                        self.logger.error("_advance() failed to advance position, breaking loop")
+                        self.logger.error(
+                            "_advance() failed to advance position, breaking loop"
+                        )
                     break
 
             elif self._match(TokenType.PREPROCESSOR):
@@ -681,7 +704,9 @@ class DTParser:
                 # Safety check: if _advance() didn't actually advance, force break
                 if self.pos == old_pos:
                     if self.logger:
-                        self.logger.error("_advance() failed to advance position, breaking loop")
+                        self.logger.error(
+                            "_advance() failed to advance position, breaking loop"
+                        )
                     break
 
         if consumed:
@@ -689,7 +714,9 @@ class DTParser:
 
         return consumed
 
-    def _associate_pending_comments_with_node(self, node: DTNode, node_line: int) -> None:
+    def _associate_pending_comments_with_node(
+        self, node: DTNode, node_line: int
+    ) -> None:
         """Associate pending comments with a node based on line proximity.
 
         Comments are associated if they appear immediately before the node
@@ -720,7 +747,10 @@ class DTParser:
                 # (no other comments between this one and the node)
                 is_closest = True
                 for other_comment in self.comments:
-                    if comment.line < other_comment.line < node_line and other_comment not in associated_comments:
+                    if (
+                        comment.line < other_comment.line < node_line
+                        and other_comment not in associated_comments
+                    ):
                         is_closest = False
                         break
 
@@ -738,7 +768,9 @@ class DTParser:
                 if comment in self.comments:
                     self.comments.remove(comment)
 
-    def _associate_pending_comments_with_property(self, prop: DTProperty, prop_line: int) -> None:
+    def _associate_pending_comments_with_property(
+        self, prop: DTProperty, prop_line: int
+    ) -> None:
         """Associate pending comments with a property based on line proximity.
 
         Args:
@@ -778,7 +810,11 @@ class DTParser:
         Returns:
             True if current token matches
         """
-        return not self._is_at_end() and self.current_token is not None and self.current_token.type == token_type
+        return (
+            not self._is_at_end()
+            and self.current_token is not None
+            and self.current_token.type == token_type
+        )
 
     def _advance(self) -> Token | None:
         """Advance to next token.
@@ -883,7 +919,6 @@ class DTParser:
                 context_parts.append(token.raw)
 
         return " ".join(context_parts)
-
 
 
 def parse_dt(text: str) -> DTNode:

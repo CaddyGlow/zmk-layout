@@ -82,7 +82,9 @@ def example_1_custom_providers():
 
     # Use layout with custom providers
     layout = Layout.create_empty(
-        keyboard="custom_board", title="Layout with Custom Providers", providers=custom_providers
+        keyboard="custom_board",
+        title="Layout with Custom Providers",
+        providers=custom_providers,
     )
 
     # Operations will use custom providers
@@ -109,7 +111,9 @@ def example_2_batch_layout_processing():
     for keyboard in keyboards:
         print(f"Creating layout for {keyboard}...")
 
-        layout = Layout.create_empty(keyboard=keyboard, title=f"{keyboard.title()} Layout")
+        layout = Layout.create_empty(
+            keyboard=keyboard, title=f"{keyboard.title()} Layout"
+        )
 
         # Add common layers
         base_layer = layout.layers.add("base")
@@ -119,7 +123,9 @@ def example_2_batch_layout_processing():
         nav_layer.set(0, "&kp HOME").set(1, "&kp END").set(2, "&kp UP")
 
         # Add common behaviors
-        layout.behaviors.add_hold_tap(name="mt_space", tap="&kp SPACE", hold="&kp LCTRL")
+        layout.behaviors.add_hold_tap(
+            name="mt_space", tap="&kp SPACE", hold="&kp LCTRL"
+        )
 
         layouts[keyboard] = layout
 
@@ -132,7 +138,9 @@ def example_2_batch_layout_processing():
     print("\nBatch Statistics:")
     for keyboard, layout in layouts.items():
         stats = layout.get_statistics()
-        print(f"  {keyboard}: {stats['layer_count']} layers, {stats['total_behaviors']} behaviors")
+        print(
+            f"  {keyboard}: {stats['layer_count']} layers, {stats['total_behaviors']} behaviors"
+        )
 
     print("✓ Batch processing completed!")
     return layouts
@@ -162,7 +170,9 @@ def example_3_layout_validation_and_analysis():
     # Add various behaviors
     layout.behaviors.add_hold_tap(name="hm_a", tap="&kp A", hold="&kp LGUI")
     layout.behaviors.add_combo(name="esc_combo", keys=[0, 1], binding="&kp ESC")
-    layout.behaviors.add_macro(name="test_macro", sequence=["&kp T", "&kp E", "&kp S", "&kp T"])
+    layout.behaviors.add_macro(
+        name="test_macro", sequence=["&kp T", "&kp E", "&kp S", "&kp T"]
+    )
 
     # Validate the layout
     print("Validating layout...")
@@ -178,8 +188,12 @@ def example_3_layout_validation_and_analysis():
 
     analysis = {
         "complexity_score": stats["total_behaviors"] * 2 + stats["layer_count"],
-        "binding_density": stats["total_bindings"] / stats["layer_count"] if stats["layer_count"] > 0 else 0,
-        "behavior_ratio": stats["total_behaviors"] / stats["layer_count"] if stats["layer_count"] > 0 else 0,
+        "binding_density": stats["total_bindings"] / stats["layer_count"]
+        if stats["layer_count"] > 0
+        else 0,
+        "behavior_ratio": stats["total_behaviors"] / stats["layer_count"]
+        if stats["layer_count"] > 0
+        else 0,
         "avg_layer_utilization": stats.get("avg_layer_size", 0),
     }
 
@@ -206,7 +220,18 @@ def example_4_layout_templating():
     # Define a layout template
     template_config = {
         "base_bindings": {
-            "qwerty_row1": ["&kp Q", "&kp W", "&kp E", "&kp R", "&kp T", "&kp Y", "&kp U", "&kp I", "&kp O", "&kp P"],
+            "qwerty_row1": [
+                "&kp Q",
+                "&kp W",
+                "&kp E",
+                "&kp R",
+                "&kp T",
+                "&kp Y",
+                "&kp U",
+                "&kp I",
+                "&kp O",
+                "&kp P",
+            ],
             "qwerty_row2": [
                 "&kp A",
                 "&kp S",
@@ -237,14 +262,26 @@ def example_4_layout_templating():
             "page": ["&kp HOME", "&kp PG_DN", "&kp PG_UP", "&kp END"],
         },
         "common_behaviors": [
-            {"type": "hold_tap", "name": "mt_space", "tap": "&kp SPACE", "hold": "&kp LCTRL"},
-            {"type": "combo", "name": "esc_combo", "keys": [0, 1], "binding": "&kp ESC"},
+            {
+                "type": "hold_tap",
+                "name": "mt_space",
+                "tap": "&kp SPACE",
+                "hold": "&kp LCTRL",
+            },
+            {
+                "type": "combo",
+                "name": "esc_combo",
+                "keys": [0, 1],
+                "binding": "&kp ESC",
+            },
         ],
     }
 
     def create_layout_from_template(keyboard: str, template: dict) -> Layout:
         """Create a layout from a template configuration."""
-        layout = Layout.create_empty(keyboard=keyboard, title=f"Templated {keyboard.title()} Layout")
+        layout = Layout.create_empty(
+            keyboard=keyboard, title=f"Templated {keyboard.title()} Layout"
+        )
 
         # Add base layer
         base_layer = layout.layers.add("base")
@@ -266,11 +303,15 @@ def example_4_layout_templating():
         for behavior_config in template["common_behaviors"]:
             if behavior_config["type"] == "hold_tap":
                 layout.behaviors.add_hold_tap(
-                    name=behavior_config["name"], tap=behavior_config["tap"], hold=behavior_config["hold"]
+                    name=behavior_config["name"],
+                    tap=behavior_config["tap"],
+                    hold=behavior_config["hold"],
                 )
             elif behavior_config["type"] == "combo":
                 layout.behaviors.add_combo(
-                    name=behavior_config["name"], keys=behavior_config["keys"], binding=behavior_config["binding"]
+                    name=behavior_config["name"],
+                    keys=behavior_config["keys"],
+                    binding=behavior_config["binding"],
                 )
 
         return layout
@@ -291,7 +332,9 @@ def example_4_layout_templating():
     print("\nTemplate Results:")
     for keyboard, layout in templated_layouts.items():
         stats = layout.get_statistics()
-        print(f"  {keyboard}: {stats['layer_count']} layers, {stats['total_bindings']} bindings")
+        print(
+            f"  {keyboard}: {stats['layer_count']} layers, {stats['total_bindings']} bindings"
+        )
 
     print("✓ Layout templating completed!")
     return templated_layouts
@@ -322,8 +365,16 @@ def example_5_layout_comparison():
         ("Layers", stats_a["layer_count"], stats_b["layer_count"]),
         ("Total Bindings", stats_a["total_bindings"], stats_b["total_bindings"]),
         ("Total Behaviors", stats_a["total_behaviors"], stats_b["total_behaviors"]),
-        ("Hold-Taps", stats_a["behavior_counts"]["hold_taps"], stats_b["behavior_counts"]["hold_taps"]),
-        ("Combos", stats_a["behavior_counts"]["combos"], stats_b["behavior_counts"]["combos"]),
+        (
+            "Hold-Taps",
+            stats_a["behavior_counts"]["hold_taps"],
+            stats_b["behavior_counts"]["hold_taps"],
+        ),
+        (
+            "Combos",
+            stats_a["behavior_counts"]["combos"],
+            stats_b["behavior_counts"]["combos"],
+        ),
     ]
 
     print(f"{'Metric':<15} {'Layout A':<10} {'Layout B':<10} {'Difference':<10}")

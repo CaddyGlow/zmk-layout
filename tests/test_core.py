@@ -60,21 +60,31 @@ class TestOptionalDependencies:
             get_display_provider()
             get_parser_provider()
         except Exception as e:
-            pytest.fail(f"Optional dependency functions should not raise exceptions: {e}")
+            pytest.fail(
+                f"Optional dependency functions should not raise exceptions: {e}"
+            )
 
     def test_feature_flags(self) -> None:
         """Test feature availability flags."""
         # Test that we can check features
-        features = {"templating": has_jinja2(), "rich_display": has_rich(), "advanced_parsing": has_lark()}
+        features = {
+            "templating": has_jinja2(),
+            "rich_display": has_rich(),
+            "advanced_parsing": has_lark(),
+        }
 
         # All should be boolean values
         for feature, available in features.items():
-            assert isinstance(available, bool), f"Feature '{feature}' should return boolean"
+            assert isinstance(available, bool), (
+                f"Feature '{feature}' should return boolean"
+            )
 
     @patch("zmk_layout.core.optional_deps.has_jinja2")
     @patch("zmk_layout.core.optional_deps.has_rich")
     @patch("zmk_layout.core.optional_deps.has_lark")
-    def test_all_dependencies_unavailable(self, mock_lark: Any, mock_rich: Any, mock_jinja2: Any) -> None:
+    def test_all_dependencies_unavailable(
+        self, mock_lark: Any, mock_rich: Any, mock_jinja2: Any
+    ) -> None:
         """Test behavior when all optional dependencies are unavailable."""
         # Mock all as unavailable
         mock_jinja2.return_value = False
@@ -104,7 +114,9 @@ class TestOptionalDependencies:
         # This test ensures they don't leak exceptions
 
         # Patch __import__ to raise ImportError for all imports
-        with patch("builtins.__import__", side_effect=ImportError("Mocked import error")):
+        with patch(
+            "builtins.__import__", side_effect=ImportError("Mocked import error")
+        ):
             # All functions should handle ImportError gracefully
             assert has_jinja2() is False
             assert has_rich() is False
@@ -204,7 +216,11 @@ class TestFeatureAvailability:
         lark_available = has_lark()
 
         # Record availability for debugging
-        availability = {"jinja2": jinja2_available, "rich": rich_available, "lark": lark_available}
+        availability = {
+            "jinja2": jinja2_available,
+            "rich": rich_available,
+            "lark": lark_available,
+        }
 
         # System should work regardless of which features are available
         assert isinstance(availability["jinja2"], bool)

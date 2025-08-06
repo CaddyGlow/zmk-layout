@@ -23,7 +23,11 @@ from .ast_nodes import DTNode, DTProperty, DTValueType
 class ASTBehaviorConverter:
     """Convert device tree AST nodes directly to behavior model objects."""
 
-    def __init__(self, defines: dict[str, str] | None = None, logger: "LayoutLogger | None" = None) -> None:
+    def __init__(
+        self,
+        defines: dict[str, str] | None = None,
+        logger: "LayoutLogger | None" = None,
+    ) -> None:
         """Initialize AST behavior converter.
 
         Args:
@@ -205,20 +209,26 @@ class ASTBehaviorConverter:
             key_positions_prop = node.get_property("key-positions")
             if not key_positions_prop:
                 if self.logger:
-                    self.logger.warning("Combo missing key-positions property", combo_name=name)
+                    self.logger.warning(
+                        "Combo missing key-positions property", combo_name=name
+                    )
                 return None
 
             key_positions = self._extract_array_from_property(key_positions_prop)
             if not key_positions:
                 if self.logger:
-                    self.logger.warning("Combo has invalid key-positions", combo_name=name)
+                    self.logger.warning(
+                        "Combo has invalid key-positions", combo_name=name
+                    )
                 return None
 
             # Bindings are required
             bindings_prop = node.get_property("bindings")
             if not bindings_prop:
                 if self.logger:
-                    self.logger.warning("Combo missing bindings property", combo_name=name)
+                    self.logger.warning(
+                        "Combo missing bindings property", combo_name=name
+                    )
                 return None
 
             binding = self._extract_single_binding_from_property(bindings_prop)
@@ -337,7 +347,9 @@ class ASTBehaviorConverter:
 
         return ""
 
-    def _populate_hold_tap_properties(self, hold_tap: HoldTapBehavior, node: DTNode) -> None:
+    def _populate_hold_tap_properties(
+        self, hold_tap: HoldTapBehavior, node: DTNode
+    ) -> None:
         """Populate hold-tap behavior properties from device tree node.
 
         Args:
@@ -347,7 +359,9 @@ class ASTBehaviorConverter:
         # Timing properties
         tapping_term_prop = node.get_property("tapping-term-ms")
         if tapping_term_prop:
-            hold_tap.tapping_term_ms = self._extract_int_from_property(tapping_term_prop)
+            hold_tap.tapping_term_ms = self._extract_int_from_property(
+                tapping_term_prop
+            )
 
         quick_tap_prop = node.get_property("quick-tap-ms")
         if quick_tap_prop:
@@ -355,7 +369,9 @@ class ASTBehaviorConverter:
 
         require_prior_idle_prop = node.get_property("require-prior-idle-ms")
         if require_prior_idle_prop:
-            hold_tap.require_prior_idle_ms = self._extract_int_from_property(require_prior_idle_prop)
+            hold_tap.require_prior_idle_ms = self._extract_int_from_property(
+                require_prior_idle_prop
+            )
 
         # Flavor property
         flavor_prop = node.get_property("flavor")
@@ -497,7 +513,9 @@ class ASTBehaviorConverter:
             # This ensures combos have the required layers field with a default value
             combo.layers = [-1]
             if self.logger:
-                self.logger.debug("Added placeholder layers for combo", combo_name=combo.name)
+                self.logger.debug(
+                    "Added placeholder layers for combo", combo_name=combo.name
+                )
 
     def _extract_string_from_property(self, prop: DTProperty) -> str:
         """Extract string value from device tree property.
@@ -635,7 +653,9 @@ class ASTBehaviorConverter:
         except (ValueError, AttributeError):
             return []
 
-    def _extract_macro_bindings_from_property(self, prop: DTProperty) -> list[LayoutBinding]:
+    def _extract_macro_bindings_from_property(
+        self, prop: DTProperty
+    ) -> list[LayoutBinding]:
         """Extract macro bindings from device tree property.
 
         Args:
@@ -687,10 +707,14 @@ class ASTBehaviorConverter:
 
                         try:
                             # Preprocess for MoErgo edge cases
-                            preprocessed_binding_str = self._preprocess_moergo_binding_edge_cases(binding_str)
+                            preprocessed_binding_str = (
+                                self._preprocess_moergo_binding_edge_cases(binding_str)
+                            )
 
                             # Resolve defines in the binding string
-                            resolved_binding_str = self._resolve_binding_string(preprocessed_binding_str)
+                            resolved_binding_str = self._resolve_binding_string(
+                                preprocessed_binding_str
+                            )
                             binding = LayoutBinding.from_str(resolved_binding_str)
                             bindings.append(binding)
 
@@ -711,7 +735,9 @@ class ASTBehaviorConverter:
                                     exc_info=True,
                                 )
                             # Create fallback binding with empty params
-                            bindings.append(LayoutBinding(value=binding_parts[0], params=[]))
+                            bindings.append(
+                                LayoutBinding(value=binding_parts[0], params=[])
+                            )
                     else:
                         # Standalone parameter without behavior - this shouldn't happen in well-formed macro
                         if self.logger:
@@ -734,10 +760,14 @@ class ASTBehaviorConverter:
                     if part and part.startswith("&"):
                         try:
                             # Preprocess for MoErgo edge cases
-                            preprocessed_part = self._preprocess_moergo_binding_edge_cases(part)
+                            preprocessed_part = (
+                                self._preprocess_moergo_binding_edge_cases(part)
+                            )
 
                             # Resolve defines in the binding string
-                            resolved_part = self._resolve_binding_string(preprocessed_part)
+                            resolved_part = self._resolve_binding_string(
+                                preprocessed_part
+                            )
                             binding = LayoutBinding.from_str(resolved_part)
                             bindings.append(binding)
                         except Exception as e:
@@ -755,7 +785,9 @@ class ASTBehaviorConverter:
 
         return bindings
 
-    def _extract_single_binding_from_property(self, prop: DTProperty) -> LayoutBinding | None:
+    def _extract_single_binding_from_property(
+        self, prop: DTProperty
+    ) -> LayoutBinding | None:
         """Extract single binding from device tree property for combos.
 
         Args:
@@ -778,7 +810,9 @@ class ASTBehaviorConverter:
                 if prop.value and prop.value.type == DTValueType.ARRAY:
                     self.logger.debug(
                         "Array value present",
-                        array_length=len(prop.value.value) if isinstance(prop.value.value, list) else 1,
+                        array_length=len(prop.value.value)
+                        if isinstance(prop.value.value, list)
+                        else 1,
                     )
 
             # Try raw parsing first to preserve complex nested structures like LG(LA(LC(LSHFT)))
@@ -793,15 +827,21 @@ class ASTBehaviorConverter:
                 # If it contains spaced parentheses, fix them and try parsing
                 if "( " in cleaned_raw or " )" in cleaned_raw:
                     if self.logger:
-                        self.logger.debug("Raw value has spaced parentheses, attempting to fix and parse directly")
+                        self.logger.debug(
+                            "Raw value has spaced parentheses, attempting to fix and parse directly"
+                        )
                     # Fix the spaced parentheses by removing spaces around them
                     fixed_raw = cleaned_raw.replace(" ( ", "(").replace(" )", ")")
                     try:
                         # Preprocess for MoErgo edge cases
-                        preprocessed_fixed_raw = self._preprocess_moergo_binding_edge_cases(fixed_raw)
+                        preprocessed_fixed_raw = (
+                            self._preprocess_moergo_binding_edge_cases(fixed_raw)
+                        )
 
                         # Resolve defines in the binding string
-                        resolved_fixed_raw = self._resolve_binding_string(preprocessed_fixed_raw)
+                        resolved_fixed_raw = self._resolve_binding_string(
+                            preprocessed_fixed_raw
+                        )
                         return LayoutBinding.from_str(resolved_fixed_raw)
                     except Exception as e:
                         if self.logger:
@@ -813,10 +853,14 @@ class ASTBehaviorConverter:
                         # Fall through to array reconstruction
                 else:
                     # Preprocess for MoErgo edge cases
-                    preprocessed_cleaned_raw = self._preprocess_moergo_binding_edge_cases(cleaned_raw)
+                    preprocessed_cleaned_raw = (
+                        self._preprocess_moergo_binding_edge_cases(cleaned_raw)
+                    )
 
                     # Resolve defines in the binding string
-                    resolved_cleaned_raw = self._resolve_binding_string(preprocessed_cleaned_raw)
+                    resolved_cleaned_raw = self._resolve_binding_string(
+                        preprocessed_cleaned_raw
+                    )
                     return LayoutBinding.from_str(resolved_cleaned_raw)
 
             # Fallback to array parsing for simpler cases
@@ -829,12 +873,18 @@ class ASTBehaviorConverter:
 
                 if binding_parts and binding_parts[0].startswith("&"):
                     # Smart reconstruction for nested function calls
-                    complete_binding = self._reconstruct_nested_function_call(binding_parts)
+                    complete_binding = self._reconstruct_nested_function_call(
+                        binding_parts
+                    )
                     # Preprocess for MoErgo edge cases
-                    preprocessed_complete_binding = self._preprocess_moergo_binding_edge_cases(complete_binding)
+                    preprocessed_complete_binding = (
+                        self._preprocess_moergo_binding_edge_cases(complete_binding)
+                    )
 
                     # Resolve defines in the binding string
-                    resolved_complete_binding = self._resolve_binding_string(preprocessed_complete_binding)
+                    resolved_complete_binding = self._resolve_binding_string(
+                        preprocessed_complete_binding
+                    )
                     return LayoutBinding.from_str(resolved_complete_binding)
 
             # Return fallback binding
@@ -929,7 +979,9 @@ class ASTBehaviorConverter:
         # Edge case 1: Transform &sys_reset to &reset
         if binding_str == "&sys_reset":
             if self.logger:
-                self.logger.debug("Transforming &sys_reset to &reset for MoErgo compatibility")
+                self.logger.debug(
+                    "Transforming &sys_reset to &reset for MoErgo compatibility"
+                )
             return "&reset"
 
         # Edge case 2: Handle &magic parameter cleanup
@@ -973,7 +1025,9 @@ class ASTBehaviorConverter:
 
             # Extract child nodes as input listener nodes
             for child_name, child_node in node.children.items():
-                listener_node = self._convert_input_listener_child_node(child_name, child_node)
+                listener_node = self._convert_input_listener_child_node(
+                    child_name, child_node
+                )
                 if listener_node:
                     input_listener.nodes.append(listener_node)
 
@@ -989,7 +1043,9 @@ class ASTBehaviorConverter:
                 )
             return None
 
-    def _convert_input_listener_child_node(self, child_name: str, child_node: DTNode) -> Any | None:
+    def _convert_input_listener_child_node(
+        self, child_name: str, child_node: DTNode
+    ) -> Any | None:
         """Convert a child node within an input listener.
 
         Args:
@@ -1020,7 +1076,9 @@ class ASTBehaviorConverter:
             input_processors = None
             processors_prop = child_node.get_property("input-processors")
             if processors_prop:
-                extracted_processors = self._extract_input_processors_from_property(processors_prop)
+                extracted_processors = self._extract_input_processors_from_property(
+                    processors_prop
+                )
                 if extracted_processors:
                     input_processors = extracted_processors
 
@@ -1116,7 +1174,9 @@ class ASTBehaviorConverter:
                                     # Keep as string if not integer
                                     separate_params.append(param_str)
 
-                            processor = InputProcessor(code=code, params=separate_params)
+                            processor = InputProcessor(
+                                code=code, params=separate_params
+                            )
                             processors.append(processor)
 
                     else:
@@ -1160,7 +1220,10 @@ class ASTBehaviorConverter:
                 return None
 
             compatible_value = compatible_prop.value.value
-            if not isinstance(compatible_value, str) or "zmk,behavior-tap-dance" not in compatible_value:
+            if (
+                not isinstance(compatible_value, str)
+                or "zmk,behavior-tap-dance" not in compatible_value
+            ):
                 return None
 
             # Extract name (strip & prefix if present)
@@ -1168,7 +1231,9 @@ class ASTBehaviorConverter:
 
             # Extract description from label if available
             label_prop = node.get_property("label")
-            description = str(label_prop.value.value) if label_prop and label_prop.value else ""
+            description = (
+                str(label_prop.value.value) if label_prop and label_prop.value else ""
+            )
 
             # Extract tapping-term-ms
             tapping_term_ms = None
@@ -1257,7 +1322,10 @@ class ASTBehaviorConverter:
                 return None
 
             compatible_value = compatible_prop.value.value
-            if not isinstance(compatible_value, str) or "zmk,behavior-sticky-key" not in compatible_value:
+            if (
+                not isinstance(compatible_value, str)
+                or "zmk,behavior-sticky-key" not in compatible_value
+            ):
                 return None
 
             # Extract name (strip & prefix if present)
@@ -1265,7 +1333,9 @@ class ASTBehaviorConverter:
 
             # Extract description from label if available
             label_prop = node.get_property("label")
-            description = str(label_prop.value.value) if label_prop and label_prop.value else ""
+            description = (
+                str(label_prop.value.value) if label_prop and label_prop.value else ""
+            )
 
             # Extract release-after-ms
             release_after_ms = None
@@ -1372,7 +1442,10 @@ class ASTBehaviorConverter:
                 return None
 
             compatible_value = compatible_prop.value.value
-            if not isinstance(compatible_value, str) or "zmk,behavior-caps-word" not in compatible_value:
+            if (
+                not isinstance(compatible_value, str)
+                or "zmk,behavior-caps-word" not in compatible_value
+            ):
                 return None
 
             # Extract name (strip & prefix if present)
@@ -1380,7 +1453,9 @@ class ASTBehaviorConverter:
 
             # Extract description from label if available
             label_prop = node.get_property("label")
-            description = str(label_prop.value.value) if label_prop and label_prop.value else ""
+            description = (
+                str(label_prop.value.value) if label_prop and label_prop.value else ""
+            )
 
             # Extract continue-list
             continue_list = []
@@ -1471,7 +1546,10 @@ class ASTBehaviorConverter:
                 return None
 
             compatible_value = compatible_prop.value.value
-            if not isinstance(compatible_value, str) or "zmk,behavior-mod-morph" not in compatible_value:
+            if (
+                not isinstance(compatible_value, str)
+                or "zmk,behavior-mod-morph" not in compatible_value
+            ):
                 return None
 
             # Extract name (strip & prefix if present)
@@ -1479,7 +1557,9 @@ class ASTBehaviorConverter:
 
             # Extract description from label if available
             label_prop = node.get_property("label")
-            description = str(label_prop.value.value) if label_prop and label_prop.value else ""
+            description = (
+                str(label_prop.value.value) if label_prop and label_prop.value else ""
+            )
 
             # Extract mods (required)
             mods = 0

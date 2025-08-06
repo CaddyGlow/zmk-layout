@@ -85,7 +85,9 @@ class ChainInspector:
                 state = BuilderState(
                     class_name=self._target.__class__.__name__,
                     attributes=self._get_attributes(),
-                    stack_trace=traceback.format_stack()[-5:-1],  # Skip inspector frames
+                    stack_trace=traceback.format_stack()[
+                        -5:-1
+                    ],  # Skip inspector frames
                 )
                 self._inspector._history.append(state)
 
@@ -93,7 +95,9 @@ class ChainInspector:
                 """Extract builder attributes."""
                 attrs = {}
                 for attr_name in dir(self._target):
-                    if not attr_name.startswith("_") and not callable(getattr(self._target, attr_name)):
+                    if not attr_name.startswith("_") and not callable(
+                        getattr(self._target, attr_name)
+                    ):
                         try:
                             attrs[attr_name] = getattr(self._target, attr_name)
                         except Exception:
@@ -120,18 +124,25 @@ class ChainInspector:
                         self._inspector._record_performance(name, elapsed)
 
                         # Wrap result if it's a builder
-                        if hasattr(result, "__class__") and "Builder" in result.__class__.__name__:
+                        if (
+                            hasattr(result, "__class__")
+                            and "Builder" in result.__class__.__name__
+                        ):
                             return InspectedBuilder(result, self._inspector)
                         return result
                     except Exception as e:
                         # Record error state
                         if self._inspector._history:
-                            self._inspector._error_states.append((self._inspector._history[-1], e))
+                            self._inspector._error_states.append(
+                                (self._inspector._history[-1], e)
+                            )
                         raise
 
                 return wrapped_method
 
-            def _format_args(self, args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
+            def _format_args(
+                self, args: tuple[Any, ...], kwargs: dict[str, Any]
+            ) -> str:
                 """Format method arguments for display."""
                 parts = []
                 for arg in args:
@@ -238,10 +249,17 @@ class ChainInspector:
         data = {
             "history": [state.to_dict() for state in self._history],
             "performance": {
-                method: {"calls": len(times), "total_ms": sum(times) * 1000, "avg_ms": sum(times) / len(times) * 1000}
+                method: {
+                    "calls": len(times),
+                    "total_ms": sum(times) * 1000,
+                    "avg_ms": sum(times) / len(times) * 1000,
+                }
                 for method, times in self._performance_data.items()
             },
-            "errors": [{"state": state.to_dict(), "error": str(error)} for state, error in self._error_states],
+            "errors": [
+                {"state": state.to_dict(), "error": str(error)}
+                for state, error in self._error_states
+            ],
         }
 
         with open(filepath, "w") as f:
@@ -362,10 +380,16 @@ class DebugFormatter:
         if not obj:
             return "[]" if isinstance(obj, list) else "()"
 
-        if len(obj) <= 3 and all(isinstance(item, str | int | float | bool) for item in obj):
+        if len(obj) <= 3 and all(
+            isinstance(item, str | int | float | bool) for item in obj
+        ):
             # Format short simple sequences inline
             items = [repr(item) if isinstance(item, str) else str(item) for item in obj]
-            result = f"[{', '.join(items)}]" if isinstance(obj, list) else f"({', '.join(items)})"
+            result = (
+                f"[{', '.join(items)}]"
+                if isinstance(obj, list)
+                else f"({', '.join(items)})"
+            )
             if len(result) <= self.max_width:
                 return result
 
@@ -431,7 +455,11 @@ def debug_chain(func: Callable[..., Any]) -> Callable[..., Any]:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             # Check if first arg is a builder
-            if args and hasattr(args[0], "__class__") and "Builder" in args[0].__class__.__name__:
+            if (
+                args
+                and hasattr(args[0], "__class__")
+                and "Builder" in args[0].__class__.__name__
+            ):
                 # Wrap the builder
                 wrapped_args = (inspector.wrap(args[0]),) + args[1:]
                 result = func(*wrapped_args, **kwargs)
@@ -451,7 +479,9 @@ def debug_chain(func: Callable[..., Any]) -> Callable[..., Any]:
             raise
         finally:
             if inspector._performance_data:
-                total_time = sum(sum(times) for times in inspector._performance_data.values())
+                total_time = sum(
+                    sum(times) for times in inspector._performance_data.values()
+                )
                 if total_time > 0.001:  # Only show if > 1ms
                     print(f"[PERF] Total time: {total_time * 1000:.3f}ms")
 

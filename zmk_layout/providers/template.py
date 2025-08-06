@@ -12,7 +12,9 @@ class TemplateProvider(Protocol):
     of the specific template engine implementation (Jinja2, etc.).
     """
 
-    def render_string(self, template: str, context: dict[str, str | int | float | bool | None]) -> str:
+    def render_string(
+        self, template: str, context: dict[str, str | int | float | bool | None]
+    ) -> str:
         """Render a template string with given context.
 
         Args:

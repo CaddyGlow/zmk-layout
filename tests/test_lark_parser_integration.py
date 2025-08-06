@@ -14,7 +14,10 @@ from zmk_layout.parsers.lark_dt_parser import LarkToDTTransformer, parse_dt_lark
 def test_parse_dt_lark_safe_when_parser_ok(monkeypatch: Any) -> None:
     """Happy path: underlying parse_dt_lark succeeds and errors list empty."""
     mock_node = DTNode(name="root")
-    monkeypatch.setattr("zmk_layout.parsers.lark_dt_parser.parse_dt_lark_safe", lambda txt: ([mock_node], []))
+    monkeypatch.setattr(
+        "zmk_layout.parsers.lark_dt_parser.parse_dt_lark_safe",
+        lambda txt: ([mock_node], []),
+    )
     nodes, errors = parse_dt_lark_safe("dummy")
     assert len(nodes) == 1
     assert nodes[0].name == "root"
@@ -27,7 +30,9 @@ def test_parse_dt_lark_safe_when_parser_missing(monkeypatch: Any) -> None:
     def _return_error(_: str) -> tuple[list[DTNode], list[str]]:
         return [], ["Lark parser not available: lark missing"]
 
-    monkeypatch.setattr("zmk_layout.parsers.lark_dt_parser.parse_dt_lark_safe", _return_error)
+    monkeypatch.setattr(
+        "zmk_layout.parsers.lark_dt_parser.parse_dt_lark_safe", _return_error
+    )
     nodes, errors = parse_dt_lark_safe("dummy")
     assert nodes == []
     assert errors and "lark" in errors[0].lower()
@@ -39,7 +44,9 @@ def test_parse_dt_lark_safe_general_exception(monkeypatch: Any) -> None:
     def _return_error(_: str) -> tuple[list[DTNode], list[str]]:
         return [], ["Parse error: parsing failed"]
 
-    monkeypatch.setattr("zmk_layout.parsers.lark_dt_parser.parse_dt_lark_safe", _return_error)
+    monkeypatch.setattr(
+        "zmk_layout.parsers.lark_dt_parser.parse_dt_lark_safe", _return_error
+    )
     nodes, errors = parse_dt_lark_safe("dummy")
     assert nodes == []
     assert errors and "parsing failed" in errors[0]
