@@ -255,6 +255,7 @@ class FullKeymapProcessor(BaseKeymapProcessor):
                 # Fallback to Lark parser if enhanced parser not available
                 try:
                     from .dt_parser import parse_dt_lark_safe
+
                     roots, parse_error_strings = parse_dt_lark_safe(transformed_content)
                     # These are already strings
                     if parse_error_strings:

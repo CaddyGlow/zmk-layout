@@ -136,9 +136,7 @@ class TestProcessingPipeline:
         """Test that errors are collected rather than failing fast."""
         processor = MagicMock()
         processor._extract_defines_from_ast.side_effect = Exception("Define extraction failed")
-        initial_data = LayoutData(
-            keyboard="test", title="Test", layers=[], layer_names=[]
-        )
+        initial_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])
 
         pipeline = ProcessingPipeline(processor)
         ast_roots = [MagicMock()]
@@ -341,23 +339,27 @@ class TestValidationPipelineEnhancements:
 
     def test_validate_hold_tap_timing(self) -> None:
         """Test hold-tap timing validation."""
+        from zmk_layout.models.behaviors import HoldTapBehavior
+
         layout = Layout.create_empty("test", "Test Layout")
 
-        # Mock behaviors attribute
-        mock_behavior = MagicMock()
-        mock_behavior.name = "hm_l"
-        mock_behavior.tapping_term_ms = 100  # Too low
-        # Create a mock behaviors manager with proper interface
-        behaviors_mock = MagicMock()
-        behaviors_mock.all.return_value = [mock_behavior]
-        # Access the private attribute to set it for testing
-        layout._behaviors = behaviors_mock
+        # Create a hold-tap behavior with low tapping term
+        hold_tap_behavior = HoldTapBehavior(
+            name="hm_l",
+            bindings=["&kp", "&kp"],  # Required 2 bindings
+            tappingTermMs=100,  # Too low - should trigger warning
+        )
+
+        # Add the behavior to the layout data
+        layout._data.hold_taps = [hold_tap_behavior]
 
         validator = ValidationPipeline(layout)
         result = validator.validate_hold_tap_timing()
+        print(result)
 
         # Should warn about low tapping term
         warnings = result.collect_warnings()
+        print(warnings)
         assert any("low tapping term" in str(w) for w in warnings)
 
     def test_validate_layer_accessibility(self) -> None:

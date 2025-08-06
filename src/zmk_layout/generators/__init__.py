@@ -7,7 +7,7 @@ from .zmk_generator import BehaviorFormatter, BehaviorRegistry, LayoutFormatter,
 
 __all__ = [
     "BehaviorFormatter",
-    "BehaviorRegistry", 
+    "BehaviorRegistry",
     "LayoutFormatter",
     "ZMKGenerator",
 ]

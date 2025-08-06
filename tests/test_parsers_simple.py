@@ -119,7 +119,7 @@ class TestASTNodes:
             prop = DTProperty("test_prop")
             assert prop.name == "test_prop"
             assert prop.value is None
-            
+
             # Test with DTValue
             dt_value = DTValue.string("test_value")
             prop_with_value = DTProperty("test_prop2", dt_value)
@@ -135,7 +135,7 @@ class TestASTNodes:
             # DTNode constructor: name: str = "", label: str = "", unit_address: str = "", line: int = 0, column: int = 0
             node = DTNode("test_node")
             assert node.name == "test_node"
-            
+
             # Test with label
             node_with_label = DTNode(name="test_node", label="test_label")
             assert node_with_label.name == "test_node"

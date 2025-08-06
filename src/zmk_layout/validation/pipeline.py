@@ -382,34 +382,42 @@ class ValidationPipeline:
         new_warnings: list[ValidationWarning] = []
 
         # Check for hold-tap behaviors and their timing
-        if hasattr(self._layout, "hold_taps") and self._layout.hold_taps:
-            for behavior in self._layout.hold_taps:
-                if hasattr(behavior, "tapping_term_ms") and behavior.tapping_term_ms:
-                    term = behavior.tapping_term_ms
-                    if term < recommended_min:
-                        new_warnings.append(
-                            ValidationWarning(
-                                f"Hold-tap behavior '{behavior.name}' has low tapping term: {term}ms "
-                                f"(recommended: {recommended_min}-{recommended_max}ms)",
-                                context={
-                                    "behavior": behavior.name,
-                                    "tapping_term": term,
-                                    "recommended_min": recommended_min,
-                                },
+        if hasattr(self._layout, "data") and self._layout.data:
+            try:
+                behaviors = self._layout.data.hold_taps
+                for behavior in behaviors:
+                    if hasattr(behavior, "tapping_term_ms") and behavior.tapping_term_ms:
+                        term = behavior.tapping_term_ms
+                        # Skip validation if term is a template string
+                        if isinstance(term, str):
+                            continue
+                        if term < recommended_min:
+                            new_warnings.append(
+                                ValidationWarning(
+                                    f"Hold-tap behavior '{behavior.name}' has low tapping term: {term}ms "
+                                    f"(recommended: {recommended_min}-{recommended_max}ms)",
+                                    context={
+                                        "behavior": behavior.name,
+                                        "tapping_term": term,
+                                        "recommended_min": recommended_min,
+                                    },
+                                )
                             )
-                        )
-                    elif term > recommended_max:
-                        new_warnings.append(
-                            ValidationWarning(
-                                f"Hold-tap behavior '{behavior.name}' has high tapping term: {term}ms "
-                                f"(recommended: {recommended_min}-{recommended_max}ms)",
-                                context={
-                                    "behavior": behavior.name,
-                                    "tapping_term": term,
-                                    "recommended_max": recommended_max,
-                                },
+                        elif term > recommended_max:
+                            new_warnings.append(
+                                ValidationWarning(
+                                    f"Hold-tap behavior '{behavior.name}' has high tapping term: {term}ms "
+                                    f"(recommended: {recommended_min}-{recommended_max}ms)",
+                                    context={
+                                        "behavior": behavior.name,
+                                        "tapping_term": term,
+                                        "recommended_max": recommended_max,
+                                    },
+                                )
                             )
-                        )
+            except Exception:
+                # Silently skip if data structure is not available
+                pass
 
         new_state = ValidationState(
             errors=self._state.errors,

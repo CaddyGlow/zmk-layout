@@ -369,12 +369,12 @@ class TestASTBehaviorConverter:
             patch.object(self.converter, "_resolve_binding_string", side_effect=lambda x: x),
             patch("zmk_layout.models.core.LayoutBinding.from_str") as mock_from_str,
         ):
-                    mock_binding = Mock()
-                    mock_from_str.return_value = mock_binding
+            mock_binding = Mock()
+            mock_from_str.return_value = mock_binding
 
-                    result = self.converter._extract_single_binding_from_property(prop)
+            result = self.converter._extract_single_binding_from_property(prop)
 
-                    assert result == mock_binding
+            assert result == mock_binding
 
     def test_extract_single_binding_from_property_with_spaced_parentheses(self) -> None:
         """Test single binding extraction with spaced parentheses."""
@@ -385,17 +385,17 @@ class TestASTBehaviorConverter:
             patch.object(self.converter, "_resolve_binding_string", side_effect=lambda x: x),
             patch("zmk_layout.models.core.LayoutBinding.from_str") as mock_from_str,
         ):
-                    mock_binding = Mock()
-                    mock_from_str.return_value = mock_binding
+            mock_binding = Mock()
+            mock_from_str.return_value = mock_binding
 
-                    result = self.converter._extract_single_binding_from_property(prop)
+            result = self.converter._extract_single_binding_from_property(prop)
 
-                    assert result == mock_binding
-                    # Should be called with fixed parentheses
-                    assert mock_from_str.called
-                    # The exact call depends on the method's behavior - let's check if parentheses were fixed
-                    call_args = mock_from_str.call_args[0][0]
-                    assert "LG(" in call_args and "A" in call_args
+            assert result == mock_binding
+            # Should be called with fixed parentheses
+            assert mock_from_str.called
+            # The exact call depends on the method's behavior - let's check if parentheses were fixed
+            call_args = mock_from_str.call_args[0][0]
+            assert "LG(" in call_args and "A" in call_args
 
     def test_extract_single_binding_from_property_none_value(self) -> None:
         """Test single binding extraction from None property."""
@@ -781,12 +781,12 @@ class TestASTBehaviorConverter:
             patch.object(self.converter, "_resolve_binding_string", side_effect=lambda x: x),
             patch("zmk_layout.models.core.LayoutBinding.from_str", side_effect=Exception("Parse error")),
         ):
-                    result = self.converter._extract_macro_bindings_from_property(prop)
+            result = self.converter._extract_macro_bindings_from_property(prop)
 
-                    # Should create fallback binding
-                    assert len(result) == 1
-                    assert result[0].value == "&invalid_binding"
-                    assert result[0].params == []
+            # Should create fallback binding
+            assert len(result) == 1
+            assert result[0].value == "&invalid_binding"
+            assert result[0].params == []
 
     def test_comprehensive_node_conversion_flow(self) -> None:
         """Test comprehensive flow of node conversion with all features."""
@@ -857,4 +857,3 @@ class TestASTBehaviorConverter:
 
         result4 = self.converter._extract_input_processors_from_property(prop_none)
         assert result4 == []
-

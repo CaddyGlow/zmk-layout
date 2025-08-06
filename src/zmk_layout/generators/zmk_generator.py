@@ -34,7 +34,7 @@ class BehaviorRegistry:
 
     def register_behavior(self, behavior: Any) -> None:
         """Register a behavior for tracking and validation.
-        
+
         Args:
             behavior: Behavior to register (SystemBehavior or similar)
         """
@@ -45,10 +45,10 @@ class BehaviorRegistry:
 
     def get_behavior(self, code: str) -> Any | None:
         """Get a registered behavior by code.
-        
+
         Args:
             code: Behavior code to lookup
-            
+
         Returns:
             Behavior if found, None otherwise
         """
@@ -56,10 +56,10 @@ class BehaviorRegistry:
 
     def is_registered(self, code: str) -> bool:
         """Check if a behavior is registered.
-        
+
         Args:
             code: Behavior code to check
-            
+
         Returns:
             True if behavior is registered
         """
@@ -67,7 +67,7 @@ class BehaviorRegistry:
 
     def get_all_behaviors(self) -> dict[str, Any]:
         """Get all registered behaviors.
-        
+
         Returns:
             Dictionary of all registered behaviors
         """
@@ -83,7 +83,7 @@ class BehaviorFormatter:
 
     def set_behavior_reference_context(self, enabled: bool) -> None:
         """Set whether we're formatting behavior references (for hold-tap bindings).
-        
+
         Args:
             enabled: True if formatting behavior references, False for normal bindings
         """
@@ -91,10 +91,10 @@ class BehaviorFormatter:
 
     def format_binding(self, binding: Any) -> str:
         """Format a binding into proper ZMK syntax.
-        
+
         Args:
             binding: LayoutBinding instance or string to format
-            
+
         Returns:
             Formatted ZMK binding string like "&kp A", "&mt LCTRL SPACE"
         """
@@ -125,10 +125,10 @@ class BehaviorFormatter:
 
     def _format_param(self, param: Any) -> str:
         """Format a single parameter (LayoutParam).
-        
+
         Args:
             param: LayoutParam instance to format
-            
+
         Returns:
             Formatted parameter string
         """
@@ -136,16 +136,16 @@ class BehaviorFormatter:
             return str(param)
 
         value = str(param.value)
-        
+
         # Handle nested parameters (like modifier chains)
         if hasattr(param, "params") and param.params:
             nested_params = []
             for nested_param in param.params:
                 nested_params.append(self._format_param(nested_param))
-            
+
             if nested_params:
                 return f"{value}({','.join(nested_params)})"
-        
+
         return value
 
 
@@ -156,21 +156,23 @@ class LayoutFormatter:
         """Initialize the layout formatter."""
         pass
 
-    def generate_layer_layout(self, layer_data: Any, profile: Any = None, base_indent: str = "            ", **kwargs: Any) -> str:
+    def generate_layer_layout(
+        self, layer_data: Any, profile: Any = None, base_indent: str = "            ", **kwargs: Any
+    ) -> str:
         """Generate formatted layout grid for a layer's bindings.
-        
+
         Args:
             layer_data: Layer bindings (list of strings) or layer object with bindings
             profile: Optional keyboard profile for layout-specific formatting
             base_indent: Base indentation for grid lines
             **kwargs: Additional formatting options
-            
+
         Returns:
             Formatted grid string with proper indentation and spacing
         """
         # Extract bindings from various input formats
         bindings = []
-        
+
         if isinstance(layer_data, list):
             bindings = layer_data
         elif hasattr(layer_data, "bindings"):
@@ -183,13 +185,13 @@ class LayoutFormatter:
 
         # Determine grid layout based on keyboard profile or binding count
         rows, cols = self._determine_grid_layout(len(bindings), profile)
-        
+
         # Format bindings into grid
         grid_lines = []
-        
+
         for row in range(rows):
             row_bindings = []
-            
+
             for col in range(cols):
                 index = row * cols + col
                 if index < len(bindings):
@@ -199,7 +201,7 @@ class LayoutFormatter:
                 else:
                     # Fill incomplete rows with padding
                     row_bindings.append("            ")
-            
+
             # Join row bindings with proper spacing
             row_line = f"{base_indent}{' '.join(row_bindings).rstrip()}"
             grid_lines.append(row_line)
@@ -208,11 +210,11 @@ class LayoutFormatter:
 
     def _determine_grid_layout(self, binding_count: int, profile: Any = None) -> tuple[int, int]:
         """Determine the grid layout (rows, cols) for the given binding count.
-        
+
         Args:
             binding_count: Number of key bindings
             profile: Optional keyboard profile with layout info
-            
+
         Returns:
             Tuple of (rows, cols)
         """
@@ -229,7 +231,7 @@ class LayoutFormatter:
             return (6, 18)
         else:
             # Default: try to make a reasonable rectangular grid
-            rows = max(3, int((binding_count ** 0.5) * 0.7))  # Favor wider layouts
+            rows = max(3, int((binding_count**0.5) * 0.7))  # Favor wider layouts
             cols = (binding_count + rows - 1) // rows  # Ceiling division
             return (rows, cols)
 
@@ -439,7 +441,9 @@ class ZMKGenerator:
 
             if not bindings or len(bindings) < 2:
                 if self.logger:
-                    self.logger.warning(f"Tap dance '{name}' requires at least 2 bindings, found {len(bindings) if bindings else 0}. Skipping.")
+                    self.logger.warning(
+                        f"Tap dance '{name}' requires at least 2 bindings, found {len(bindings) if bindings else 0}. Skipping."
+                    )
                 continue
 
             # This is a valid tap dance, add it to our list
@@ -639,7 +643,7 @@ class ZMKGenerator:
 
         # First, collect all valid combos
         valid_combos = []
-        
+
         for combo in combos_data:
             name = combo.name
             if not name:
@@ -656,7 +660,7 @@ class ZMKGenerator:
                 continue
 
             # Check for empty bindings like &none
-            if binding_data and hasattr(binding_data, 'value') and binding_data.value in ['&none']:
+            if binding_data and hasattr(binding_data, "value") and binding_data.value in ["&none"]:
                 if self.logger:
                     self.logger.warning(f"Combo '{name}' has no bindings. Skipping.")
                 continue
@@ -664,7 +668,9 @@ class ZMKGenerator:
             # Check key position count
             if len(key_positions_indices) < 2:
                 if self.logger:
-                    self.logger.warning(f"Combo '{name}' requires at least 2 key positions, found {len(key_positions_indices)}. Skipping.")
+                    self.logger.warning(
+                        f"Combo '{name}' requires at least 2 key positions, found {len(key_positions_indices)}. Skipping."
+                    )
                 continue
 
             # This combo is valid, add it to our list

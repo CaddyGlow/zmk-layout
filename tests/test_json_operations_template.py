@@ -10,6 +10,7 @@ from zmk_layout.utils.json_operations import load_layout_file
 
 class StubFileProvider:
     """Minimal in-memory FileProvider stub."""
+
     def __init__(self, files: dict[Path, str]) -> None:
         self._files = files
 
@@ -40,13 +41,15 @@ class StubFileProvider:
 
 class StubTemplateProvider:
     """TemplateProvider stub that renders {var} or {{var}} style placeholders."""
+
     def __init__(self) -> None:
         self.render_calls: list[tuple[str, dict[str, str | int | float | bool | None]]] = []
 
     def has_template_syntax(self, content: str) -> bool:
         # Simple template detection - look for {variable} patterns, not JSON braces
         import re
-        return bool(re.search(r'\{[a-zA-Z_][a-zA-Z0-9_]*\}', content))
+
+        return bool(re.search(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}", content))
 
     def render_string(self, template: str, context: dict[str, str | int | float | bool | None]) -> str:
         self.render_calls.append((template, context))
@@ -127,17 +130,17 @@ def test_template_provider_render_exception(tmp_path: Path, valid_layout_json: s
     """Template provider render failures should propagate as ValueError."""
     path = tmp_path / "layout.json"
     file_provider = StubFileProvider({path: valid_layout_json.replace("Sample", "{name}")})
-    
+
     class FailingTemplateProvider:
         def has_template_syntax(self, content: str) -> bool:
             return True
-        
+
         def render_string(self, template: str, context: dict[str, str | int | float | bool | None]) -> str:
             raise RuntimeError("Template render failed")
-        
+
         def escape_content(self, content: str) -> str:
             return content
-    
+
     template_provider = FailingTemplateProvider()
 
     with pytest.raises(ValueError, match="Invalid layout data"):
@@ -189,19 +192,19 @@ def test_template_context_is_empty_dict(tmp_path: Path, valid_layout_json: str) 
 def test_variable_resolution_flag_isolation(tmp_path: Path, valid_layout_json: str) -> None:
     """Ensure global flag is properly restored after processing."""
     from zmk_layout.utils.json_operations import _skip_variable_resolution
-    
+
     path = tmp_path / "layout.json"
     file_provider = StubFileProvider({path: valid_layout_json})
-    
+
     # Check initial state
     initial_value = _skip_variable_resolution
-    
+
     # Load with skip_variable_resolution=True
     load_layout_file(
         path,
         file_provider=file_provider,
         skip_variable_resolution=True,
     )
-    
+
     # Flag should be restored to initial value
     assert _skip_variable_resolution == initial_value

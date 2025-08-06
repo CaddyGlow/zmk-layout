@@ -19,7 +19,7 @@ class TestValidationPipeline:
         """Test initial validation state."""
         layout = Layout.create_empty("test", "Test Layout")
         validator = ValidationPipeline(layout)
-        
+
         assert validator.is_valid()
         assert len(validator.collect_errors()) == 0
         assert len(validator.collect_warnings()) == 0
@@ -31,10 +31,10 @@ class TestValidationPipeline:
         invalid_binding = LayoutBinding(value="kp", params=[])  # Missing & prefix
         layer = layout.layers.add("base")
         layer.bindings.append(invalid_binding)
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_bindings()
-        
+
         assert not result.is_valid()
         errors = result.collect_errors()
         assert len(errors) >= 1  # May have both syntax and unknown behavior errors
@@ -50,10 +50,10 @@ class TestValidationPipeline:
         layer.set(0, "&kp A")
         layer.set(1, "&mt LCTRL ESC")
         layer.set(2, "&trans")
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_bindings()
-        
+
         assert result.is_valid()
         assert len(result.collect_errors()) == 0
 
@@ -61,10 +61,10 @@ class TestValidationPipeline:
         """Test validation of out-of-bounds layer references."""
         layout = Layout.create_empty("test", "Test Layout")
         layout.layers.add("base").set(0, "&mo 5")  # Only 1 layer exists
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_layer_references()
-        
+
         assert not result.is_valid()
         errors = result.collect_errors()
         assert len(errors) >= 1  # May have both syntax and unknown behavior errors
@@ -77,10 +77,10 @@ class TestValidationPipeline:
         layout = Layout.create_empty("test", "Test Layout")
         layout.layers.add("base").set(0, "&mo 1")
         layout.layers.add("nav").set(0, "&to 0")
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_layer_references()
-        
+
         assert result.is_valid()
         assert len(result.collect_errors()) == 0
 
@@ -89,10 +89,10 @@ class TestValidationPipeline:
         layout = Layout.create_empty("test", "Test Layout")
         layout.layers.add("base").set(0, "&mo nav")  # String reference
         layout.layers.add("nav")
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_layer_references()
-        
+
         assert result.is_valid()
         assert len(result.collect_errors()) == 0
 
@@ -100,10 +100,10 @@ class TestValidationPipeline:
         """Test validation of unknown string layer references."""
         layout = Layout.create_empty("test", "Test Layout")
         layout.layers.add("base").set(0, "&mo unknown_layer")
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_layer_references()
-        
+
         assert not result.is_valid()
         errors = result.collect_errors()
         assert len(errors) >= 1  # May have both syntax and unknown behavior errors
@@ -113,14 +113,14 @@ class TestValidationPipeline:
         """Test key position validation warnings."""
         layout = Layout.create_empty("test", "Test Layout")
         layer = layout.layers.add("base")
-        
+
         # Add more than max_keys bindings
         for i in range(45):
             layer.set(i, "&trans")
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_key_positions(max_keys=42)
-        
+
         assert result.is_valid()  # Warnings don't invalidate
         warnings = result.collect_warnings()
         assert len(warnings) == 1
@@ -132,14 +132,14 @@ class TestValidationPipeline:
         """Test key position validation errors for extreme counts."""
         layout = Layout.create_empty("test", "Test Layout")
         layer = layout.layers.add("base")
-        
+
         # Add way too many bindings
         for i in range(250):
             layer.set(i, "&trans")
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_key_positions()
-        
+
         assert not result.is_valid()
         errors = result.collect_errors()
         assert len(errors) >= 1  # May have both syntax and unknown behavior errors
@@ -151,10 +151,10 @@ class TestValidationPipeline:
         layer = layout.layers.add("base")
         layer.set(0, "&hm_l LCTRL A")  # Custom hold-tap
         layer.set(1, "&hrm_r RSHIFT B")  # Custom hold-tap
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_behavior_references()
-        
+
         assert result.is_valid()  # Just warnings for now
         warnings = result.collect_warnings()
         assert len(warnings) == 1
@@ -168,14 +168,14 @@ class TestValidationPipeline:
         validator1 = ValidationPipeline(layout)
         validator2 = validator1.validate_bindings()
         validator3 = validator2.validate_layer_references()
-        
+
         # Each should be a different instance
         assert validator1 is not validator2
         assert validator2 is not validator3
-        
+
         # Original should have no errors
         assert len(validator1.collect_errors()) == 0
-        
+
         # Each step accumulates state
         assert validator1._state is not validator2._state
         assert validator2._state is not validator3._state
@@ -187,15 +187,10 @@ class TestValidationPipeline:
         # Manually create an invalid binding
         layer.bindings.append(LayoutBinding(value="kp", params=[]))  # Invalid syntax
         layer.set(1, "&mo 5")  # Invalid layer reference
-        
+
         validator = ValidationPipeline(layout)
-        result = (
-            validator
-            .validate_bindings()
-            .validate_layer_references()
-            .validate_key_positions(max_keys=10)
-        )
-        
+        result = validator.validate_bindings().validate_layer_references().validate_key_positions(max_keys=10)
+
         assert not result.is_valid()
         errors = result.collect_errors()
         # We expect at least 3 errors: syntax + unknown behavior for "kp", and layer reference for "&mo 5"
@@ -207,14 +202,14 @@ class TestValidationPipeline:
         layer = layout.layers.add("base")
         # Manually create an invalid binding
         layer.bindings.append(LayoutBinding(value="invalid", params=[]))  # Error
-        
+
         # Add many keys for warning
         for i in range(50):
             layer.set(i + 1, "&trans")
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_bindings().validate_key_positions(max_keys=42)
-        
+
         summary = result.summary()
         assert isinstance(summary, ValidationSummary)
         assert not summary.is_valid
@@ -225,18 +220,18 @@ class TestValidationPipeline:
     def test_validation_state_namedtuple(self) -> None:
         """Test ValidationState as immutable NamedTuple."""
         state = ValidationState(errors=(), warnings=())
-        
+
         # NamedTuple is immutable
         with pytest.raises(AttributeError):
             state.errors = ()  # type: ignore
-        
+
         # Can create new state with updated values
         error = ValidationError("Test error")
         new_state = ValidationState(
             errors=state.errors + (error,),
             warnings=state.warnings,
         )
-        
+
         assert len(new_state.errors) == 1
         assert len(state.errors) == 0  # Original unchanged
 
@@ -244,7 +239,7 @@ class TestValidationPipeline:
         """Test string representation."""
         layout = Layout.create_empty("test", "Test Layout")
         validator = ValidationPipeline(layout)
-        
+
         repr_str = repr(validator)
         assert "ValidationPipeline" in repr_str
         assert "errors=0" in repr_str
@@ -256,12 +251,12 @@ class TestValidationPipeline:
         layout = Layout.create_empty("test", "Test Layout")
         layer = layout.layers.add("base")
         layer.bindings.append(LayoutBinding(value="invalid", params=[]))
-        
+
         validator = ValidationPipeline(layout)
         result = validator.validate_bindings()
-        
+
         errors = result.collect_errors()
-        
+
         # Check that we have errors with context
         assert len(errors) >= 1
         for error in errors:
@@ -274,59 +269,58 @@ class TestValidationPipeline:
         """Test combo position validation."""
         layout = Layout.create_empty("test", "Test Layout")
         layer = layout.layers.add("base")
-        
+
         # Add 10 keys to the layer
         for i in range(10):
             layer.set(i, "&kp A")
-        
+
         # Add combo with valid positions
         if hasattr(layout, "combos"):
             layout.combos.add("test_combo", key_positions=[0, 1], binding="&kp ESC")
-            
+
             validator = ValidationPipeline(layout)
             result = validator.validate_combo_positions()
-            
+
             assert result.is_valid()
             assert len(result.collect_errors()) == 0
 
     def test_complex_validation_scenario(self) -> None:
         """Test a complex validation scenario with multiple issues."""
         layout = Layout.create_empty("test", "Test Layout")
-        
+
         # Layer 1: base
         base = layout.layers.add("base")
         base.set(0, "&kp A")  # Valid
         base.bindings.append(LayoutBinding(value="invalid", params=[]))  # Invalid syntax
         base.set(2, "&mo 3")  # Invalid layer ref
-        
+
         # Layer 2: nav
         nav = layout.layers.add("nav")
         nav.set(0, "&to 0")  # Valid
         nav.bindings.append(LayoutBinding(value="&unknown_behavior", params=[]))  # Unknown behavior
-        
+
         # Add many keys for warning
         for i in range(50):
             nav.set(i + 2, "&trans")
-        
+
         # Run full validation
         validator = ValidationPipeline(layout)
         result = (
-            validator
-            .validate_bindings()
+            validator.validate_bindings()
             .validate_layer_references()
             .validate_key_positions(max_keys=42)
             .validate_behavior_references()
         )
-        
+
         # Check results
         assert not result.is_valid()
-        
+
         errors = result.collect_errors()
         assert len(errors) >= 3  # At least 3 errors
-        
+
         warnings = result.collect_warnings()
         assert len(warnings) >= 1  # At least 1 warning
-        
+
         # Verify summary
         summary = result.summary()
         assert not summary.is_valid

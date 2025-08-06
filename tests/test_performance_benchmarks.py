@@ -635,6 +635,178 @@ class TestPerformanceBenchmarks:
         # Should complete efficiently
         assert per_op < 200.0, f"QMK migration workflow takes {per_op:.3f}ms per operation"
 
+    def test_infrastructure_provider_performance(self) -> None:
+        """Benchmark: Performance of provider configuration."""
+        from zmk_layout.infrastructure import ProviderBuilder
+
+        iterations = 1000
+
+        # Benchmark provider configuration
+        gc.collect()
+        start_time = time.perf_counter()
+
+        for _ in range(iterations):
+            (
+                ProviderBuilder()
+                .enable_caching(size=512)
+                .enable_debug_mode()
+                .enable_performance_tracking()
+                .from_environment()
+                .validate()
+                .build()
+            )
+
+        elapsed = time.perf_counter() - start_time
+        per_op = (elapsed / iterations) * 1000
+
+        print(f"\n=== Provider Configuration Performance ({iterations} iterations) ===")
+        print(f"Total time: {elapsed:.3f}s")
+        print(f"Per operation: {per_op:.3f}ms")
+
+        # Should complete efficiently
+        assert per_op < 5.0, f"Provider configuration takes {per_op:.3f}ms per operation"
+
+    def test_template_context_builder_performance(self) -> None:
+        """Benchmark: Performance of template context building."""
+        from zmk_layout.infrastructure import TemplateContextBuilder
+        from zmk_layout.models.metadata import LayoutData
+
+        # Create test data
+        layout_data = LayoutData(
+            keyboard="test",
+            title="Test Layout",
+            layers=[[LayoutBinding.from_str("&kp A")] * 50 for _ in range(5)],
+            layer_names=[f"layer_{i}" for i in range(5)],
+        )
+
+        iterations = 500
+
+        # Benchmark context building
+        gc.collect()
+        start_time = time.perf_counter()
+
+        for _ in range(iterations):
+            (
+                TemplateContextBuilder()
+                .with_layout(layout_data)
+                .with_generation_metadata(author="Test", version="1.0.0")
+                .with_features(home_row_mods=True, rgb=False)
+                .with_custom_vars(theme="dark")
+                .validate_completeness()
+                .build()
+            )
+
+        elapsed = time.perf_counter() - start_time
+        per_op = (elapsed / iterations) * 1000
+
+        print(f"\n=== Template Context Building Performance ({iterations} iterations) ===")
+        print(f"Total time: {elapsed:.3f}s")
+        print(f"Per operation: {per_op:.3f}ms")
+        print(f"Layout size: {len(layout_data.layers)} layers × {len(layout_data.layers[0])} keys")
+
+        # Should complete efficiently
+        assert per_op < 10.0, f"Template context building takes {per_op:.3f}ms per operation"
+
+    def test_debug_inspector_overhead(self) -> None:
+        """Benchmark: Overhead of debug inspection."""
+        from zmk_layout.infrastructure import ChainInspector
+
+        class TestBuilder:
+            def __init__(self, value: int = 0) -> None:
+                self.value = value
+
+            def increment(self) -> "TestBuilder":
+                return TestBuilder(self.value + 1)
+
+            def double(self) -> "TestBuilder":
+                return TestBuilder(self.value * 2)
+
+            def build(self) -> int:
+                return self.value
+
+        iterations = 1000
+
+        # Benchmark without inspection
+        gc.collect()
+        start_time = time.perf_counter()
+        for _ in range(iterations):
+            TestBuilder(5).increment().double().build()
+        uninspected_time = time.perf_counter() - start_time
+
+        # Benchmark with inspection
+        inspector = ChainInspector()
+        gc.collect()
+        start_time = time.perf_counter()
+        for _ in range(iterations):
+            builder = inspector.wrap(TestBuilder(5))
+            builder.increment().double().build()
+        inspected_time = time.perf_counter() - start_time
+
+        # Calculate overhead
+        overhead_percent = ((inspected_time - uninspected_time) / uninspected_time) * 100
+
+        print(f"\n=== Debug Inspector Overhead ({iterations} iterations) ===")
+        print(f"Without inspection: {uninspected_time:.3f}s")
+        print(f"With inspection: {inspected_time:.3f}s")
+        print(f"Overhead: {overhead_percent:.1f}%")
+
+        # Inspection should have reasonable overhead
+        assert overhead_percent < 200.0, f"Inspector overhead {overhead_percent:.1f}% is too high"
+
+    def test_caching_effectiveness(self) -> None:
+        """Benchmark: Effectiveness of caching utilities."""
+        from zmk_layout.infrastructure.performance import LRUCache, memoize
+
+        # Test LRU cache
+        cache = LRUCache(maxsize=100)
+        iterations = 10000
+
+        # Populate cache
+        for i in range(100):
+            cache.put(f"key_{i}", f"value_{i}")
+
+        # Benchmark cache hits
+        gc.collect()
+        start_time = time.perf_counter()
+        for _ in range(iterations):
+            for i in range(50):  # Access first 50 items repeatedly
+                cache.get(f"key_{i}")
+        cache_time = time.perf_counter() - start_time
+
+        stats = cache.stats()
+
+        print(f"\n=== LRU Cache Performance ({iterations} iterations) ===")
+        print(f"Total time: {cache_time:.3f}s")
+        print(f"Operations: {iterations * 50}")
+        print(f"Per operation: {(cache_time / (iterations * 50)) * 1_000_000:.3f}μs")
+        print(f"Hit rate: {stats['hit_rate']:.2%}")
+
+        # Test memoization
+        call_count = 0
+
+        @memoize(maxsize=50)
+        def expensive_operation(x: int) -> int:
+            nonlocal call_count
+            call_count += 1
+            return x * x
+
+        # Benchmark memoized function
+        gc.collect()
+        start_time = time.perf_counter()
+        for _ in range(iterations):
+            for i in range(10):  # Use 10 different values
+                expensive_operation(i)
+        memoize_time = time.perf_counter() - start_time
+
+        print(f"\n=== Memoization Performance ({iterations} iterations) ===")
+        print(f"Total time: {memoize_time:.3f}s")
+        print(f"Function calls: {call_count}")
+        print(f"Cache hit rate: {((iterations * 10 - call_count) / (iterations * 10)):.2%}")
+
+        # Cache should provide good performance
+        assert cache_time < 1.0, f"Cache operations too slow: {cache_time:.3f}s"
+        assert call_count == 10, f"Memoization not working: {call_count} calls"
+
     def test_behavior_builder_scaling(self) -> None:
         """Benchmark: BehaviorBuilder scaling with configuration complexity."""
         from collections.abc import Callable

@@ -11,81 +11,80 @@ if TYPE_CHECKING:
     from .ast_nodes import DTNode, DTProperty, DTValue
 
 
-
 class LarkToDTTransformer:
     """Transform Lark parse tree to DTNode objects."""
 
     def transform(self, tree: Any) -> list["DTNode"]:
         """Transform parse tree to list of DTNode objects.
-        
+
         Args:
             tree: Lark parse tree
-            
+
         Returns:
             List of DTNode objects
         """
         from .ast_nodes import DTNode
-        
+
         nodes = []
         root = DTNode(name="", label="")  # Root node
-        
+
         for item in tree.children:
-            if item.data == 'node':
+            if item.data == "node":
                 node = self._transform_node(item)
                 if node:
                     nodes.append(node)
                     root.add_child(node)
-        
+
         return nodes if nodes else [root]
-    
+
     def _transform_node(self, node_tree: Any) -> "DTNode":
         """Transform a node tree to DTNode."""
         from .ast_nodes import DTNode
-        
+
         name = ""
         label = ""
-        
+
         # Extract node information from tree
         for child in node_tree.children:
-            if hasattr(child, 'data'):
-                if child.data == 'label':
+            if hasattr(child, "data"):
+                if child.data == "label":
                     label = str(child.children[0])
-                elif child.data == 'node_path':
+                elif child.data == "node_path":
                     name = self._extract_path(child)
-                elif child.data == 'property':
+                elif child.data == "property":
                     # Properties will be handled separately
                     pass
-        
+
         node = DTNode(name=name, label=label)
-        
+
         # Process properties and child nodes
         for child in node_tree.children:
-            if hasattr(child, 'data'):
-                if child.data == 'property':
+            if hasattr(child, "data"):
+                if child.data == "property":
                     prop = self._transform_property(child)
                     if prop:
                         node.add_property(prop)
-                elif child.data == 'node':
+                elif child.data == "node":
                     child_node = self._transform_node(child)
                     if child_node:
                         node.add_child(child_node)
-        
+
         return node
-    
+
     def _transform_property(self, prop_tree: Any) -> "DTProperty":
         """Transform property tree to DTProperty."""
         from .ast_nodes import DTProperty, DTValue, DTValueType
-        
+
         name = ""
         values = []
-        
+
         for child in prop_tree.children:
-            if hasattr(child, 'data'):
-                if child.data == 'property_name':
+            if hasattr(child, "data"):
+                if child.data == "property_name":
                     name = str(child.children[0])
-                elif child.data == 'property_values':
+                elif child.data == "property_values":
                     values = self._transform_property_values(child)
-        
+
         # Create DTValue from values
         if not values:
             dt_value = None
@@ -94,60 +93,60 @@ class LarkToDTTransformer:
         else:
             # Multiple values - create array
             dt_value = DTValue(DTValueType.ARRAY, values)
-        
+
         return DTProperty(name=name, value=dt_value)
-    
+
     def _transform_property_values(self, values_tree: Any) -> list["DTValue"]:
         """Transform property values tree to list of DTValue."""
         from .ast_nodes import DTValue, DTValueType
-        
+
         values = []
-        
+
         for child in values_tree.children:
-            if hasattr(child, 'data') and child.data == 'property_value_item':
+            if hasattr(child, "data") and child.data == "property_value_item":
                 # Extract the actual value from property_value_item
                 for value_child in child.children:
-                    if hasattr(value_child, 'data'):
-                        if value_child.data == 'string_value':
-                            value_str = str(value_child.children[0]).strip('"\'')
+                    if hasattr(value_child, "data"):
+                        if value_child.data == "string_value":
+                            value_str = str(value_child.children[0]).strip("\"'")
                             values.append(DTValue(DTValueType.STRING, value_str))
-                        elif value_child.data == 'number_value':
+                        elif value_child.data == "number_value":
                             num_str = str(value_child.children[0])
-                            value = int(num_str, 16) if num_str.startswith('0x') else int(num_str)
+                            value = int(num_str, 16) if num_str.startswith("0x") else int(num_str)
                             values.append(DTValue(DTValueType.INTEGER, value))
-                        elif value_child.data == 'identifier_value':
+                        elif value_child.data == "identifier_value":
                             identifier = str(value_child.children[0])
                             values.append(DTValue(DTValueType.STRING, identifier))
-                        elif value_child.data == 'reference_value':
+                        elif value_child.data == "reference_value":
                             ref = str(value_child.children[0])
                             values.append(DTValue(DTValueType.REFERENCE, ref))
-                        elif value_child.data == 'array_value':
+                        elif value_child.data == "array_value":
                             array_values = self._transform_array_value(value_child)
                             values.append(DTValue(DTValueType.ARRAY, array_values))
-        
+
         return values
-    
+
     def _transform_array_value(self, array_tree: Any) -> list[str]:
         """Transform array value tree to list."""
         values = []
-        
+
         for child in array_tree.children:
-            if hasattr(child, 'data') and child.data == 'array_content':
+            if hasattr(child, "data") and child.data == "array_content":
                 for item in child.children:
-                    if hasattr(item, 'data') and item.data == 'array_item':
+                    if hasattr(item, "data") and item.data == "array_item":
                         # Each array_item has array_token child(ren)
                         for token in item.children:
-                            if hasattr(token, 'data'):
-                                if token.data == 'array_token':
+                            if hasattr(token, "data"):
+                                if token.data == "array_token":
                                     # Array token can contain reference_token or be direct value
                                     if token.children:
                                         for token_child in token.children:
-                                            if hasattr(token_child, 'data'):
-                                                if token_child.data == 'reference_token':
+                                            if hasattr(token_child, "data"):
+                                                if token_child.data == "reference_token":
                                                     # Extract the reference name from reference_token
                                                     ref_name = str(token_child.children[1])  # Skip & symbol
                                                     values.append(f"&{ref_name}")
-                                                elif token_child.data == 'function_call':
+                                                elif token_child.data == "function_call":
                                                     func_call = self._transform_function_call(token_child)
                                                     values.append(func_call)
                                             else:
@@ -159,33 +158,33 @@ class LarkToDTTransformer:
                             else:
                                 # Direct token (not wrapped in array_token)
                                 values.append(str(token))
-        
+
         return values
-    
+
     def _transform_function_call(self, func_tree: Any) -> str:
         """Transform function call tree to string."""
         func_name = ""
         args = []
-        
+
         for child in func_tree.children:
-            if hasattr(child, 'data'):
-                if child.data == 'function_args':
+            if hasattr(child, "data"):
+                if child.data == "function_args":
                     for arg in child.children:
-                        if hasattr(arg, 'data') and arg.data == 'function_arg':
+                        if hasattr(arg, "data") and arg.data == "function_arg":
                             args.append(str(arg.children[0]))
             else:
                 func_name = str(child)
-        
+
         if args:
             return f"{func_name}({', '.join(args)})"
         return f"{func_name}()"
-    
+
     def _extract_path(self, path_tree: Any) -> str:
         """Extract path from path tree."""
         path_parts = []
-        
+
         for child in path_tree.children:
-            if hasattr(child, 'data') and child.data == 'path_segment':
+            if hasattr(child, "data") and child.data == "path_segment":
                 segment = str(child.children[0])
                 # Handle unit address if present
                 if len(child.children) > 1:
@@ -194,8 +193,9 @@ class LarkToDTTransformer:
                 path_parts.append(segment)
             else:
                 path_parts.append(str(child))
-        
+
         return "/".join(path_parts) if path_parts else ""
+
 
 def parse_dt_lark(text: str) -> list["DTNode"]:
     """Parse device tree source using Lark parser.
@@ -223,11 +223,11 @@ def parse_dt_lark(text: str) -> list["DTNode"]:
     grammar_path = Path(__file__).parent / "devicetree.lark"
     if not grammar_path.exists():
         raise ImportError("devicetree.lark grammar file not found")
-    
+
     try:
-        parser = Lark(grammar_path.read_text(), start='start', parser='lalr')
+        parser = Lark(grammar_path.read_text(), start="start", parser="lalr")
         tree = parser.parse(text)
-        
+
         # Convert lark tree to DTNode objects
         transformer = LarkToDTTransformer()
         return transformer.transform(tree)

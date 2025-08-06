@@ -430,13 +430,13 @@ class LayoutBinding(LayoutBaseModel):
     @classmethod
     def builder(cls, behavior: str) -> "LayoutBindingBuilder":
         """Create fluent builder for complex bindings.
-        
+
         Args:
             behavior: The ZMK behavior (e.g., "kp", "&kp", "mt")
-            
+
         Returns:
             LayoutBindingBuilder instance for chaining
-            
+
         Examples:
             >>> binding = LayoutBinding.builder("&kp").modifier("LC").key("A").build()
             >>> binding = LayoutBinding.builder("mt").param("LCTRL").param("ESC").build()
@@ -447,13 +447,13 @@ class LayoutBinding(LayoutBaseModel):
 
     def with_param(self, param: str | int) -> Self:
         """Add parameter and return new instance (immutable).
-        
+
         Args:
             param: Parameter value to add
-            
+
         Returns:
             New LayoutBinding instance with added parameter
-            
+
         Examples:
             >>> binding = LayoutBinding.from_str("&kp").with_param("A")
         """
@@ -462,13 +462,13 @@ class LayoutBinding(LayoutBaseModel):
 
     def with_modifier(self, modifier: str) -> Self:
         """Wrap in modifier chain (immutable).
-        
+
         Args:
             modifier: Modifier to wrap around existing parameters
-            
+
         Returns:
             New LayoutBinding instance with modifier applied
-            
+
         Examples:
             >>> binding = LayoutBinding.from_str("&kp A").with_modifier("LC")
             >>> # Result: &kp LC(A)
@@ -481,14 +481,14 @@ class LayoutBinding(LayoutBaseModel):
 
     def as_hold_tap(self, hold_behavior: str, tapping_term: int | None = None) -> "LayoutBinding":
         """Convert to hold-tap behavior (immutable).
-        
+
         Args:
             hold_behavior: Behavior or layer for hold action
             tapping_term: Optional tapping term (not used in binding, for reference)
-            
+
         Returns:
             New LayoutBinding as mod-tap behavior
-            
+
         Examples:
             >>> binding = LayoutBinding.from_str("&kp ESC").as_hold_tap("LCTRL")
             >>> # Result: &mt LCTRL ESC
@@ -503,13 +503,13 @@ class LayoutBinding(LayoutBaseModel):
 
     def as_layer_tap(self, layer: int | str) -> "LayoutBinding":
         """Convert to layer-tap behavior (immutable).
-        
+
         Args:
             layer: Layer index or name
-            
+
         Returns:
             New LayoutBinding as layer-tap behavior
-            
+
         Examples:
             >>> binding = LayoutBinding.from_str("&kp SPACE").as_layer_tap(1)
             >>> # Result: &lt 1 SPACE

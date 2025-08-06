@@ -34,7 +34,7 @@ class TestDTParser:
             Token(TokenType.EOF, "", 1, 5, ""),
         ]
         parser = DTParser(tokens)
-        
+
         assert parser.tokens == tokens
         assert parser.pos == 0  # Should be at first token after _advance()
         assert parser.current_token == tokens[0]
@@ -48,14 +48,14 @@ class TestDTParser:
         tokens = [Token(TokenType.EOF, "", 1, 1, "")]
         mock_logger = Mock()
         parser = DTParser(tokens, logger=mock_logger)
-        
+
         assert parser.logger == mock_logger
 
     def test_parse_empty_tokens(self) -> None:
         """Test parsing empty token list."""
         parser = DTParser([Token(TokenType.EOF, "", 1, 1, "")])
         root = parser.parse()
-        
+
         assert isinstance(root, DTNode)
         assert root.name == ""
         assert len(root.properties) == 0
@@ -76,7 +76,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         assert root.name == ""
         assert len(root.properties) == 1
         prop = list(root.properties.values())[0]
@@ -97,7 +97,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         assert len(root.children) == 1
         child = list(root.children.values())[0]
         assert child.name == "node"
@@ -120,7 +120,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         roots = parser.parse_multiple()
-        
+
         assert len(roots) == 2
         child1 = list(roots[0].children.values())[0]
         child2 = list(roots[1].children.values())[0]
@@ -139,7 +139,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         assert len(root.children) == 1
         node = list(root.children.values())[0]
         assert node.name == "node"
@@ -158,7 +158,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         assert len(parser.conditionals) >= 0  # Preprocessor directives stored as conditionals
         assert len(root.children) == 1
 
@@ -177,7 +177,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         prop = list(node.properties.values())[0]
         assert prop.name == "compatible"
@@ -200,7 +200,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         prop = list(node.properties.values())[0]
         assert prop.name == "reg"
@@ -221,7 +221,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         prop = list(node.properties.values())[0]
         assert prop.name == "status"
@@ -244,7 +244,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         prop = list(node.properties.values())[0]
         assert prop.name == "clocks"
@@ -270,7 +270,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         prop = list(node.properties.values())[0]
         assert prop.name == "reg"
@@ -295,7 +295,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         prop = list(node.properties.values())[0]
         assert prop.name == "compatible"
@@ -316,7 +316,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         assert node.name == "node"
         assert node.label == "mylabel"
@@ -334,7 +334,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         assert node.name == "node"
         assert node.unit_address == "1000"
@@ -354,7 +354,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         assert node.name == "node"
         assert node.label == "mylabel"
@@ -373,7 +373,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         assert node.name == "noderef"  # Reference without &
         assert len(node.properties) == 1
@@ -395,11 +395,11 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         parent = list(root.children.values())[0]
         assert parent.name == "parent"
         assert len(parent.children) == 1
-        
+
         child = list(parent.children.values())[0]
         assert child.name == "child"
         assert len(child.properties) == 1
@@ -417,7 +417,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         # Should have errors but still parse partial structure
         assert len(parser.errors) > 0
         assert isinstance(root, DTNode)
@@ -425,8 +425,8 @@ class TestDTParser:
     def test_parse_fatal_error(self) -> None:
         """Test handling of fatal parsing errors."""
         tokens = [Token(TokenType.EOF, "", 1, 1, "")]
-        
-        with patch.object(DTParser, '_parse_root_node', side_effect=Exception("Fatal error")):
+
+        with patch.object(DTParser, "_parse_root_node", side_effect=Exception("Fatal error")):
             parser = DTParser(tokens)
             with pytest.raises(DTParseError, match="Fatal parsing error"):
                 parser.parse()
@@ -435,15 +435,15 @@ class TestDTParser:
         """Test that comments are properly associated with nodes."""
         parser = DTParser([Token(TokenType.EOF, "", 1, 1, "")])
         node = DTNode("test", line=5, column=1)
-        
+
         # Add comments that should be associated
         parser.comments = [
             DTComment("// Close comment", 4, 1, False),
             DTComment("// Far comment", 1, 1, False),
         ]
-        
+
         parser._associate_pending_comments_with_node(node, 5)
-        
+
         # Should associate the close comment but not the far one
         assert len(node.comments) >= 0  # May associate based on proximity logic
 
@@ -451,12 +451,12 @@ class TestDTParser:
         """Test that comments are properly associated with properties."""
         parser = DTParser([Token(TokenType.EOF, "", 1, 1, "")])
         prop = DTProperty("test", DTValue.string("value"), 3, 1)
-        
+
         # Add comment that should be associated
         parser.comments = [DTComment("// Property comment", 2, 1, False)]
-        
+
         parser._associate_pending_comments_with_property(prop, 3)
-        
+
         # Should associate the comment
         assert len(prop.comments) >= 0  # May associate based on proximity logic
 
@@ -467,15 +467,15 @@ class TestDTParser:
             Token(TokenType.EOF, "", 1, 5, ""),
         ]
         parser = DTParser(tokens)
-        
+
         # Test _match
         assert parser._match(TokenType.IDENTIFIER) is True
         assert parser._match(TokenType.STRING) is False
-        
+
         # Test _current_line and _current_column
         assert parser._current_line() == 1
         assert parser._current_column() == 1
-        
+
         # Test _is_at_end
         assert parser._is_at_end() is False
         parser._advance()  # Move to EOF
@@ -493,7 +493,7 @@ class TestDTParser:
         parser = DTParser(tokens)
         parser.pos = 2  # Position at 'c'
         parser.current_token = tokens[2]
-        
+
         context = parser._get_context(window=1)
         assert ">>> c <<<" in context
         assert "b" in context
@@ -509,7 +509,7 @@ class TestDTParser:
             Token(TokenType.EOF, "", 1, 17, ""),
         ]
         parser = DTParser(tokens)
-        
+
         # Synchronize should advance to semicolon
         parser._synchronize()
         assert parser.current_token is not None
@@ -526,7 +526,7 @@ class TestDTParser:
         ]
         parser = DTParser(tokens)
         assert parser._is_property() is True
-        
+
         # Node case (followed by {)
         tokens = [
             Token(TokenType.IDENTIFIER, "node", 1, 1, "node"),
@@ -547,8 +547,8 @@ class TestHelperFunctions:
             compatible = "test-device";
         };
         """
-        
-        with patch('zmk_layout.parsers.dt_parser.tokenize_dt') as mock_tokenize:
+
+        with patch("zmk_layout.parsers.dt_parser.tokenize_dt") as mock_tokenize:
             mock_tokens = [
                 Token(TokenType.SLASH, "/", 1, 1, "/"),
                 Token(TokenType.LBRACE, "{", 1, 3, "{"),
@@ -561,9 +561,9 @@ class TestHelperFunctions:
                 Token(TokenType.EOF, "", 4, 1, ""),
             ]
             mock_tokenize.return_value = mock_tokens
-            
+
             root = parse_dt(dt_text)
-            
+
             assert isinstance(root, DTNode)
             assert len(root.properties) == 1
             prop = list(root.properties.values())[0]
@@ -572,12 +572,12 @@ class TestHelperFunctions:
     def test_parse_dt_safe(self) -> None:
         """Test parse_dt_safe function."""
         dt_text = "invalid syntax {"
-        
-        with patch('zmk_layout.parsers.dt_parser.tokenize_dt') as mock_tokenize:
+
+        with patch("zmk_layout.parsers.dt_parser.tokenize_dt") as mock_tokenize:
             mock_tokenize.return_value = [Token(TokenType.EOF, "", 1, 1, "")]
-            
+
             root, errors = parse_dt_safe(dt_text)
-            
+
             # Should handle errors gracefully
             assert isinstance(root, DTNode) or root is None
             assert isinstance(errors, list)
@@ -585,10 +585,10 @@ class TestHelperFunctions:
     def test_parse_dt_safe_with_exception(self) -> None:
         """Test parse_dt_safe with tokenizer exception."""
         dt_text = "test"
-        
-        with patch('zmk_layout.parsers.dt_parser.tokenize_dt', side_effect=Exception("Tokenize error")):
+
+        with patch("zmk_layout.parsers.dt_parser.tokenize_dt", side_effect=Exception("Tokenize error")):
             root, errors = parse_dt_safe(dt_text)
-            
+
             assert root is None
             assert len(errors) == 1
             assert "Parsing failed" in str(errors[0])
@@ -599,8 +599,8 @@ class TestHelperFunctions:
         node1 { };
         node2 { };
         """
-        
-        with patch('zmk_layout.parsers.dt_parser.tokenize_dt') as mock_tokenize:
+
+        with patch("zmk_layout.parsers.dt_parser.tokenize_dt") as mock_tokenize:
             mock_tokens = [
                 Token(TokenType.IDENTIFIER, "node1", 1, 1, "node1"),
                 Token(TokenType.LBRACE, "{", 1, 7, "{"),
@@ -613,54 +613,54 @@ class TestHelperFunctions:
                 Token(TokenType.EOF, "", 3, 1, ""),
             ]
             mock_tokenize.return_value = mock_tokens
-            
+
             roots = parse_dt_multiple(dt_text)
-            
+
             assert isinstance(roots, list)
             assert len(roots) >= 1  # Should parse at least one root
 
     def test_parse_dt_multiple_safe(self) -> None:
         """Test parse_dt_multiple_safe function."""
         dt_text = "test"
-        
-        with patch('zmk_layout.parsers.dt_parser.tokenize_dt') as mock_tokenize:
+
+        with patch("zmk_layout.parsers.dt_parser.tokenize_dt") as mock_tokenize:
             mock_tokenize.return_value = [Token(TokenType.EOF, "", 1, 1, "")]
-            
+
             roots, errors = parse_dt_multiple_safe(dt_text)
-            
+
             assert isinstance(roots, list)
             assert isinstance(errors, list)
 
     def test_parse_dt_multiple_safe_with_exception(self) -> None:
         """Test parse_dt_multiple_safe with exception."""
         dt_text = "test"
-        
-        with patch('zmk_layout.parsers.dt_parser.tokenize_dt', side_effect=Exception("Error")):
+
+        with patch("zmk_layout.parsers.dt_parser.tokenize_dt", side_effect=Exception("Error")):
             roots, errors = parse_dt_multiple_safe(dt_text)
-            
+
             assert roots == []
             assert len(errors) == 1
 
     def test_parse_dt_lark(self) -> None:
         """Test parse_dt_lark function."""
         dt_text = "test"
-        
+
         # Test with lark parser available
         mock_nodes = [DTNode("test")]
-        with patch('zmk_layout.parsers.dt_parser.parse_dt_lark'):
+        with patch("zmk_layout.parsers.dt_parser.parse_dt_lark"):
             # Mock the inner import and function
             mock_lark_module = Mock()
             mock_lark_module.parse_dt_lark.return_value = mock_nodes
-            
-            with patch.dict('sys.modules', {'zmk_layout.parsers.lark_dt_parser': mock_lark_module}):
+
+            with patch.dict("sys.modules", {"zmk_layout.parsers.lark_dt_parser": mock_lark_module}):
                 result = parse_dt_lark(dt_text)
                 assert len(result) >= 0  # May fallback
 
     def test_parse_dt_lark_fallback(self) -> None:
         """Test parse_dt_lark fallback when lark unavailable."""
         dt_text = "/ { };"
-        
-        with patch('zmk_layout.parsers.dt_parser.tokenize_dt') as mock_tokenize:
+
+        with patch("zmk_layout.parsers.dt_parser.tokenize_dt") as mock_tokenize:
             mock_tokens = [
                 Token(TokenType.SLASH, "/", 1, 1, "/"),
                 Token(TokenType.LBRACE, "{", 1, 3, "{"),
@@ -669,7 +669,7 @@ class TestHelperFunctions:
                 Token(TokenType.EOF, "", 2, 1, ""),
             ]
             mock_tokenize.return_value = mock_tokens
-            
+
             # Should fallback to regular parser
             result = parse_dt_lark(dt_text)
             assert isinstance(result, list)
@@ -678,12 +678,12 @@ class TestHelperFunctions:
     def test_parse_dt_lark_safe(self) -> None:
         """Test parse_dt_lark_safe function."""
         dt_text = "test"
-        
+
         # Test fallback behavior
-        with patch('zmk_layout.parsers.dt_parser.tokenize_dt') as mock_tokenize:
+        with patch("zmk_layout.parsers.dt_parser.tokenize_dt") as mock_tokenize:
             mock_tokens = [Token(TokenType.EOF, "", 1, 1, "")]
             mock_tokenize.return_value = mock_tokens
-            
+
             nodes, errors = parse_dt_lark_safe(dt_text)
             assert isinstance(nodes, list)
             assert isinstance(errors, list)
@@ -691,10 +691,10 @@ class TestHelperFunctions:
     def test_parse_dt_lark_safe_with_exception(self) -> None:
         """Test parse_dt_lark_safe with exception."""
         dt_text = "test"
-        
-        with patch('zmk_layout.parsers.dt_parser.parse_dt', side_effect=Exception("Parse error")):
+
+        with patch("zmk_layout.parsers.dt_parser.parse_dt", side_effect=Exception("Parse error")):
             nodes, errors = parse_dt_lark_safe(dt_text)
-            
+
             assert nodes == []
             assert len(errors) == 1
             assert "Parse error" in errors[0]
@@ -719,7 +719,7 @@ class TestEdgeCases:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         prop = list(node.properties.values())[0]
         assert prop.name == "array"
@@ -743,7 +743,7 @@ class TestEdgeCases:
         ]
         parser = DTParser(tokens)
         parser.parse()
-        
+
         # Should have parsing errors
         assert len(parser.errors) > 0
 
@@ -762,7 +762,7 @@ class TestEdgeCases:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         node = list(root.children.values())[0]
         prop = list(node.properties.values())[0]
         # Should fallback to string value
@@ -782,7 +782,7 @@ class TestEdgeCases:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         # Should handle unexpected token and continue parsing
         assert len(parser.errors) > 0
         assert isinstance(root, DTNode)
@@ -795,10 +795,10 @@ class TestEdgeCases:
             Token(TokenType.EOF, "", 1, 8, ""),
         ]
         parser = DTParser(tokens, logger=mock_logger)
-        
+
         # Force an error
         parser._error("Test error")
-        
+
         # Logger should be called
         mock_logger.warning.assert_called()
 
@@ -831,20 +831,20 @@ class TestEdgeCases:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         assert root.name == ""
         assert len(root.children) == 1
-        
+
         parent = list(root.children.values())[0]
         assert parent.name == "parent"
         assert len(parent.children) == 2
-        
+
         children = list(parent.children.values())
         child1 = children[0]
         child2 = children[1]
         assert child1.name == "child1"
         assert len(child1.properties) == 1
-        
+
         assert child2.name == "child2"
         assert len(child2.properties) == 1
         prop = list(child2.properties.values())[0]
@@ -864,11 +864,11 @@ class TestEdgeCases:
         ]
         parser = DTParser(tokens)
         root = parser.parse()
-        
+
         # Should collect preprocessor directives as conditionals
         assert len(parser.conditionals) >= 1
         assert parser.conditionals[0].directive == "ifdef"
         assert parser.conditionals[0].condition == "CONFIG_TEST"
-        
+
         # Conditionals should be attached to root
         assert len(root.conditionals) >= 1

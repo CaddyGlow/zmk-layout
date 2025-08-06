@@ -21,13 +21,13 @@ class TestZmkGenerator:
         registry = BehaviorRegistry()
         # Should not raise
         registry.register_behavior("test_behavior")
-        
+
         # Test with proper behavior object
         mock_behavior = Mock()
         mock_behavior.code = "&test"
         mock_behavior.name = "test_behavior"
         registry.register_behavior(mock_behavior)
-        
+
         assert registry.is_registered("&test")
         assert registry.get_behavior("&test") == mock_behavior
 

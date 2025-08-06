@@ -35,9 +35,10 @@ def test_extraction_config_default_when_profile_none() -> None:
 
 def test_extraction_config_default_on_profile_error() -> None:
     """Test fallback to default when profile access raises exception."""
+
     class BadProfile:
         keyboard_name = "kb"
-        
+
         # accessing keymap_extraction will raise
         @property
         def keymap_extraction(self) -> None:
@@ -80,10 +81,10 @@ def test_extraction_config_profile_keymap_extraction_false() -> None:
 
 def test_extraction_config_with_logger_warning(caplog: Any) -> None:
     """Test that logger warnings are emitted on profile errors."""
-    
+
     class BadProfile:
         keyboard_name = "test_kb"
-        
+
         @property
         def keymap_extraction(self) -> None:
             raise ValueError("Profile error")
@@ -91,12 +92,12 @@ def test_extraction_config_with_logger_warning(caplog: Any) -> None:
     # Create mock logger
     mock_logger = Mock()
     parser = ZMKKeymapParser(logger=mock_logger)
-    
+
     cfg = parser._get_extraction_config(BadProfile())  # type: ignore[arg-type]
-    
+
     # Should fallback to default
     assert cfg == get_default_extraction_config()
-    
+
     # Should log warning
     mock_logger.warning.assert_called_once()
     call_args = mock_logger.warning.call_args
@@ -107,6 +108,7 @@ def test_extraction_config_with_logger_warning(caplog: Any) -> None:
 
 def test_extraction_config_profile_without_keyboard_name() -> None:
     """Test profile error handling when keyboard_name is missing."""
+
     class ProfileWithoutName:
         @property
         def keymap_extraction(self) -> None:
@@ -114,11 +116,11 @@ def test_extraction_config_profile_without_keyboard_name() -> None:
 
     mock_logger = Mock()
     parser = ZMKKeymapParser(logger=mock_logger)
-    
-    cfg = parser._get_extraction_config(ProfileWithoutName())  # type: ignore[arg-type] 
-    
+
+    cfg = parser._get_extraction_config(ProfileWithoutName())  # type: ignore[arg-type]
+
     assert cfg == get_default_extraction_config()
-    
+
     # Should log warning with "unknown" profile name
     mock_logger.warning.assert_called_once()
     call_args = mock_logger.warning.call_args
@@ -141,9 +143,7 @@ def test_extraction_config_sections_list_conversion() -> None:
 def test_extraction_config_complex_profile_structure() -> None:
     """Test with more complex profile structure."""
     profile = SimpleNamespace(
-        keymap_extraction=SimpleNamespace(
-            sections=["layers", "behaviors", "macros", "combos"]
-        ),
+        keymap_extraction=SimpleNamespace(sections=["layers", "behaviors", "macros", "combos"]),
         keyboard_name="complex_kb",
         other_attributes="should_be_ignored",
     )
@@ -166,16 +166,17 @@ def test_extraction_config_empty_sections() -> None:
 
 def test_extraction_config_without_logger() -> None:
     """Test error handling when no logger is provided."""
+
     class BadProfile:
         keyboard_name = "kb"
-        
+
         @property
         def keymap_extraction(self) -> None:
             raise RuntimeError("broken profile")
 
     parser = ZMKKeymapParser(logger=None)  # No logger
     cfg = parser._get_extraction_config(BadProfile())  # type: ignore[arg-type]
-    
+
     # Should still fallback gracefully
     assert cfg == get_default_extraction_config()
 

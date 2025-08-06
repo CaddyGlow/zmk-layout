@@ -47,13 +47,17 @@ def load_layout_file(
 
     try:
         content = file_provider.read_text(file_path)
-        
+
         # Apply template processing if enabled and provider available
-        if not skip_template_processing and template_provider is not None and template_provider.has_template_syntax(content):
+        if (
+            not skip_template_processing
+            and template_provider is not None
+            and template_provider.has_template_syntax(content)
+        ):
             # For now, use empty context - this could be extended to accept context
             context: dict[str, str | int | float | bool | None] = {}
             content = template_provider.render_string(content, context)
-        
+
         data = json.loads(content)
 
         # Set the module flag before validation

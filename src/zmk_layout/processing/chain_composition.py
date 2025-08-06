@@ -204,7 +204,7 @@ class PipelineComposer:
             try:
                 # Execute stage
                 data = operation(data)
-                
+
                 # If this was a checkpoint stage, update the last checkpoint
                 if stage_name.startswith("checkpoint_"):
                     last_checkpoint_data = data
@@ -420,10 +420,16 @@ def compose_pipelines(*pipelines: Any) -> PipelineComposer:
         elif "ValidationPipeline" in pipeline_type:
             # For validation, we need a factory function
             # Use default argument to capture the current pipeline value
-            composer.add_validation(lambda _, p=pipeline: p, f"validation_{i}")
+            def validation_factory(layout: Layout, p: Any = pipeline) -> Any:
+                return p
+
+            composer.add_validation(validation_factory, f"validation_{i}")
         else:
             # Add as custom stage
             # Use default argument to capture the current pipeline value
-            composer.add_custom_stage(f"pipeline_{i}", lambda data, p=pipeline: p.execute(data))
+            def custom_stage(data: Any, p: Any = pipeline) -> Any:
+                return p.execute(data)
+
+            composer.add_custom_stage(f"pipeline_{i}", custom_stage)
 
     return composer
