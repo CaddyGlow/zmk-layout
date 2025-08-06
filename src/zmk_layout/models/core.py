@@ -479,7 +479,7 @@ class LayoutBinding(LayoutBaseModel):
             return self.model_copy(update={"params": [modified_param]})
         return self
 
-    def as_hold_tap(self, hold_behavior: str, tapping_term: int | None = None) -> Self:
+    def as_hold_tap(self, hold_behavior: str, tapping_term: int | None = None) -> "LayoutBinding":
         """Convert to hold-tap behavior (immutable).
         
         Args:
@@ -501,7 +501,7 @@ class LayoutBinding(LayoutBaseModel):
             ],
         )
 
-    def as_layer_tap(self, layer: int | str) -> Self:
+    def as_layer_tap(self, layer: int | str) -> "LayoutBinding":
         """Convert to layer-tap behavior (immutable).
         
         Args:
