@@ -29,7 +29,7 @@ class ParsingContext(LayoutBaseModel):
     keymap_content: str
     title: str = "ZMK Layout Generated Keymap"
     keyboard_name: str = "unknown"
-    extraction_config: list[ExtractionConfig] | None = None
+    extraction_config: list[ExtractionConfig] | list[str] | None = None
     warnings: list[str] = []
     errors: list[str] = []
     defines: dict[str, str] = {}

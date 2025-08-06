@@ -15,7 +15,7 @@ from .ast_nodes import DTNode, DTValue
 
 # Import actual implementations
 from .keymap_processors import FullKeymapProcessor, TemplateAwareProcessor
-from .parsing_models import ParsingContext, get_default_extraction_config
+from .parsing_models import ParsingContext
 
 
 def create_full_keymap_processor(logger: "LayoutLogger | None" = None) -> "ProcessorProtocol":
@@ -241,14 +241,14 @@ class ZMKKeymapParser:
     def _get_extraction_config(
         self,
         profile: Optional["KeyboardProfile"] = None,
-    ) -> dict[str, Any] | None:
+    ) -> list[str] | None:
         """Get extraction configuration from profile or use default.
 
         Args:
             keyboard_profile: Keyboard profile
 
         Returns:
-            Extraction configuration dictionary
+            List of extraction section names or None
         """
         if profile:
             try:
@@ -256,8 +256,8 @@ class ZMKKeymapParser:
                 # TODO: currently not implemented in profile
                 if hasattr(profile, "keymap_extraction") and profile.keymap_extraction:
                     extraction_sections = profile.keymap_extraction.sections
-                    # Convert to dict format expected by ParsingContext
-                    return {"sections": list(extraction_sections)}
+                    # Return the list of section names - the profile.keymap_extraction.sections is just a list of strings
+                    return list(extraction_sections)
             except Exception as e:
                 if self.logger:
                     self.logger.warning(
@@ -269,8 +269,8 @@ class ZMKKeymapParser:
                         exc_info=True,
                     )
 
-        # Return default configuration
-        return get_default_extraction_config()
+        # Return None for default configuration
+        return None
 
     def _get_template_path(self, profile: "KeyboardProfile") -> Path | None:
         """Get template file path from keyboard profile.

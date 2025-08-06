@@ -16,21 +16,21 @@ def test_extraction_config_from_profile() -> None:
     )
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(profile)  # type: ignore[arg-type]
-    assert cfg == {"sections": ["layers", "behaviors"]}
+    assert cfg == ["layers", "behaviors"]
 
 
 def test_extraction_config_default_when_missing() -> None:
     """Test fallback to default when no profile provided."""
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(None)
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
 
 def test_extraction_config_default_when_profile_none() -> None:
     """Test fallback to default when profile is None."""
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(None)
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
 
 def test_extraction_config_default_on_profile_error() -> None:
@@ -46,7 +46,7 @@ def test_extraction_config_default_on_profile_error() -> None:
 
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(BadProfile())  # type: ignore[arg-type]
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
 
 def test_extraction_config_profile_missing_keymap_extraction() -> None:
@@ -54,7 +54,7 @@ def test_extraction_config_profile_missing_keymap_extraction() -> None:
     profile = SimpleNamespace(keyboard_name="kb")  # No keymap_extraction
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(profile)  # type: ignore[arg-type]
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
 
 def test_extraction_config_profile_keymap_extraction_none() -> None:
@@ -65,7 +65,7 @@ def test_extraction_config_profile_keymap_extraction_none() -> None:
     )
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(profile)  # type: ignore[arg-type]
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
 
 def test_extraction_config_profile_keymap_extraction_false() -> None:
@@ -76,7 +76,7 @@ def test_extraction_config_profile_keymap_extraction_false() -> None:
     )
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(profile)  # type: ignore[arg-type]
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
 
 def test_extraction_config_with_logger_warning(caplog: Any) -> None:
@@ -96,7 +96,7 @@ def test_extraction_config_with_logger_warning(caplog: Any) -> None:
     cfg = parser._get_extraction_config(BadProfile())  # type: ignore[arg-type]
 
     # Should fallback to default
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
     # Should log warning
     mock_logger.warning.assert_called_once()
@@ -119,7 +119,7 @@ def test_extraction_config_profile_without_keyboard_name() -> None:
 
     cfg = parser._get_extraction_config(ProfileWithoutName())  # type: ignore[arg-type]
 
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
     # Should log warning with "unknown" profile name
     mock_logger.warning.assert_called_once()
@@ -136,8 +136,8 @@ def test_extraction_config_sections_list_conversion() -> None:
     )
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(profile)  # type: ignore[arg-type]
-    assert cfg == {"sections": ["layers", "behaviors"]}
-    assert isinstance(cfg["sections"], list)
+    assert cfg == ["layers", "behaviors"]
+    assert isinstance(cfg, list)
 
 
 def test_extraction_config_complex_profile_structure() -> None:
@@ -149,7 +149,7 @@ def test_extraction_config_complex_profile_structure() -> None:
     )
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(profile)  # type: ignore[arg-type]
-    expected = {"sections": ["layers", "behaviors", "macros", "combos"]}
+    expected = ["layers", "behaviors", "macros", "combos"]
     assert cfg == expected
 
 
@@ -161,7 +161,7 @@ def test_extraction_config_empty_sections() -> None:
     )
     parser = ZMKKeymapParser()
     cfg = parser._get_extraction_config(profile)  # type: ignore[arg-type]
-    assert cfg == {"sections": []}
+    assert cfg == []
 
 
 def test_extraction_config_without_logger() -> None:
@@ -178,12 +178,12 @@ def test_extraction_config_without_logger() -> None:
     cfg = parser._get_extraction_config(BadProfile())  # type: ignore[arg-type]
 
     # Should still fallback gracefully
-    assert cfg == get_default_extraction_config()
+    assert cfg is None
 
 
-def test_get_default_extraction_config_returns_dict() -> None:
-    """Ensure get_default_extraction_config returns a dict (currently empty)."""
+def test_get_default_extraction_config_returns_list() -> None:
+    """Ensure get_default_extraction_config returns a list of ExtractionConfig."""
     config = get_default_extraction_config()
-    assert isinstance(config, dict)
-    # Current implementation returns empty dict
-    assert config == {}
+    assert isinstance(config, list)
+    # Current implementation returns list of ExtractionConfig objects
+    assert len(config) > 0  # Should have default extraction configs

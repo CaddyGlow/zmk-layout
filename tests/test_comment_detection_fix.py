@@ -16,8 +16,8 @@ import re
 
 import pytest
 
-from zmk_layout.parsers.dt_parser import parse_dt_safe, parse_dt_lark_safe
-from zmk_layout.parsers.tokenizer import tokenize_dt, TokenType
+from zmk_layout.parsers.dt_parser import parse_dt_lark_safe, parse_dt_safe
+from zmk_layout.parsers.tokenizer import TokenType, tokenize_dt
 
 
 class TestTokenizerCommentDetection:
@@ -55,7 +55,7 @@ class TestTokenizerCommentDetection:
             ("#include <file.h>", TokenType.PREPROCESSOR),
         ]
     )
-    def test_tokenizer_produces_correct_token_types(self, comment_text, expected_token_type):
+    def test_tokenizer_produces_correct_token_types(self, comment_text: str, expected_token_type: TokenType) -> None:
         """Test that the tokenizer produces the correct specific comment token types."""
         tokens = tokenize_dt(comment_text)
         assert len(tokens) > 0, f"No tokens produced for: {comment_text}"
@@ -71,7 +71,7 @@ class TestTokenizerCommentDetection:
         assert comment_token.type == expected_token_type, \
             f"Expected {expected_token_type.value}, got {comment_token.type.value} for: {comment_text}"
 
-    def test_tokenizer_comment_content_preservation(self):
+    def test_tokenizer_comment_content_preservation(self) -> None:
         """Test that tokenizer preserves the full comment content."""
         test_cases = [
             "// Single line with special chars: !@#$%",
@@ -94,7 +94,7 @@ class TestTokenizerCommentDetection:
 class TestLarkCommentDetection:
     """Tests for the Lark-based comment detection using grammar tokens."""
 
-    def test_lark_parser_comment_independence(self):
+    def test_lark_parser_comment_independence(self) -> None:
         """Test that Lark parser handles comments independently from custom parser."""
         dts_with_comments = """
         // Single line comment
@@ -117,7 +117,7 @@ class TestLarkCommentDetection:
         assert root.get_property("compatible") is not None, "Should parse compatible property"
         assert root.get_child("test_node") is not None, "Should parse child node"
 
-    def test_lark_parser_vs_custom_parser_compatibility(self):
+    def test_lark_parser_vs_custom_parser_compatibility(self) -> None:
         """Test that both parsers can handle the same basic DTS content."""
         basic_dts = """
         / {
@@ -196,14 +196,14 @@ class TestRegexCommentDetection:
             ("regular text /* with block */ inside", False),  # Mixed content
         ]
     )
-    def test_regex_detection_accuracy(self, comment_text, expected_is_block):
+    def test_regex_detection_accuracy(self, comment_text: str, expected_is_block: bool) -> None:
         """Test the exact regex logic used at line 606 in dt_parser.py."""
         # This is the exact regex from the fix
         is_block = bool(re.match(r"/\*(.|\n)*?\*/", comment_text, re.DOTALL))
         assert is_block == expected_is_block, \
             f"Comment '{comment_text}' expected is_block={expected_is_block}, got {is_block}"
 
-    def test_regex_dotall_flag_importance(self):
+    def test_regex_dotall_flag_importance(self) -> None:
         """Verify DOTALL flag is essential for multi-line comment detection."""
         multiline_comment = "/*\nLine 1\nLine 2\n*/"
         
@@ -217,7 +217,7 @@ class TestRegexCommentDetection:
         assert with_dotall is True, "DOTALL flag should enable multi-line matching"
         assert without_dotall is False, "Without DOTALL, . doesn't match newlines in multi-line comments"
 
-    def test_regex_non_greedy_matching(self):
+    def test_regex_non_greedy_matching(self) -> None:
         """Verify non-greedy matching stops at first */ occurrence."""
         nested_style = "/* outer /* inner */ more */"
         
@@ -230,7 +230,7 @@ class TestRegexCommentDetection:
 class TestParserCommentDetection:
     """Integration tests for comment detection within the full parser workflow."""
 
-    def test_single_line_comment_detection(self):
+    def test_single_line_comment_detection(self) -> None:
         """Test single-line comment detection in parser context."""
         dts_content = """
         // Single line comment
@@ -248,7 +248,7 @@ class TestParserCommentDetection:
         assert comment.text == "// Single line comment"
         assert comment.is_block is False
 
-    def test_multi_line_comment_detection(self):
+    def test_multi_line_comment_detection(self) -> None:
         """Test multi-line comment detection in parser context."""
         dts_content = """
         /*
@@ -269,7 +269,7 @@ class TestParserCommentDetection:
         assert "Multi-line comment" in comment.text
         assert comment.is_block is True
 
-    def test_mixed_comment_types(self):
+    def test_mixed_comment_types(self) -> None:
         """Test mixed single-line and multi-line comments."""
         dts_content = """
         // Single line 1
@@ -295,7 +295,7 @@ class TestParserCommentDetection:
         assert root.comments[2].is_block is False  # Single line 2
         assert root.comments[3].is_block is True   # Multi-line block
 
-    def test_empty_and_minimal_block_comments(self):
+    def test_empty_and_minimal_block_comments(self) -> None:
         """Test edge cases with empty and minimal block comments."""
         dts_content = """
         /**/
@@ -314,7 +314,7 @@ class TestParserCommentDetection:
         # All should be detected as block comments
         assert all(comment.is_block for comment in root.comments)
 
-    def test_preprocessor_directives_as_non_block_comments(self):
+    def test_preprocessor_directives_as_non_block_comments(self) -> None:
         """Test that preprocessor directives are not detected as block comments."""
         dts_content = """
         #include <dt-bindings/zmk/keys.h>
@@ -339,7 +339,7 @@ class TestParserCommentDetection:
 class TestZMKKeymapIntegration:
     """Test comment detection in realistic ZMK keymap scenarios."""
 
-    def test_zmk_keymap_with_mixed_comments(self):
+    def test_zmk_keymap_with_mixed_comments(self) -> None:
         """Test comment detection in a realistic ZMK keymap structure."""
         zmk_keymap = """
         #include <behaviors.dtsi>
@@ -398,7 +398,7 @@ class TestZMKKeymapIntegration:
         if total_comments > 0:
             assert has_expected_comments, f"Expected ZMK-related comments, got: {comment_texts[:3]}"
 
-    def test_zmk_behavior_definitions_with_comments(self):
+    def test_zmk_behavior_definitions_with_comments(self) -> None:
         """Test comment detection in ZMK behavior definitions."""
         zmk_behaviors = """
         #include <dt-bindings/zmk/keys.h>
@@ -441,7 +441,7 @@ class TestZMKKeymapIntegration:
 class TestCommentAssociation:
     """Test how comments with correct is_block detection are associated with nodes/properties."""
 
-    def test_node_comment_association_respects_comment_type(self):
+    def test_node_comment_association_respects_comment_type(self) -> None:
         """Test that node comment association works regardless of comment type."""
         dts_content = """
         // Single line node comment
@@ -466,7 +466,7 @@ class TestCommentAssociation:
         assert associated_comment is not None
         assert associated_comment.is_block is False
 
-    def test_property_comment_association_with_block_comment(self):
+    def test_property_comment_association_with_block_comment(self) -> None:
         """Test property comment association with multi-line comments."""
         dts_content = """
         / {
@@ -503,7 +503,7 @@ class TestCommentAssociation:
 class TestEdgeCasesAndErrorHandling:
     """Test edge cases and error handling scenarios."""
 
-    def test_malformed_comment_handling(self):
+    def test_malformed_comment_handling(self) -> None:
         """Test handling of malformed comments."""
         dts_content = """
         /* Unclosed comment
@@ -519,7 +519,7 @@ class TestEdgeCasesAndErrorHandling:
         assert root is not None
         # May have parsing errors, but should not crash
 
-    def test_very_large_comment_blocks(self):
+    def test_very_large_comment_blocks(self) -> None:
         """Test handling of very large comment blocks."""
         large_comment_content = "Very long comment content. " * 1000
         dts_content = f"""
@@ -544,7 +544,7 @@ class TestEdgeCasesAndErrorHandling:
         assert large_comment is not None
         assert large_comment.is_block is True
 
-    def test_comments_with_special_characters_and_unicode(self):
+    def test_comments_with_special_characters_and_unicode(self) -> None:
         """Test comment detection with special characters and unicode."""
         dts_content = """
         // Comment with special chars: !@#$%^&*()_+-={}[]|:;"'<>,.?/`~
@@ -563,7 +563,7 @@ class TestEdgeCasesAndErrorHandling:
         assert root.comments[0].is_block is False
         assert root.comments[1].is_block is True
 
-    def test_nested_comment_style_handling(self):
+    def test_nested_comment_style_handling(self) -> None:
         """Test handling of nested-style comments (not true nesting)."""
         dts_content = """
         /* Outer /* inner comment style */ remaining */
@@ -587,7 +587,7 @@ class TestEdgeCasesAndErrorHandling:
 class TestRegressionAndBackwardCompatibility:
     """Regression tests to ensure the fix doesn't break existing functionality."""
 
-    def test_existing_parser_functionality_unchanged(self):
+    def test_existing_parser_functionality_unchanged(self) -> None:
         """Ensure basic parser functionality is unchanged."""
         dts_content = """
         / {
@@ -611,7 +611,7 @@ class TestRegressionAndBackwardCompatibility:
         assert root.get_property("status") is not None
         assert root.get_child("child_node") is not None
 
-    def test_comment_parsing_with_complex_nodes(self):
+    def test_comment_parsing_with_complex_nodes(self) -> None:
         """Test comment parsing doesn't interfere with complex node structures."""
         dts_content = """
         // Root comment
@@ -672,7 +672,7 @@ class TestRegressionAndBackwardCompatibility:
         "/*\n * Multi-line\n * block comment\n */",
         "#define PREPROCESSOR_DIRECTIVE"
     ])
-    def test_comment_detection_consistency_across_styles(self, comment_style):
+    def test_comment_detection_consistency_across_styles(self, comment_style: str) -> None:
         """Test that comment detection is consistent across different comment styles."""
         dts_content = f"""
         {comment_style}
@@ -710,7 +710,7 @@ class TestAllApproachesComparison:
             ("/* with spaces */", True),
         ]
     )
-    def test_all_approaches_agree_on_comment_type(self, comment_text, expected_is_block):
+    def test_all_approaches_agree_on_comment_type(self, comment_text: str, expected_is_block: bool) -> None:
         """Test that regex, tokenizer, and parser all agree on comment classification."""
         
         # 1. Test regex approach (direct)
@@ -737,21 +737,21 @@ class TestAllApproachesComparison:
         # All approaches should agree on the result
         if comment_text.startswith("//"):
             # Single line comments
-            assert regex_result == False, f"Regex should identify // as single-line"
-            assert tokenizer_result == False, f"Tokenizer should identify // as single-line"  
-            assert parser_result == False, f"Parser should identify // as single-line"
+            assert not regex_result, "Regex should identify // as single-line"
+            assert not tokenizer_result, "Tokenizer should identify // as single-line"  
+            assert not parser_result, "Parser should identify // as single-line"
         elif comment_text.startswith("/*") and comment_text.endswith("*/"):
             # Block comments
-            assert regex_result == True, f"Regex should identify /* */ as block"
-            assert tokenizer_result == True, f"Tokenizer should identify /* */ as block"
-            assert parser_result == True, f"Parser should identify /* */ as block"
+            assert regex_result, "Regex should identify /* */ as block"
+            assert tokenizer_result, "Tokenizer should identify /* */ as block"
+            assert parser_result, "Parser should identify /* */ as block"
         
         # Final consistency check
         if tokenizer_result is not None and parser_result is not None:
             assert tokenizer_result == parser_result == expected_is_block, \
                 f"Approaches disagree: tokenizer={tokenizer_result}, parser={parser_result}, expected={expected_is_block}"
 
-    def test_architectural_separation(self):
+    def test_architectural_separation(self) -> None:
         """Test that different parsers work independently without interference."""
         test_dts = '''
         // Single line comment
@@ -784,7 +784,7 @@ class TestAllApproachesComparison:
         assert custom_node.get_property("prop") is not None, "Custom parser should find prop"
         assert lark_node.get_property("prop") is not None, "Lark parser should find prop"
 
-    def test_performance_and_fallback_behavior(self):
+    def test_performance_and_fallback_behavior(self) -> None:
         """Test that fallback mechanisms work correctly."""
         
         # Test with a well-formed challenging comment (non-greedy matching)

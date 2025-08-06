@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from zmk_layout.models.metadata import LayoutData
 
 from .ast_nodes import DTNode
-from .parsing_models import ParsingContext, get_default_extraction_config
+from .parsing_models import ExtractionConfig, ParsingContext, get_default_extraction_config
 from .section_extractor import SectionExtractorProtocol, create_section_extractor
 
 if TYPE_CHECKING:
@@ -344,7 +344,21 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
             layout_data = self._create_base_layout_data(context)
 
             # Use configured extraction or default
-            extraction_config = context.extraction_config or get_default_extraction_config()
+            extraction_config: list[ExtractionConfig]
+            if context.extraction_config is None:
+                extraction_config = get_default_extraction_config()
+            elif isinstance(context.extraction_config, list) and context.extraction_config:
+                # Check if it's a list of strings (from profile) or ExtractionConfig objects
+                if isinstance(context.extraction_config[0], str):
+                    # Convert string list to default extraction config
+                    # For now, just use default since string-based configs aren't fully implemented
+                    extraction_config = get_default_extraction_config()
+                else:
+                    # Already list of ExtractionConfig objects
+                    from typing import cast
+                    extraction_config = cast(list[ExtractionConfig], context.extraction_config)
+            else:
+                extraction_config = get_default_extraction_config()
             
             if self.logger:
                 self.logger.debug("Template processing using extraction config", config_count=len(extraction_config))
@@ -359,7 +373,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
                     context.keymap_content, extraction_config
                 )
                 if self.logger:
-                    self.logger.debug("Section extraction completed", sections_found=len(extracted_sections), sections=list(extracted_sections.keys()))
+                    self.logger.debug("Section extraction completed", sections_found=len(extracted_sections), sections=str(list(extracted_sections.keys())))
             
             # Store extracted sections in context for result
             context.extracted_sections = extracted_sections

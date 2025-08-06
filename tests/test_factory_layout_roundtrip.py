@@ -34,7 +34,7 @@ try:
     from glove80_profile import CompleteGlove80Profile, create_complete_glove80_profile
 except ImportError:
     # Fallback for when the module isn't available
-    CompleteGlove80Profile = Any  # type: ignore[misc,assignment]
+    CompleteGlove80Profile = Any  # type: ignore[misc, assignment]
 
     def create_complete_glove80_profile() -> CompleteGlove80Profile:
         return None  # type: ignore[return-value]
@@ -463,8 +463,8 @@ class TestFactoryRoundTripValidation:
             if hasattr(parse_result, 'layout_data') and parse_result.layout_data is not None:
                 parsed_layout_data = parse_result.layout_data
             else:
-                # Fallback: use the parse result directly if it's already LayoutData
-                parsed_layout_data = parse_result
+                # Fallback: skip if no layout_data available
+                pytest.fail("Parse result does not contain layout_data")
 
             # Step 4: Convert back to JSON (using Pydantic model_dump)
             roundtrip_json = parsed_layout_data.model_dump(by_alias=True)
@@ -522,8 +522,8 @@ class TestFactoryRoundTripValidation:
         if hasattr(parse_result, 'layout_data') and parse_result.layout_data is not None:
             original_layout_data = parse_result.layout_data
         else:
-            # Fallback: use the parse result directly if it's already LayoutData
-            original_layout_data = parse_result
+            # Fallback: skip if no layout_data available
+            pytest.fail("Parse result does not contain layout_data")
 
         # Use temporary files for intermediate steps
         with tempfile.TemporaryDirectory() as temp_dir:

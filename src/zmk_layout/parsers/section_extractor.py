@@ -311,6 +311,7 @@ class SectionExtractor:
             )
 
             # Return appropriate data based on section type
+            data: Any
             if section.type == "behavior":
                 data = converted_behaviors if converted_behaviors else {}
             elif section.type == "macro":
