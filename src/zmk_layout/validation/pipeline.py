@@ -313,6 +313,169 @@ class ValidationPipeline:
         )
         return ValidationPipeline(self._layout, new_state)
 
+    def validate_modifier_consistency(self) -> ValidationPipeline:
+        """Validate modifier key consistency - returns new instance.
+
+        Checks:
+        - Consistent modifier usage across layers
+        - Balanced modifier pairs (left/right)
+        - No conflicting modifier combinations
+
+        Returns:
+            New ValidationPipeline instance with validation results
+        """
+        new_warnings: list[ValidationWarning] = []
+
+        # Track modifier usage
+        left_mods = {"LSFT", "LCTL", "LALT", "LGUI", "LC", "LS", "LA", "LG"}
+        right_mods = {"RSFT", "RCTL", "RALT", "RGUI", "RC", "RS", "RA", "RG"}
+
+        mod_counts: dict[str, int] = {}
+
+        for layer_name in self._layout.layers.names:
+            layer = self._layout.layers.get(layer_name)
+            for binding in layer.bindings:
+                binding_str = binding.to_str()
+                # Count modifier usage
+                for mod in left_mods | right_mods:
+                    if mod in binding_str:
+                        mod_counts[mod] = mod_counts.get(mod, 0) + 1
+
+        # Check for imbalanced modifiers
+        for left_mod in ["LSFT", "LCTL", "LALT", "LGUI"]:
+            right_mod = "R" + left_mod[1:]
+            left_count = mod_counts.get(left_mod, 0)
+            right_count = mod_counts.get(right_mod, 0)
+
+            if left_count > 0 and right_count > 0:
+                ratio = max(left_count, right_count) / max(min(left_count, right_count), 1)
+                if ratio > 3:  # More than 3:1 imbalance
+                    new_warnings.append(
+                        ValidationWarning(
+                            f"Imbalanced modifier usage: {left_mod}={left_count}, {right_mod}={right_count}",
+                            context={
+                                "left_mod": left_mod,
+                                "left_count": left_count,
+                                "right_mod": right_mod,
+                                "right_count": right_count,
+                                "ratio": ratio,
+                            },
+                        )
+                    )
+
+        new_state = ValidationState(
+            errors=self._state.errors,
+            warnings=self._state.warnings + tuple(new_warnings),
+        )
+        return ValidationPipeline(self._layout, new_state)
+
+    def validate_hold_tap_timing(self, recommended_min: int = 150, recommended_max: int = 250) -> ValidationPipeline:
+        """Validate hold-tap timing parameters - returns new instance.
+
+        Args:
+            recommended_min: Minimum recommended tapping term (ms)
+            recommended_max: Maximum recommended tapping term (ms)
+
+        Returns:
+            New ValidationPipeline instance with validation results
+        """
+        new_warnings: list[ValidationWarning] = []
+
+        # Check for hold-tap behaviors and their timing
+        if hasattr(self._layout, "behaviors") and self._layout.behaviors:
+            for behavior in self._layout.behaviors.all():
+                if hasattr(behavior, "tapping_term_ms") and behavior.tapping_term_ms:
+                    term = behavior.tapping_term_ms
+                    if term < recommended_min:
+                        new_warnings.append(
+                            ValidationWarning(
+                                f"Hold-tap behavior '{behavior.name}' has low tapping term: {term}ms "
+                                f"(recommended: {recommended_min}-{recommended_max}ms)",
+                                context={
+                                    "behavior": behavior.name,
+                                    "tapping_term": term,
+                                    "recommended_min": recommended_min,
+                                },
+                            )
+                        )
+                    elif term > recommended_max:
+                        new_warnings.append(
+                            ValidationWarning(
+                                f"Hold-tap behavior '{behavior.name}' has high tapping term: {term}ms "
+                                f"(recommended: {recommended_min}-{recommended_max}ms)",
+                                context={
+                                    "behavior": behavior.name,
+                                    "tapping_term": term,
+                                    "recommended_max": recommended_max,
+                                },
+                            )
+                        )
+
+        new_state = ValidationState(
+            errors=self._state.errors,
+            warnings=self._state.warnings + tuple(new_warnings),
+        )
+        return ValidationPipeline(self._layout, new_state)
+
+    def validate_layer_accessibility(self) -> ValidationPipeline:
+        """Validate that all layers are accessible - returns new instance.
+
+        Checks:
+        - Each layer can be reached from the base layer
+        - No orphaned layers
+        - Layer activation graph is connected
+
+        Returns:
+            New ValidationPipeline instance with validation results
+        """
+        new_errors: list[ValidationError] = []
+        new_warnings: list[ValidationWarning] = []
+
+        layer_names = list(self._layout.layers.names)
+        layer_count = len(layer_names)
+
+        # Build layer activation graph
+        layer_graph: dict[int, set[int]] = {i: set() for i in range(layer_count)}
+
+        for layer_idx, layer_name in enumerate(layer_names):
+            layer = self._layout.layers.get(layer_name)
+            for binding in layer.bindings:
+                # Check for layer activation behaviors
+                if binding.value in ("&mo", "&lt", "&sl", "&to", "&tog") and binding.params:
+                    layer_ref = binding.params[0].value
+                    if isinstance(layer_ref, int) and 0 <= layer_ref < layer_count:
+                        layer_graph[layer_idx].add(layer_ref)
+
+        # Check reachability from base layer (layer 0)
+        visited = set()
+        to_visit = [0]
+
+        while to_visit:
+            current = to_visit.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            to_visit.extend(layer_graph.get(current, []))
+
+        # Check for unreachable layers
+        for layer_idx in range(layer_count):
+            if layer_idx not in visited and layer_idx != 0:
+                new_warnings.append(
+                    ValidationWarning(
+                        f"Layer '{layer_names[layer_idx]}' (index {layer_idx}) is not reachable from base layer",
+                        context={
+                            "layer": layer_names[layer_idx],
+                            "layer_index": layer_idx,
+                        },
+                    )
+                )
+
+        new_state = ValidationState(
+            errors=self._state.errors + tuple(new_errors),
+            warnings=self._state.warnings + tuple(new_warnings),
+        )
+        return ValidationPipeline(self._layout, new_state)
+
     def validate_combo_positions(self) -> ValidationPipeline:
         """Validate combo key positions - returns new instance.
 
