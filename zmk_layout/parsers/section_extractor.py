@@ -11,6 +11,7 @@ from .parsing_models import (
     SectionProcessingResult,
 )
 
+
 if TYPE_CHECKING:
     from zmk_layout.providers import LayoutLogger
 
@@ -46,10 +47,10 @@ class SectionExtractorProtocol(Protocol):
 
 class UniversalBehaviorExtractor:
     """Universal behavior extractor that can extract all types of behaviors."""
-    
+
     def __init__(self, logger: "LayoutLogger | None" = None) -> None:
         self.logger = logger
-    
+
     def extract_behaviors_as_models(
         self, roots: list[DTNode], content: str, defines: dict[str, str] | None = None
     ) -> dict[str, Any]:
@@ -58,7 +59,7 @@ class UniversalBehaviorExtractor:
         # In a full implementation, this would walk the AST and extract behaviors
         return {
             "hold_taps": [],
-            "macros": [], 
+            "macros": [],
             "combos": [],
             "tap_dances": [],
             "sticky_keys": [],
@@ -166,7 +167,7 @@ class SectionExtractor:
             if not start_match:
                 if self.logger:
                     self.logger.debug(
-                        "No start delimiter found", 
+                        "No start delimiter found",
                         section_name=config.tpl_ctx_name,
                         pattern=start_pattern
                     )
@@ -350,7 +351,7 @@ class SectionExtractor:
                     raw_content=section.raw_content,
                 )
 
-            # Parse section content as AST  
+            # Parse section content as AST
             try:
                 from .dt_parser import parse_dt_multiple_safe
                 roots, parse_errors = parse_dt_multiple_safe(section.content)
@@ -373,11 +374,11 @@ class SectionExtractor:
             try:
                 from .zmk_keymap_parser import ZMKKeymapParser
                 temp_parser = ZMKKeymapParser()
-                
+
                 # Pass defines if available from context
                 if context and hasattr(context, "defines"):
                     temp_parser.defines = context.defines
-                
+
                 # Try to extract layers from each root
                 layers_data = None
                 for root in roots:
@@ -385,11 +386,11 @@ class SectionExtractor:
                     if potential_layers:
                         layers_data = potential_layers
                         break
-                
+
                 if not layers_data:
                     # No layers found - but this might be OK for template mode
                     layers_data = {"layer_names": [], "layers": []}
-                
+
             except Exception as e:
                 if self.logger:
                     self.logger.warning("Failed to extract layers, using empty result", error=str(e))

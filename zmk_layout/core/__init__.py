@@ -13,6 +13,7 @@ from .optional_deps import (
     has_rich,
 )
 
+
 __all__ = [
     "Layout",
     "has_jinja2",

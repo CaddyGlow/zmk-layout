@@ -13,7 +13,13 @@ from zmk_layout.models import (
     TapDanceBehavior,
 )
 from zmk_layout.parsers.ast_behavior_converter import ASTBehaviorConverter
-from zmk_layout.parsers.ast_nodes import DTComment, DTNode, DTProperty, DTValue, DTValueType
+from zmk_layout.parsers.ast_nodes import (
+    DTComment,
+    DTNode,
+    DTProperty,
+    DTValue,
+    DTValueType,
+)
 
 
 class TestASTBehaviorConverter:
@@ -711,7 +717,9 @@ class TestASTBehaviorConverter:
 
     def test_create_ast_behavior_converter_function(self) -> None:
         """Test the factory function for creating AST behavior converter."""
-        from zmk_layout.parsers.ast_behavior_converter import create_ast_behavior_converter
+        from zmk_layout.parsers.ast_behavior_converter import (
+            create_ast_behavior_converter,
+        )
 
         defines = {"TEST": "value"}
         converter = create_ast_behavior_converter(defines)
@@ -721,7 +729,9 @@ class TestASTBehaviorConverter:
 
     def test_create_ast_behavior_converter_function_no_args(self) -> None:
         """Test the factory function without arguments."""
-        from zmk_layout.parsers.ast_behavior_converter import create_ast_behavior_converter
+        from zmk_layout.parsers.ast_behavior_converter import (
+            create_ast_behavior_converter,
+        )
 
         converter = create_ast_behavior_converter()
 

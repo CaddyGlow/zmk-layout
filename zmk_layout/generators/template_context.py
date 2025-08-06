@@ -3,6 +3,7 @@
 import re
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
+
 if TYPE_CHECKING:
     pass
 
@@ -10,6 +11,7 @@ from typing import Protocol
 
 from zmk_layout.models import LayoutData
 from zmk_layout.providers import LayoutProviders
+
 
 # Type aliases for better readability
 TemplateContext: TypeAlias = dict[str, Any]

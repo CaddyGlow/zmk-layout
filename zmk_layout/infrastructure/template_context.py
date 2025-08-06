@@ -8,8 +8,13 @@ from typing import TYPE_CHECKING, Any, Self
 
 from pydantic import BaseModel, Field
 
+
 if TYPE_CHECKING:
-    from zmk_layout.models.behaviors import ComboBehavior, HoldTapBehavior, MacroBehavior
+    from zmk_layout.models.behaviors import (
+        ComboBehavior,
+        HoldTapBehavior,
+        MacroBehavior,
+    )
     from zmk_layout.models.metadata import LayoutData
 
 

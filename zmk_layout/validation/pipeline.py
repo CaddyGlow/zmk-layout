@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, NamedTuple
 
+
 if TYPE_CHECKING:
     from ..core import Layout
 

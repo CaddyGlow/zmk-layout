@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Protocol, Self
 
 from pydantic import BaseModel, Field
 
+
 if TYPE_CHECKING:
     pass
 

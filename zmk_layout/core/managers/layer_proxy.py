@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from zmk_layout.core.exceptions import LayerNotFoundError
 from zmk_layout.models.core import LayoutBinding
 
+
 if TYPE_CHECKING:
     from zmk_layout.models.metadata import LayoutData
     from zmk_layout.providers import LayoutProviders

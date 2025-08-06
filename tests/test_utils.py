@@ -396,7 +396,7 @@ class TestCoreOperations:
                         {
                             "name": f"layer_{i}",
                             "binding_count": len(layer_bindings),
-                            "unique_behaviors": len(set(b.value for b in layer_bindings)),
+                            "unique_behaviors": len({b.value for b in layer_bindings}),
                         }
                         for i, layer_bindings in enumerate(layout_data.layers)
                     ],

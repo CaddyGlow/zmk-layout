@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Self
 from zmk_layout.models.core import LayoutBinding
 from zmk_layout.validation import ValidationPipeline
 
+
 if TYPE_CHECKING:
     from zmk_layout.models.metadata import LayoutData
     from zmk_layout.parsers.keymap_processors import BaseKeymapProcessor

@@ -15,6 +15,7 @@ from .ast_nodes import (
 from .dt_parser import DTParser
 from .zmk_keymap_parser import ZMKKeymapParser
 
+
 __all__ = [
     "DTComment",
     "DTConditional",

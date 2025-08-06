@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from zmk_layout.core.exceptions import FileOperationError, ValidationError
 from zmk_layout.models.metadata import LayoutData
 
+
 if TYPE_CHECKING:
     from zmk_layout.core.managers import BehaviorManager, LayerManager
     from zmk_layout.providers import LayoutProviders

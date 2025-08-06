@@ -10,6 +10,7 @@ from zmk_layout.models.behaviors import (
 )
 from zmk_layout.models.core import LayoutBinding
 
+
 if TYPE_CHECKING:
     from zmk_layout.models.metadata import LayoutData
     from zmk_layout.providers import LayoutProviders

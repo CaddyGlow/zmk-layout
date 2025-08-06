@@ -1,6 +1,6 @@
 [project]
 name = "zmk-layout"
-version = "0.1.0"
+dynamic = ["version"]
 description = "ZMK keyboard layout manipulation library with fluent API"
 authors = [
   { name = "ZMK Layout Library Contributors", email = "developers@example.com" },
@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 dependencies = ["lark>=1.2.2", "pydantic>=2.11.0", "typing-extensions>=4.0.0"]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project.optional-dependencies]
@@ -22,15 +22,23 @@ parsing = ["lark>=1.1"]
 dev = ["pytest>=8.0", "pytest-cov>=4.0", "ruff>=0.11", "mypy>=1.15"]
 
 [project.urls]
-Homepage = "https://github.com/zmk-layout/zmk-layout"
-Documentation = "https://zmk-layout.readthedocs.io"
-Repository = "https://github.com/zmk-layout/zmk-layout"
+Homepage = "https://github.com/CaddyGlow/zmk-layout"
+# Documentation = "https://zmk-layout.readthedocs.io"
+Repository = "https://github.com/CaddyGlow/zmk-layout"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "zmk_layout/__version__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["zmk_layout"]
 include = []
+
 [tool.coverage.run]
 include = ["zmk_layout", "tests"]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 88

@@ -12,6 +12,7 @@ from collections.abc import Callable
 from threading import RLock
 from typing import Any, TypeVar
 
+
 T = TypeVar("T")
 
 

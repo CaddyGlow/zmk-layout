@@ -30,6 +30,7 @@ from .metadata import (
 )
 from .types import ConfigValue, LayerBindings, LayerIndex, ParamValue, TemplateNumeric
 
+
 __all__ = [  # noqa: RUF022
     # Base and core models
     "LayoutBaseModel",

@@ -6,6 +6,7 @@ from .combo import ComboBuilder
 from .generator import ZMKGeneratorBuilder
 from .macro import MacroBuilder
 
+
 __all__ = [
     "LayoutBindingBuilder",
     "BuildError",

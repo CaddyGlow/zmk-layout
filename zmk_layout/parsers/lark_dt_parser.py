@@ -7,6 +7,7 @@ type information and fallback behavior.
 
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from .ast_nodes import DTComment, DTNode, DTProperty, DTValue
 

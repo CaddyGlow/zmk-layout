@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from zmk_layout.core import Layout
     from zmk_layout.models.metadata import LayoutData

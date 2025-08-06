@@ -249,12 +249,12 @@ class TestBaseKeymapProcessorBehaviorTransformation:
         / {
             keymap {
                 compatible = "zmk,keymap";
-                
+
                 layer_0 {
                     bindings = <&encoder_input_listener>;
                 };
             };
-            
+
             &encoder_input_listener {
                 status = "okay";
             };
@@ -273,7 +273,7 @@ class TestBaseKeymapProcessorBehaviorTransformation:
             &encoder_1_input_listener {
                 status = "okay";
             };
-            
+
             &encoder_2_input_listener {
                 status = "okay";
             };

@@ -551,7 +551,11 @@ class TestPerformanceBenchmarks:
         from unittest.mock import MagicMock
 
         from zmk_layout.models.metadata import LayoutData
-        from zmk_layout.processing import PipelineComposer, ProcessingPipeline, TransformationPipeline
+        from zmk_layout.processing import (
+            PipelineComposer,
+            ProcessingPipeline,
+            TransformationPipeline,
+        )
 
         # Create pipelines
         processor = MagicMock()

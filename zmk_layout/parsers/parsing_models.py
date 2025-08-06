@@ -95,7 +95,7 @@ def get_default_extraction_config() -> list[ExtractionConfig]:
             ],
         ),
         ExtractionConfig(
-            tpl_ctx_name="user_behaviors_dtsi", 
+            tpl_ctx_name="user_behaviors_dtsi",
             type="behavior",
             layer_data_name="behaviors",
             delimiter=[
@@ -105,7 +105,7 @@ def get_default_extraction_config() -> list[ExtractionConfig]:
         ),
         ExtractionConfig(
             tpl_ctx_name="combos_dtsi",
-            type="combo", 
+            type="combo",
             layer_data_name="combos",
             delimiter=[
                 r"/\*\s*Automatically\s+generated\s+combos\s+definitions\s*\*/",

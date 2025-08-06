@@ -7,6 +7,7 @@ from pydantic import Field, field_validator
 from .base import LayoutBaseModel
 from .types import LayerIndex, ParamValue, TemplateNumeric
 
+
 if TYPE_CHECKING:
     from .core import LayoutBinding
 

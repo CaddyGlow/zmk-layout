@@ -6,8 +6,13 @@ from typing import TYPE_CHECKING, Any
 from zmk_layout.models.metadata import LayoutData
 
 from .ast_nodes import DTNode
-from .parsing_models import ExtractionConfig, ParsingContext, get_default_extraction_config
+from .parsing_models import (
+    ExtractionConfig,
+    ParsingContext,
+    get_default_extraction_config,
+)
 from .section_extractor import SectionExtractorProtocol, create_section_extractor
+
 
 if TYPE_CHECKING:
     from zmk_layout.providers import LayoutLogger
@@ -359,7 +364,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
                     extraction_config = cast(list[ExtractionConfig], context.extraction_config)
             else:
                 extraction_config = get_default_extraction_config()
-            
+
             if self.logger:
                 self.logger.debug("Template processing using extraction config", config_count=len(extraction_config))
 
@@ -374,7 +379,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
                 )
                 if self.logger:
                     self.logger.debug("Section extraction completed", sections_found=len(extracted_sections), sections=str(list(extracted_sections.keys())))
-            
+
             # Store extracted sections in context for result
             context.extracted_sections = extracted_sections
 

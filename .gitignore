@@ -66,3 +66,4 @@ build
 workspace/
 site/
 src/zmk_layout/models/__pycache__
+zmk_layout/__version__.py

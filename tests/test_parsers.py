@@ -5,7 +5,13 @@ from unittest.mock import Mock
 
 import pytest
 
-from zmk_layout.parsers.ast_nodes import DTComment, DTNode, DTProperty, DTValue, DTValueType
+from zmk_layout.parsers.ast_nodes import (
+    DTComment,
+    DTNode,
+    DTProperty,
+    DTValue,
+    DTValueType,
+)
 from zmk_layout.parsers.tokenizer import DTTokenizer, TokenType
 from zmk_layout.providers import LayoutProviders
 from zmk_layout.providers.factory import create_default_providers

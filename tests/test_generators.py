@@ -33,7 +33,7 @@ class TestZMKGenerator:
 / {{
     keymap {{
         compatible = "zmk,keymap";
-        
+
         default {{
             bindings = <
                 {" ".join(f"{b.value} {' '.join(str(p.value) for p in b.params)}" for b in layout_data.layers[0])}

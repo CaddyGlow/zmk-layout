@@ -7,6 +7,7 @@ from pydantic import Field, field_validator
 from .base import LayoutBaseModel
 from .types import ParamValue
 
+
 if TYPE_CHECKING:
     from ..builders.binding import LayoutBindingBuilder
 

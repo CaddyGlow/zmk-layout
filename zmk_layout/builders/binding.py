@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Self
 
 from zmk_layout.models.types import ParamValue
 
+
 if TYPE_CHECKING:
     from ..models.core import LayoutBinding
 

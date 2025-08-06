@@ -5,12 +5,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from typing import Any
 
 from zmk_layout.models import LayoutData
 from zmk_layout.models.metadata import LayoutResult
 from zmk_layout.providers import FileProvider
+
 
 # Type aliases for placeholder types
 KeyboardProfile = Any

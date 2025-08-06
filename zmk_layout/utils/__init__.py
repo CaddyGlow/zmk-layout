@@ -26,6 +26,7 @@ from .validation import (
     validate_position_index,
 )
 
+
 __all__ = [
     # JSON operations
     "VariableResolutionContext",

@@ -191,7 +191,7 @@ class TestParsingIntegration:
         content = """
         keymap {
             compatible = "zmk,keymap";
-            
+
             default_layer {
                 bindings = <
                     &kp A &kp B &kp C

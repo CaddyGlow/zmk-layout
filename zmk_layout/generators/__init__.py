@@ -3,7 +3,13 @@
 This module provides generation functionality for ZMK keyboard layouts and configuration files.
 """
 
-from .zmk_generator import BehaviorFormatter, BehaviorRegistry, LayoutFormatter, ZMKGenerator
+from .zmk_generator import (
+    BehaviorFormatter,
+    BehaviorRegistry,
+    LayoutFormatter,
+    ZMKGenerator,
+)
+
 
 __all__ = [
     "BehaviorFormatter",

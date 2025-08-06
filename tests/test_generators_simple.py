@@ -132,7 +132,9 @@ class TestConfigGenerator:
 
     def test_get_required_includes_stub(self) -> None:
         """Test stub implementation of get_required_includes_for_layout."""
-        from zmk_layout.generators.config_generator import get_required_includes_for_layout
+        from zmk_layout.generators.config_generator import (
+            get_required_includes_for_layout,
+        )
 
         mock_profile = Mock()
         layout_data = LayoutData(keyboard="test", title="Test", layers=[], layer_names=[])

@@ -15,11 +15,16 @@ from zmk_layout.models.behaviors import (
 )
 from zmk_layout.models.core import LayerBindings
 
+
 # Real formatter implementations for ZMK behavior and layout formatting
 
 if TYPE_CHECKING:
     from zmk_layout.models.metadata import LayoutData
-    from zmk_layout.providers import ConfigurationProvider, LayoutLogger, TemplateProvider
+    from zmk_layout.providers import (
+        ConfigurationProvider,
+        LayoutLogger,
+        TemplateProvider,
+    )
 
 # Type aliases for external dependencies that need to be extracted
 KeyboardProfile = Any

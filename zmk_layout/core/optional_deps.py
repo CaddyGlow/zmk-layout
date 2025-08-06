@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from zmk_layout.providers import TemplateProvider
 
@@ -78,10 +79,10 @@ def get_parser_provider() -> Any:
                         string: ESCAPED_STRING
                         number: NUMBER
                         comment: COMMENT
-                        
+
                         NAME: /[a-zA-Z_][a-zA-Z0-9_-]*/
                         COMMENT: /\\/\\/[^\\n]*/
-                        
+
                         %import common.ESCAPED_STRING
                         %import common.NUMBER
                         %import common.WS

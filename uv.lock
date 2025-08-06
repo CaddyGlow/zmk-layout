@@ -605,7 +605,6 @@ wheels = [
 
 [[package]]
 name = "zmk-layout"
-version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "lark" },
@@ -666,7 +665,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11" },
     { name = "typing-extensions", specifier = ">=4.0.0" },
 ]
-provides-extras = ["full", "templating", "display", "parsing", "dev"]
+provides-extras = ["dev", "display", "full", "parsing", "templating"]
 
 [package.metadata.requires-dev]
 dev = [

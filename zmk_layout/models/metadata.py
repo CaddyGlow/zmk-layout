@@ -12,6 +12,7 @@ from pydantic import (
 from .base import LayoutBaseModel
 from .types import ConfigValue, LayerBindings
 
+
 if TYPE_CHECKING:
     from .behaviors import (
         CapsWordBehavior,

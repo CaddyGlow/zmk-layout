@@ -4,10 +4,12 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
+
 if TYPE_CHECKING:
     from ..providers import FileProvider, TemplateProvider
 
 from ..models import LayoutData
+
 
 # Module-level flag to control variable resolution
 _skip_variable_resolution = False

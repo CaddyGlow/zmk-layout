@@ -13,6 +13,7 @@ from .ast_nodes import (
 )
 from .tokenizer import Token, TokenType, tokenize_dt
 
+
 if TYPE_CHECKING:
     from zmk_layout.providers import LayoutLogger
 

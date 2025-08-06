@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Self
 
 from zmk_layout.models.core import LayoutBinding
 
+
 if TYPE_CHECKING:
     from zmk_layout.models.behaviors import ComboBehavior, MacroBehavior
     from zmk_layout.models.metadata import LayoutData

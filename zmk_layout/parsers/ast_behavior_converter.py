@@ -3,6 +3,7 @@
 # logging module not needed anymore since we don't use isEnabledFor
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from ..providers import LayoutLogger
 

@@ -9,6 +9,7 @@ from zmk_layout.models.behaviors import (
     TapDanceBehavior,
 )
 
+
 if TYPE_CHECKING:
     from zmk_layout.generators.zmk_generator import ZMKGenerator
     from zmk_layout.models.metadata import LayoutData

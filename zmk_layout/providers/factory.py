@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from .configuration import ConfigurationProvider, SystemBehavior
     from .file import FileProvider

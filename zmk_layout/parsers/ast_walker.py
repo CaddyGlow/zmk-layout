@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from .ast_nodes import DTNode, DTProperty, DTVisitor
 
+
 if TYPE_CHECKING:
     from zmk_layout.providers import LayoutLogger
 

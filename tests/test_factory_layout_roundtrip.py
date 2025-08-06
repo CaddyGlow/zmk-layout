@@ -29,6 +29,7 @@ from zmk_layout.parsers.zmk_keymap_parser import ZMKKeymapParser
 from zmk_layout.providers.configuration import ConfigurationProvider, SystemBehavior
 from zmk_layout.providers.factory import LayoutProviders
 
+
 sys.path.append(str(Path(__file__).parent.parent / "keyboards"))
 try:
     from glove80_profile import CompleteGlove80Profile, create_complete_glove80_profile
@@ -448,7 +449,7 @@ class TestFactoryRoundTripValidation:
             assert keymap_path.exists()
             keymap_content = keymap_path.read_text()
             assert "layer_Base" in keymap_content or "layer_base" in keymap_content
-            assert "layer_Lower" in keymap_content or "layer_lower" in keymap_content  
+            assert "layer_Lower" in keymap_content or "layer_lower" in keymap_content
             assert "layer_Magic" in keymap_content or "layer_magic" in keymap_content
 
             # Step 3: Parse keymap back to LayoutData using ZMKKeymapParser
@@ -458,7 +459,7 @@ class TestFactoryRoundTripValidation:
             from zmk_layout.parsers.zmk_keymap_parser import ParsingMode
             keymap_content = keymap_path.read_text()
             parse_result = parser.parse_keymap(keymap_path, mode=ParsingMode.FULL)
-            
+
             # Extract the actual LayoutData from the parse result
             if hasattr(parse_result, 'layout_data') and parse_result.layout_data is not None:
                 parsed_layout_data = parse_result.layout_data
@@ -471,7 +472,7 @@ class TestFactoryRoundTripValidation:
 
             # Step 5: Compare essential data (normalize for comparison)
             # Focus on core layout data that should survive roundtrip
-            
+
             # Handle keyboard field with fallback - parser defaults to 'unknown'
             if "keyboard" in roundtrip_json:
                 # Parser sets keyboard to 'unknown' when it can't determine from keymap
@@ -479,7 +480,7 @@ class TestFactoryRoundTripValidation:
             else:
                 # Parser might not preserve keyboard field, which is OK for the core test
                 print("Warning: 'keyboard' field not preserved in roundtrip")
-            
+
             assert roundtrip_json["layer_names"] == original_json["layer_names"]
             assert len(roundtrip_json["layers"]) == len(original_json["layers"])
 
@@ -517,7 +518,7 @@ class TestFactoryRoundTripValidation:
         from zmk_layout.parsers.zmk_keymap_parser import ParsingMode
         keymap_content = factory_keymap_path.read_text()
         parse_result = parser.parse_keymap(factory_keymap_path, mode=ParsingMode.FULL)
-        
+
         # Extract the actual LayoutData from the parse result
         if hasattr(parse_result, 'layout_data') and parse_result.layout_data is not None:
             original_layout_data = parse_result.layout_data

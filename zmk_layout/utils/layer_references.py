@@ -4,10 +4,12 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
+
 if TYPE_CHECKING:
     from ..providers import ConfigurationProvider, FileProvider, LayoutLogger
 
 from ..models import LayoutData
+
 
 T = TypeVar("T")
 
