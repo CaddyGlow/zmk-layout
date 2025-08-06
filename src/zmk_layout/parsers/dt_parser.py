@@ -1,5 +1,6 @@
 """Recursive descent parser for device tree source files."""
 
+import re
 from typing import TYPE_CHECKING
 
 from .ast_nodes import (
@@ -96,7 +97,7 @@ class DTParser:
             # Add safety counter to prevent infinite loops
             max_iterations = 1000  # Reasonable limit for root nodes
             iterations = 0
-            
+
             while not self._is_at_end():
                 iterations += 1
                 if iterations > max_iterations:
@@ -105,18 +106,22 @@ class DTParser:
                             "Infinite loop detected in parse_multiple main loop",
                             current_token=str(self.current_token),
                             position=self.pos,
-                            total_tokens=len(self.tokens)
+                            total_tokens=len(self.tokens),
                         )
                     # Add error and break to prevent infinite loop
-                    self.errors.append(DTParseError(
-                        "Parser exceeded maximum iterations - possible infinite loop",
-                        self._current_line(), self._current_column(), "parse_multiple"
-                    ))
+                    self.errors.append(
+                        DTParseError(
+                            "Parser exceeded maximum iterations - possible infinite loop",
+                            self._current_line(),
+                            self._current_column(),
+                            "parse_multiple",
+                        )
+                    )
                     break
-                    
+
                 # Store current position to detect if we're making progress
                 old_pos = self.pos
-                
+
                 # Skip any comments between root nodes
                 if self._consume_comments_and_preprocessor():
                     continue
@@ -128,14 +133,14 @@ class DTParser:
 
                 # Skip any trailing comments
                 self._consume_comments_and_preprocessor()
-                
+
                 # Safety check: if position hasn't advanced, force advance to prevent infinite loop
                 if self.pos == old_pos and not self._is_at_end():
                     if self.logger:
                         self.logger.error(
                             "Parser position didn't advance, forcing advance to prevent infinite loop",
                             current_token=str(self.current_token),
-                            position=self.pos
+                            position=self.pos,
                         )
                     self._advance()  # Force advance to prevent infinite loop
 
@@ -572,7 +577,7 @@ class DTParser:
         """
         consumed = False
         len(self.comments)
-        
+
         # Add safety counter to prevent infinite loops
         max_iterations = 10000  # Reasonable limit for preprocessor/comment chains
         iterations = 0
@@ -585,18 +590,20 @@ class DTParser:
                         "Infinite loop detected in _consume_comments_and_preprocessor",
                         current_token=str(self.current_token),
                         position=self.pos,
-                        total_tokens=len(self.tokens)
+                        total_tokens=len(self.tokens),
                     )
                 # Force break to prevent infinite loop
                 break
-                
+
             if self._match(TokenType.COMMENT):
                 if self.current_token is None:
                     break
                 comment_text = self.current_token.value
                 line = self._current_line()
                 column = self._current_column()
-                is_block = comment_text.startswith("/*")
+                # Remove bogus detection - use proper MULTI_LINE_COMMENT token from Lark
+                # For now, detect multi-line comments correctly using regex matching
+                is_block = bool(re.match(r"/\*(.|\n)*?\*/", comment_text, re.DOTALL))
                 comment = DTComment(comment_text, line, column, is_block)
                 self.comments.append(comment)
                 consumed = True
