@@ -29,7 +29,9 @@ class TokenType(Enum):
     AT = "AT"  # @
 
     # Special
-    COMMENT = "COMMENT"
+    COMMENT = "COMMENT"  # Generic comment (kept for backward compatibility)
+    SINGLE_LINE_COMMENT = "SINGLE_LINE_COMMENT"  # // comments
+    MULTI_LINE_COMMENT = "MULTI_LINE_COMMENT"    # /* */ comments
     PREPROCESSOR = "PREPROCESSOR"  # #include, #define, #ifdef, etc.
     NEWLINE = "NEWLINE"
     WHITESPACE = "WHITESPACE"
@@ -60,10 +62,10 @@ class DTTokenizer:
 
     # Token patterns
     PATTERNS = [
-        # Comments (must come before other patterns)
-        (TokenType.COMMENT, r"//.*?(?=\n|$)"),
+        # Comments (must come before other patterns) - now with specific types
+        (TokenType.SINGLE_LINE_COMMENT, r"//.*?(?=\n|$)"),
         (
-            TokenType.COMMENT,
+            TokenType.MULTI_LINE_COMMENT,
             r"/\*[\s\S]*?\*/",
         ),  # [\s\S] matches any character including newlines
         # Preprocessor directives (but not property names starting with #)

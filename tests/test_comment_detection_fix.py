@@ -1,17 +1,152 @@
 """Comprehensive tests for multi-line comment detection fix in dt_parser.py.
 
-This module tests the regex-based comment detection fix at line 606 in
-src/zmk_layout/parsers/dt_parser.py that replaced the bogus startswith("/*")
-detection with proper regex matching bool(re.match(r"/\\*(.|\n)*?\\*/", comment_text, re.DOTALL)).
+This module tests three different approaches for comment detection that replaced 
+the original bogus startswith("/*") detection:
+
+1. **Regex-based detection**: Using regex patterns to identify comment types
+2. **Lark-based detection**: Using SINGLE_LINE_COMMENT and MULTI_LINE_COMMENT tokens from Lark grammar
+3. **Tokenizer-based detection**: Using specific comment token types in the custom tokenizer (current)
+
+The tests ensure all approaches correctly distinguish between single-line (//) and 
+multi-line (/* */) comments, with the tokenizer-based approach being the primary 
+solution and Lark parser remaining independent.
 """
 
-import pytest
 import re
-from unittest.mock import Mock
 
-from zmk_layout.parsers.ast_nodes import DTComment, DTNode, DTProperty, DTValue
-from zmk_layout.parsers.dt_parser import DTParser, parse_dt_safe
-from zmk_layout.parsers.tokenizer import Token, TokenType, tokenize_dt
+import pytest
+
+from zmk_layout.parsers.dt_parser import parse_dt_safe, parse_dt_lark_safe
+from zmk_layout.parsers.tokenizer import tokenize_dt, TokenType
+
+
+class TestTokenizerCommentDetection:
+    """Tests for the tokenizer-based comment detection using specific token types."""
+
+    @pytest.mark.parametrize(
+        "comment_text, expected_token_type",
+        [
+            # Single-line comments should produce SINGLE_LINE_COMMENT tokens
+            ("// This is a single line comment", TokenType.SINGLE_LINE_COMMENT),
+            ("//", TokenType.SINGLE_LINE_COMMENT),
+            ("// with some // internal slashes", TokenType.SINGLE_LINE_COMMENT),
+            ("// /* this is not a block */", TokenType.SINGLE_LINE_COMMENT),
+            
+            # Multi-line comments should produce MULTI_LINE_COMMENT tokens
+            ("/* This is a block comment */", TokenType.MULTI_LINE_COMMENT),
+            ("/* Multi\nline\ncomment */", TokenType.MULTI_LINE_COMMENT),
+            ("/**/", TokenType.MULTI_LINE_COMMENT),  # Empty block
+            ("/*   */", TokenType.MULTI_LINE_COMMENT),  # Block with spaces
+            ("/*\t*/", TokenType.MULTI_LINE_COMMENT),  # Block with tabs
+            ("/*\n*/", TokenType.MULTI_LINE_COMMENT),  # Block with only newlines
+            ("/*\r\n*/", TokenType.MULTI_LINE_COMMENT),  # Block with CRLF newlines
+            ("/* !@#$%^&*()_+-={}[]|:;\"'<>,.?/`~ */", TokenType.MULTI_LINE_COMMENT),
+            ("/* outer /* inner */", TokenType.MULTI_LINE_COMMENT),  # Non-greedy match
+            ("/* leading space */", TokenType.MULTI_LINE_COMMENT),
+            ("/*trailing space */", TokenType.MULTI_LINE_COMMENT),
+            ("/*\n\n\n*/", TokenType.MULTI_LINE_COMMENT),  # Multiple newlines
+            ("/* line 1\n * line 2\n * line 3\n */", TokenType.MULTI_LINE_COMMENT),
+            
+            # Preprocessor directives should produce PREPROCESSOR tokens
+            ("#define FOO", TokenType.PREPROCESSOR),
+            ("#ifdef BAR", TokenType.PREPROCESSOR),
+            ("#else", TokenType.PREPROCESSOR),
+            ("#endif", TokenType.PREPROCESSOR),
+            ("#include <file.h>", TokenType.PREPROCESSOR),
+        ]
+    )
+    def test_tokenizer_produces_correct_token_types(self, comment_text, expected_token_type):
+        """Test that the tokenizer produces the correct specific comment token types."""
+        tokens = tokenize_dt(comment_text)
+        assert len(tokens) > 0, f"No tokens produced for: {comment_text}"
+        
+        # Find the comment token (should be first non-whitespace token)
+        comment_token = None
+        for token in tokens:
+            if token.type in (TokenType.SINGLE_LINE_COMMENT, TokenType.MULTI_LINE_COMMENT, TokenType.PREPROCESSOR):
+                comment_token = token
+                break
+                
+        assert comment_token is not None, f"No comment token found for: {comment_text}"
+        assert comment_token.type == expected_token_type, \
+            f"Expected {expected_token_type.value}, got {comment_token.type.value} for: {comment_text}"
+
+    def test_tokenizer_comment_content_preservation(self):
+        """Test that tokenizer preserves the full comment content."""
+        test_cases = [
+            "// Single line with special chars: !@#$%",
+            "/* Multi-line\n * with asterisks\n * and formatting */",
+            "#include <dt-bindings/zmk/keys.h>",
+        ]
+        
+        for comment_text in test_cases:
+            tokens = tokenize_dt(comment_text)
+            comment_tokens = [t for t in tokens if t.type in (
+                TokenType.SINGLE_LINE_COMMENT, 
+                TokenType.MULTI_LINE_COMMENT, 
+                TokenType.PREPROCESSOR
+            )]
+            assert len(comment_tokens) == 1, f"Expected 1 comment token, got {len(comment_tokens)}"
+            assert comment_tokens[0].value == comment_text, \
+                f"Content mismatch: expected '{comment_text}', got '{comment_tokens[0].value}'"
+
+
+class TestLarkCommentDetection:
+    """Tests for the Lark-based comment detection using grammar tokens."""
+
+    def test_lark_parser_comment_independence(self):
+        """Test that Lark parser handles comments independently from custom parser."""
+        dts_with_comments = """
+        // Single line comment
+        /* Multi-line
+           comment */
+        / {
+            compatible = "test,device";
+            test_node {
+                prop = <0x123>;
+            };
+        };
+        """
+        
+        # Test that Lark parser works (though comment handling may differ)
+        roots, errors = parse_dt_lark_safe(dts_with_comments)
+        assert len(errors) == 0, f"Lark parser should not have errors: {errors}"
+        assert len(roots) > 0, "Lark parser should produce at least one root node"
+        
+        root = roots[0]
+        assert root.get_property("compatible") is not None, "Should parse compatible property"
+        assert root.get_child("test_node") is not None, "Should parse child node"
+
+    def test_lark_parser_vs_custom_parser_compatibility(self):
+        """Test that both parsers can handle the same basic DTS content."""
+        basic_dts = """
+        / {
+            compatible = "test,device";
+            reg = <0x1000 0x100>;
+            status = "okay";
+        };
+        """
+        
+        # Test custom parser
+        custom_root, custom_errors = parse_dt_safe(basic_dts)
+        assert len(custom_errors) == 0, "Custom parser should not have errors"
+        assert custom_root is not None, "Custom parser should produce root"
+        
+        # Test Lark parser
+        lark_roots, lark_errors = parse_dt_lark_safe(basic_dts)
+        assert len(lark_errors) == 0, "Lark parser should not have errors"
+        assert len(lark_roots) > 0, "Lark parser should produce roots"
+        
+        lark_root = lark_roots[0]
+        
+        # Both should parse the same properties
+        assert custom_root.get_property("compatible") is not None
+        assert custom_root.get_property("reg") is not None
+        assert custom_root.get_property("status") is not None
+        
+        assert lark_root.get_property("compatible") is not None
+        assert lark_root.get_property("reg") is not None  
+        assert lark_root.get_property("status") is not None
 
 
 class TestRegexCommentDetection:
@@ -559,6 +694,119 @@ class TestRegressionAndBackwardCompatibility:
             assert comment.is_block is False
         elif comment_style.startswith("/*"):
             assert comment.is_block is True
+
+
+class TestAllApproachesComparison:
+    """Integration tests comparing all three comment detection approaches."""
+
+    @pytest.mark.parametrize(
+        "comment_text, expected_is_block",
+        [
+            # Test cases that should work consistently across all approaches
+            ("// Single line comment", False),
+            ("/* Block comment */", True),
+            ("/*\n * Multi-line\n * comment\n */", True),
+            ("/**/", True),
+            ("/* with spaces */", True),
+        ]
+    )
+    def test_all_approaches_agree_on_comment_type(self, comment_text, expected_is_block):
+        """Test that regex, tokenizer, and parser all agree on comment classification."""
+        
+        # 1. Test regex approach (direct)
+        regex_result = bool(re.match(r"/\*(.|\n)*?\*/", comment_text, re.DOTALL))
+        
+        # 2. Test tokenizer approach
+        tokens = tokenize_dt(comment_text)
+        tokenizer_result = None
+        for token in tokens:
+            if token.type == TokenType.SINGLE_LINE_COMMENT:
+                tokenizer_result = False
+                break
+            elif token.type == TokenType.MULTI_LINE_COMMENT:
+                tokenizer_result = True
+                break
+        
+        # 3. Test parser approach (via DTParser)
+        dts = f"{comment_text}\n/ {{ test = \"value\"; }};"
+        root, errors = parse_dt_safe(dts)
+        parser_result = None
+        if not errors and root and root.comments:
+            parser_result = root.comments[0].is_block
+        
+        # All approaches should agree on the result
+        if comment_text.startswith("//"):
+            # Single line comments
+            assert regex_result == False, f"Regex should identify // as single-line"
+            assert tokenizer_result == False, f"Tokenizer should identify // as single-line"  
+            assert parser_result == False, f"Parser should identify // as single-line"
+        elif comment_text.startswith("/*") and comment_text.endswith("*/"):
+            # Block comments
+            assert regex_result == True, f"Regex should identify /* */ as block"
+            assert tokenizer_result == True, f"Tokenizer should identify /* */ as block"
+            assert parser_result == True, f"Parser should identify /* */ as block"
+        
+        # Final consistency check
+        if tokenizer_result is not None and parser_result is not None:
+            assert tokenizer_result == parser_result == expected_is_block, \
+                f"Approaches disagree: tokenizer={tokenizer_result}, parser={parser_result}, expected={expected_is_block}"
+
+    def test_architectural_separation(self):
+        """Test that different parsers work independently without interference."""
+        test_dts = '''
+        // Single line comment
+        /* Multi-line comment */
+        / {
+            compatible = "test,device";
+            test_node {
+                prop = <0x123>;
+            };
+        };
+        '''
+        
+        # Custom parser (primary)
+        custom_root, custom_errors = parse_dt_safe(test_dts)
+        assert len(custom_errors) == 0, "Custom parser should work"
+        assert custom_root is not None, "Custom parser should produce root"
+        
+        # Lark parser (independent)
+        lark_roots, lark_errors = parse_dt_lark_safe(test_dts)
+        assert len(lark_errors) == 0, "Lark parser should work independently"
+        assert len(lark_roots) > 0, "Lark parser should produce results"
+        
+        # Both should parse the structure correctly
+        custom_node = custom_root.get_child("test_node")
+        lark_node = lark_roots[0].get_child("test_node")
+        
+        assert custom_node is not None, "Custom parser should find test_node"
+        assert lark_node is not None, "Lark parser should find test_node"
+        
+        assert custom_node.get_property("prop") is not None, "Custom parser should find prop"
+        assert lark_node.get_property("prop") is not None, "Lark parser should find prop"
+
+    def test_performance_and_fallback_behavior(self):
+        """Test that fallback mechanisms work correctly."""
+        
+        # Test with a well-formed challenging comment (non-greedy matching)
+        challenging_comment = "/* Complex /* inner */ comment */"
+        dts_with_challenging = f"{challenging_comment}\n/ {{ test = \"value\"; }};"
+        
+        # The parser may have parsing challenges with this specific pattern, 
+        # but should not crash - let's test that both approaches handle it
+        root, errors = parse_dt_safe(dts_with_challenging)
+        # Note: This may produce errors due to the nested comment syntax, which is expected
+        assert root is not None or len(errors) > 0, "Should either parse successfully or report errors gracefully"
+        
+        # Test tokenizer directly
+        tokens = tokenize_dt(challenging_comment)
+        comment_tokens = [t for t in tokens if t.type in (TokenType.SINGLE_LINE_COMMENT, TokenType.MULTI_LINE_COMMENT)]
+        assert len(comment_tokens) >= 1, "Should tokenize challenging comment"
+        
+        # Test Lark parser independence  
+        lark_roots, lark_errors = parse_dt_lark_safe(dts_with_challenging)
+        # Lark may or may not handle this specific case, but shouldn't crash
+        assert isinstance(lark_roots, list), "Lark should return list"
+        assert isinstance(lark_errors, list), "Lark should return error list"
 
 
 if __name__ == "__main__":

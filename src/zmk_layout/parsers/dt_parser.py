@@ -1,6 +1,5 @@
 """Recursive descent parser for device tree source files."""
 
-import re
 from typing import TYPE_CHECKING
 
 from .ast_nodes import (
@@ -582,7 +581,7 @@ class DTParser:
         max_iterations = 10000  # Reasonable limit for preprocessor/comment chains
         iterations = 0
 
-        while self._match(TokenType.COMMENT) or self._match(TokenType.PREPROCESSOR):
+        while self._match(TokenType.SINGLE_LINE_COMMENT) or self._match(TokenType.MULTI_LINE_COMMENT) or self._match(TokenType.COMMENT) or self._match(TokenType.PREPROCESSOR):
             iterations += 1
             if iterations > max_iterations:
                 if self.logger:
@@ -595,15 +594,53 @@ class DTParser:
                 # Force break to prevent infinite loop
                 break
 
-            if self._match(TokenType.COMMENT):
+            if self._match(TokenType.SINGLE_LINE_COMMENT):
                 if self.current_token is None:
                     break
                 comment_text = self.current_token.value
                 line = self._current_line()
                 column = self._current_column()
-                # Remove bogus detection - use proper MULTI_LINE_COMMENT token from Lark
-                # For now, detect multi-line comments correctly using regex matching
-                is_block = bool(re.match(r"/\*(.|\n)*?\*/", comment_text, re.DOTALL))
+                # Single line comment - is_block is False
+                comment = DTComment(comment_text, line, column, False)
+                self.comments.append(comment)
+                consumed = True
+                # Store current position to detect if _advance() actually moves forward
+                old_pos = self.pos
+                self._advance()
+                # Safety check: if _advance() didn't actually advance, force break
+                if self.pos == old_pos:
+                    if self.logger:
+                        self.logger.error("_advance() failed to advance position, breaking loop")
+                    break
+
+            elif self._match(TokenType.MULTI_LINE_COMMENT):
+                if self.current_token is None:
+                    break
+                comment_text = self.current_token.value
+                line = self._current_line()
+                column = self._current_column()
+                # Multi-line comment - is_block is True
+                comment = DTComment(comment_text, line, column, True)
+                self.comments.append(comment)
+                consumed = True
+                # Store current position to detect if _advance() actually moves forward
+                old_pos = self.pos
+                self._advance()
+                # Safety check: if _advance() didn't actually advance, force break
+                if self.pos == old_pos:
+                    if self.logger:
+                        self.logger.error("_advance() failed to advance position, breaking loop")
+                    break
+
+            elif self._match(TokenType.COMMENT):
+                # Fallback for generic COMMENT tokens (backward compatibility)
+                if self.current_token is None:
+                    break
+                comment_text = self.current_token.value
+                line = self._current_line()
+                column = self._current_column()
+                # Determine comment type by examining text content (fallback approach)
+                is_block = comment_text.startswith("/*") and comment_text.endswith("*/")
                 comment = DTComment(comment_text, line, column, is_block)
                 self.comments.append(comment)
                 consumed = True
@@ -845,6 +882,7 @@ class DTParser:
                 context_parts.append(token.raw)
 
         return " ".join(context_parts)
+
 
 
 def parse_dt(text: str) -> DTNode:
