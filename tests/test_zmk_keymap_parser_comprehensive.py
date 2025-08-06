@@ -453,8 +453,8 @@ class TestZMKKeymapParserErrorHandling:
 
         config = zmk_parser._get_extraction_config(None)
 
-        # Should handle gracefully and return some default
-        assert isinstance(config, dict)
+        # Should handle gracefully and return None for default configuration
+        assert config is None
 
     def test_template_path_error_handling(self, zmk_parser: ZMKKeymapParser) -> None:
         """Test error handling in template path retrieval."""

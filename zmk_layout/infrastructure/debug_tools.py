@@ -50,12 +50,17 @@ class ChainInspector:
         >>> inspector.print_chain_history()
     """
 
-    def __init__(self) -> None:
-        """Initialize chain inspector."""
+    def __init__(self, lightweight: bool = False) -> None:
+        """Initialize chain inspector.
+        
+        Args:
+            lightweight: Enable lightweight mode with minimal overhead
+        """
         self._history: list[BuilderState] = []
         self._performance_data: dict[str, list[float]] = {}
         self._error_states: list[tuple[BuilderState, Exception]] = []
         self._enabled = True
+        self._lightweight = lightweight
 
     def wrap(self, builder: Any) -> Any:
         """Wrap a builder for inspection.
@@ -71,7 +76,36 @@ class ChainInspector:
         """
         if not self._enabled:
             return builder
-
+        
+        # In lightweight mode, return a minimal wrapper
+        if self._lightweight:
+            return self._wrap_lightweight(builder)
+        
+        # Use full inspection mode
+        return self._wrap_full(builder)
+    def _wrap_lightweight(self, builder: Any) -> Any:
+        """Lightweight wrapper with minimal overhead."""
+        class LightweightWrapper:
+            def __init__(self, target: Any) -> None:
+                self._target = target
+            
+            def __getattr__(self, name: str) -> Any:
+                attr = getattr(self._target, name)
+                if not callable(attr):
+                    return attr
+                
+                def wrapped(*args: Any, **kwargs: Any) -> Any:
+                    result = attr(*args, **kwargs)
+                    # Only wrap if it's a builder
+                    if hasattr(result, "__class__") and "Builder" in result.__class__.__name__:
+                        return LightweightWrapper(result)
+                    return result
+                return wrapped
+        
+        return LightweightWrapper(builder)
+    
+    def _wrap_full(self, builder: Any) -> Any:
+        """Full wrapper with complete inspection."""
         class InspectedBuilder:
             """Wrapper that tracks builder calls."""
 
@@ -85,23 +119,18 @@ class ChainInspector:
                 state = BuilderState(
                     class_name=self._target.__class__.__name__,
                     attributes=self._get_attributes(),
-                    stack_trace=traceback.format_stack()[
-                        -5:-1
-                    ],  # Skip inspector frames
+                    stack_trace=[],  # Skip stack trace for performance
                 )
                 self._inspector._history.append(state)
 
             def _get_attributes(self) -> dict[str, Any]:
-                """Extract builder attributes."""
+                """Extract builder attributes efficiently."""
+                # Only capture public attributes from __dict__ for performance
                 attrs = {}
-                for attr_name in dir(self._target):
-                    if not attr_name.startswith("_") and not callable(
-                        getattr(self._target, attr_name)
-                    ):
-                        try:
-                            attrs[attr_name] = getattr(self._target, attr_name)
-                        except Exception:
-                            attrs[attr_name] = "<Unable to access>"
+                if hasattr(self._target, '__dict__'):
+                    for attr_name, attr_value in self._target.__dict__.items():
+                        if not attr_name.startswith("_"):
+                            attrs[attr_name] = attr_value
                 return attrs
 
             def __getattr__(self, name: str) -> Any:

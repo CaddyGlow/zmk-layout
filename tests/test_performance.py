@@ -1,13 +1,15 @@
 """Performance benchmarking tests to ensure <5% overhead."""
 
+import gc
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import Any, Callable
+
+import pytest
 
 from zmk_layout.models import HoldTapBehavior, LayoutBinding, LayoutData
 from zmk_layout.providers.factory import create_default_providers
 
-
+@pytest.mark.performance
 class TestPerformance:
     """Performance benchmarking tests."""
 
@@ -231,6 +233,7 @@ def benchmark_function(func: Callable[[], Any], iterations: int = 100) -> float:
     return (end_time - start_time) / iterations
 
 
+@pytest.mark.performance
 class TestBenchmarkUtility:
     """Test the benchmark utility function."""
 

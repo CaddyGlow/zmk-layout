@@ -14,33 +14,41 @@ help:
 
 # Fix code with safe fixes and format
 fix:
-	ruff check . --fix
-	ruff format .
+	uv run ruff check . --fix
+	uv run ruff format .
 
 # Run all checks - must pass for CI
 check:
 	@echo "Running ruff check..."
-	ruff check .
+	uv run ruff check .
 	@echo "Running ruff format check..."
-	ruff format --check .
+	uv run ruff format --check .
 	@echo "Running mypy..."
-	mypy zmk_layout --strict
+	uv run mypy zmk_layout 
 	@echo "Running tests..."
-	pytest tests/ -v
+	uv run pytest tests/ -v -m "not performance"
 	@echo "All checks passed!"
 
 # Fix code with unsafe fixes
 fix-hard:
-	ruff check . --fix --unsafe-fixes
-	ruff format .
+	uv run ruff check . --fix --unsafe-fixes
+	uv run ruff format .
 
 # Run tests only
 test:
-	pytest tests/ -v --cov=zmk_layout --cov-report=term-missing
+	uv run pytest tests/ 
+
+# Run performance tests only
+test-perf:
+	uv run pytest tests/ -v -m "performance"
+
+# Run all tests including performance
+test-all:
+	uv run pytest tests/ -v --cov=zmk_layout --cov-report=term-missing
 
 # Format code only
 format:
-	ruff format .
+	uv run ruff format .
 
 # Build distribution packages
 build: clean

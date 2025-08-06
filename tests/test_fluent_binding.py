@@ -1,4 +1,6 @@
-"""Tests for LayoutBinding fluent API and builder."""
+"""Test suite for fluent binding builders."""
+
+import pytest
 
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -325,6 +327,7 @@ class TestFluentAPIEquivalence:
         assert traditional.model_dump() == fluent.model_dump()
 
 
+@pytest.mark.performance
 class TestPerformance:
     """Performance tests for fluent API."""
 

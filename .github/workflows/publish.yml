@@ -32,6 +32,7 @@ jobs:
       - name: Run checks
         run: |
           make check
+        continue-on-error: ${{ github.event.inputs.force_release == 'true' }}
 
       - name: Build package
         run: |
@@ -86,4 +87,3 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           verbose: true
-

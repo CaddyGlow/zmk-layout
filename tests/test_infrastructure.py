@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 import json
 import os
 import tempfile
@@ -480,6 +482,7 @@ class TestPerformanceOptimizations:
         assert value2 == 42
         assert compute_count == 1  # Not incremented
 
+    @pytest.mark.performance
     def test_performance_monitor(self) -> None:
         """Test performance monitoring."""
         monitor = PerformanceMonitor()

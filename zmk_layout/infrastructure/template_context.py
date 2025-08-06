@@ -65,10 +65,7 @@ class TemplateContext(BaseModel):
     # Feature flags
     features: dict[str, bool] = Field(default_factory=dict)
 
-    class Config:
-        """Pydantic configuration."""
-
-        arbitrary_types_allowed = True
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class TemplateContextBuilder:

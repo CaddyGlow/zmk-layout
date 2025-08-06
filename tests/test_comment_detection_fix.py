@@ -827,6 +827,7 @@ class TestAllApproachesComparison:
             "Lark parser should find prop"
         )
 
+    @pytest.mark.performance
     def test_performance_and_fallback_behavior(self) -> None:
         """Test that fallback mechanisms work correctly."""
 

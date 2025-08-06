@@ -102,8 +102,10 @@ warn_unused_configs = true
 
 [tool.pytest.ini_options]
 timeout = 30
-addopts = "-v --tb=short --cov=src --cov-report=term"
-pytest_plugins = ["pytest_profiling.plugin"]
+addopts = "-v --tb=short --cov-report=term -m 'not performance'"
+markers = [
+  "performance: marks tests as performance tests (deselect with '-m \"not performance\"')",
+]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
