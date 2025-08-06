@@ -9,7 +9,6 @@ from zmk_layout.validation import (
     ValidationPipeline,
     ValidationState,
     ValidationSummary,
-    ValidationWarning,
 )
 
 
@@ -29,7 +28,6 @@ class TestValidationPipeline:
         """Test validation of invalid binding syntax."""
         layout = Layout.create_empty("test", "Test Layout")
         # Manually create an invalid binding
-        from zmk_layout.models.core import LayoutBinding
         invalid_binding = LayoutBinding(value="kp", params=[])  # Missing & prefix
         layer = layout.layers.add("base")
         layer.bindings.append(invalid_binding)
@@ -41,6 +39,7 @@ class TestValidationPipeline:
         errors = result.collect_errors()
         assert len(errors) >= 1  # May have both syntax and unknown behavior errors
         assert "Invalid binding syntax" in errors[0].message
+        assert errors[0].context is not None
         assert errors[0].context["layer"] == "base"
         assert errors[0].context["position"] == 0
 
@@ -70,6 +69,7 @@ class TestValidationPipeline:
         errors = result.collect_errors()
         assert len(errors) >= 1  # May have both syntax and unknown behavior errors
         assert "Layer reference out of bounds" in errors[0].message
+        assert errors[0].context is not None
         assert errors[0].context["reference"] == 5
 
     def test_validate_layer_references_valid(self) -> None:
@@ -125,6 +125,7 @@ class TestValidationPipeline:
         warnings = result.collect_warnings()
         assert len(warnings) == 1
         assert "more than recommended" in warnings[0].message
+        assert warnings[0].context is not None
         assert warnings[0].context["count"] == 45
 
     def test_validate_key_positions_error(self) -> None:
@@ -158,6 +159,7 @@ class TestValidationPipeline:
         warnings = result.collect_warnings()
         assert len(warnings) == 1
         assert "custom behavior references" in warnings[0].message
+        assert warnings[0].context is not None
         assert "&hm_l" in warnings[0].context["behaviors"]
 
     def test_immutability(self) -> None:
@@ -183,7 +185,6 @@ class TestValidationPipeline:
         layout = Layout.create_empty("test", "Test Layout")
         layer = layout.layers.add("base")
         # Manually create an invalid binding
-        from zmk_layout.models.core import LayoutBinding
         layer.bindings.append(LayoutBinding(value="kp", params=[]))  # Invalid syntax
         layer.set(1, "&mo 5")  # Invalid layer reference
         
@@ -205,7 +206,6 @@ class TestValidationPipeline:
         layout = Layout.create_empty("test", "Test Layout")
         layer = layout.layers.add("base")
         # Manually create an invalid binding
-        from zmk_layout.models.core import LayoutBinding
         layer.bindings.append(LayoutBinding(value="invalid", params=[]))  # Error
         
         # Add many keys for warning
@@ -254,7 +254,6 @@ class TestValidationPipeline:
     def test_error_context(self) -> None:
         """Test that errors include helpful context."""
         layout = Layout.create_empty("test", "Test Layout")
-        from zmk_layout.models.core import LayoutBinding
         layer = layout.layers.add("base")
         layer.bindings.append(LayoutBinding(value="invalid", params=[]))
         
@@ -293,7 +292,6 @@ class TestValidationPipeline:
     def test_complex_validation_scenario(self) -> None:
         """Test a complex validation scenario with multiple issues."""
         layout = Layout.create_empty("test", "Test Layout")
-        from zmk_layout.models.core import LayoutBinding
         
         # Layer 1: base
         base = layout.layers.add("base")

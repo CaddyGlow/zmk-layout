@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -20,7 +20,7 @@ from zmk_layout.generators.config_generator import (
     get_required_includes_for_layout,
 )
 from zmk_layout.models import LayoutData
-from zmk_layout.models.metadata import ConfigParameter, LayoutResult
+from zmk_layout.models.metadata import ConfigParameter
 
 
 class MockConfigOption:
@@ -56,7 +56,7 @@ def mock_file_provider():
 def mock_template_adapter():
     """A mock template adapter."""
     adapter = MagicMock()
-    adapter.render_string.side_effect = lambda t, c: t.format(**{k: v for k, v in c.items() if isinstance(v, (str, int))})
+    adapter.render_string.side_effect = lambda t, c: t.format(**{k: v for k, v in c.items() if isinstance(v, str | int)})
     adapter.render_template.side_effect = lambda t, c: f"TPL:{t}"
     return adapter
 
@@ -149,7 +149,7 @@ class TestGenerateConfigFile:
         """Test handling of file write errors."""
         # Arrange
         output_path = Path("/test/zmk.conf")
-        mock_file_provider.write_text.side_effect = IOError("Permission denied")
+        mock_file_provider.write_text.side_effect = OSError("Permission denied")
 
         # Act & Assert
         with pytest.raises(IOError, match="Permission denied"):
@@ -265,7 +265,7 @@ class TestBuildTemplateContext:
         behavior_manager.get_behavior_registry.return_value = {"test": "behavior"}
 
         # Act
-        context = build_template_context(
+        build_template_context(
             base_keymap_data, base_profile, dtsi_generator, behavior_manager
         )
 
@@ -755,7 +755,7 @@ class TestGenerateConfigFileWithResult:
         """Test exception handling during generation."""
         # Arrange
         output_path = Path("/test/zmk.conf")
-        mock_generate.side_effect = IOError("Disk full")
+        mock_generate.side_effect = OSError("Disk full")
         dtsi_generator = MagicMock()
 
         # Act

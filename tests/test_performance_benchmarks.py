@@ -3,7 +3,6 @@
 import gc
 import time
 import tracemalloc
-from typing import Any
 
 import psutil
 import pytest
@@ -25,14 +24,14 @@ class TestPerformanceBenchmarks:
         gc.collect()
         start_time = time.perf_counter()
         for _ in range(iterations):
-            binding = LayoutBinding.from_str("&kp LC(LS(A))")
+            LayoutBinding.from_str("&kp LC(LS(A))")
         traditional_time = time.perf_counter() - start_time
         
         # Fluent approach
         gc.collect()
         start_time = time.perf_counter()
         for _ in range(iterations):
-            binding = (
+            (
                 LayoutBindingBuilder("&kp")
                 .modifier("LC")
                 .modifier("LS")
@@ -83,8 +82,8 @@ class TestPerformanceBenchmarks:
         
         validation_time = time.perf_counter() - start_time
         
-        print(f"\n=== Validation Pipeline Performance ===")
-        print(f"Layout size: 50 layers × 100 keys = 5000 bindings")
+        print("\n=== Validation Pipeline Performance ===")
+        print("Layout size: 50 layers × 100 keys = 5000 bindings")
         print(f"Validation time: {validation_time:.3f}s")
         print(f"Per-binding time: {validation_time/5000*1000:.3f}ms")
         print(f"Errors found: {len(result.collect_errors())}")
@@ -123,7 +122,7 @@ class TestPerformanceBenchmarks:
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         
-        print(f"\n=== Memory Usage - Small Layout (50 bindings) ===")
+        print("\n=== Memory Usage - Small Layout (50 bindings) ===")
         print(f"Baseline memory: {baseline_memory:.2f} MB")
         print(f"After creation:  {after_memory:.2f} MB")
         print(f"Memory used:     {memory_used:.2f} MB")
@@ -164,7 +163,7 @@ class TestPerformanceBenchmarks:
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         
-        print(f"\n=== Memory Usage - Medium Layout (200 bindings) ===")
+        print("\n=== Memory Usage - Medium Layout (200 bindings) ===")
         print(f"Baseline memory: {baseline_memory:.2f} MB")
         print(f"After creation:  {after_memory:.2f} MB")
         print(f"Memory used:     {memory_used:.2f} MB")
@@ -193,7 +192,7 @@ class TestPerformanceBenchmarks:
         
         # Run validation on large layout
         validator = ValidationPipeline(layout)
-        result = (
+        (
             validator
             .validate_bindings()
             .validate_layer_references()
@@ -208,7 +207,7 @@ class TestPerformanceBenchmarks:
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         
-        print(f"\n=== Memory Usage - Large Layout (1000 bindings) ===")
+        print("\n=== Memory Usage - Large Layout (1000 bindings) ===")
         print(f"Baseline memory: {baseline_memory:.2f} MB")
         print(f"After creation:  {after_memory:.2f} MB")
         print(f"Memory used:     {memory_used:.2f} MB")
@@ -227,10 +226,10 @@ class TestPerformanceBenchmarks:
         # First run - populate cache
         gc.collect()
         start_time = time.perf_counter()
-        for i in range(iterations):
+        for _i in range(iterations):
             # Use same pattern repeatedly
             builder = LayoutBindingBuilder("&kp").modifier("LC").key("A")
-            binding = builder.build()
+            builder.build()
         first_run_time = time.perf_counter() - start_time
         
         # Check cache size
@@ -239,9 +238,9 @@ class TestPerformanceBenchmarks:
         # Second run - should use cache
         gc.collect()
         start_time = time.perf_counter()
-        for i in range(iterations):
+        for _i in range(iterations):
             builder = LayoutBindingBuilder("&kp").modifier("LC").key("A")
-            binding = builder.build()
+            builder.build()
         cached_run_time = time.perf_counter() - start_time
         
         # Calculate speedup
@@ -306,15 +305,15 @@ class TestPerformanceBenchmarks:
             start_time = time.perf_counter()
             
             validator = ValidationPipeline(layout)
-            result = validator.validate_bindings().validate_layer_references()
+            validator.validate_bindings().validate_layer_references()
             
             elapsed = time.perf_counter() - start_time
             times.append(elapsed)
         
-        print(f"\n=== Validation Pipeline Scaling ===")
+        print("\n=== Validation Pipeline Scaling ===")
         print(f"{'Size':<10} {'Time (ms)':<12} {'Per-binding (μs)':<15}")
         print("-" * 40)
-        for size, elapsed in zip(sizes, times):
+        for size, elapsed in zip(sizes, times, strict=False):
             per_binding = (elapsed / size) * 1_000_000  # microseconds
             print(f"{size:<10} {elapsed*1000:<12.2f} {per_binding:<15.2f}")
         
@@ -339,7 +338,7 @@ class TestPerformanceBenchmarks:
             gc.collect()
             start_time = time.perf_counter()
             for _ in range(iterations):
-                binding = LayoutBindingBuilder("&kp").key("A").build()
+                LayoutBindingBuilder("&kp").key("A").build()
             elapsed = time.perf_counter() - start_time
             
         elif complexity == "moderate":
@@ -347,7 +346,7 @@ class TestPerformanceBenchmarks:
             gc.collect()
             start_time = time.perf_counter()
             for _ in range(iterations):
-                binding = LayoutBindingBuilder("&kp").modifier("LC").key("A").build()
+                LayoutBindingBuilder("&kp").modifier("LC").key("A").build()
             elapsed = time.perf_counter() - start_time
             
         else:  # complex
@@ -355,7 +354,7 @@ class TestPerformanceBenchmarks:
             gc.collect()
             start_time = time.perf_counter()
             for _ in range(iterations):
-                binding = (
+                (
                     LayoutBindingBuilder("&kp")
                     .modifier("LC")
                     .modifier("LS")

@@ -64,4 +64,5 @@ dev = [
   "pytest-coverage>=0.0",
   "pytest-timeout>=2.4.0",
   "ruff>=0.12.7",
+  "types-psutil>=7.0.0.20250801",
 ]
