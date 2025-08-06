@@ -382,8 +382,8 @@ class ValidationPipeline:
         new_warnings: list[ValidationWarning] = []
 
         # Check for hold-tap behaviors and their timing
-        if hasattr(self._layout, "behaviors") and self._layout.behaviors:
-            for behavior in self._layout.behaviors.all():
+        if hasattr(self._layout, "hold_taps") and self._layout.hold_taps:
+            for behavior in self._layout.hold_taps:
                 if hasattr(behavior, "tapping_term_ms") and behavior.tapping_term_ms:
                     term = behavior.tapping_term_ms
                     if term < recommended_min:
