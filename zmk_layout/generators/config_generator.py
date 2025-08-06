@@ -2,7 +2,6 @@
 
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 
@@ -10,8 +9,6 @@ if TYPE_CHECKING:
     from typing import Any
 
 from zmk_layout.models import LayoutData
-from zmk_layout.models.metadata import LayoutResult
-from zmk_layout.providers import FileProvider
 
 
 # Type aliases for placeholder types
@@ -31,27 +28,20 @@ def get_required_includes_for_layout(
 
 
 def generate_config_file(
-    file_adapter: FileProvider,
     profile: "KeyboardProfile",
     keymap_data: LayoutData,
-    output_path: Path,
-) -> dict[str, str | int]:
-    """Generate configuration file and return settings.
+) -> tuple[str, dict[str, str | int]]:
+    """Generate configuration file content and return settings.
 
     Args:
-        file_adapter: File adapter for writing files
         profile: Keyboard profile with configuration
         keymap_data: Layout data for configuration generation
-        output_path: Path to write the configuration file
 
     Returns:
-        Dictionary of kconfig settings
+        Tuple of (config_content, kconfig_settings)
     """
     # Generate the config using the function
     conf_content, kconfig_settings = generate_kconfig_conf(keymap_data, profile)
-
-    # Write the config file
-    file_adapter.write_text(output_path, conf_content)
 
     if kconfig_settings:
         options_summary = " | ".join(f"{k}={v}" for k, v in kconfig_settings.items())
@@ -61,7 +51,7 @@ def generate_config_file(
             options_summary,
         )
 
-    return kconfig_settings
+    return conf_content, kconfig_settings
 
 
 def build_template_context(
@@ -269,24 +259,23 @@ def generate_kconfig_conf(
 
 
 def generate_keymap_file(
-    file_adapter: FileProvider,
     template_adapter: Any,
     dtsi_generator: "ZmkFileContentGenerator",
     keymap_data: LayoutData,
     profile: "KeyboardProfile",
-    output_path: Path,
     behavior_manager: "BehaviorManagementService | None" = None,
-) -> None:
-    """Generate keymap file.
+) -> str:
+    """Generate keymap file content.
 
     Args:
-        file_adapter: File adapter for writing files
         template_adapter: Template adapter for rendering
         dtsi_generator: DTSI generator for creating template content
         keymap_data: Layout data for keymap generation
         profile: Keyboard profile with configuration
-        output_path: Path to write the keymap file
         behavior_manager: Optional behavior management service
+
+    Returns:
+        Generated keymap content as string
 
     Raises:
         LayoutError: If keymap generation fails
@@ -318,14 +307,14 @@ def generate_keymap_file(
             keymap_content = template_adapter.render_string(inline_template, context)
         elif template_file:
             # Resolve template file path
-            from zmk_layout.utils import resolve_template_file_path
+            from zmk_layout.generators.core_operations import resolve_template_file_path
 
             template_path = resolve_template_file_path(
                 profile.keyboard_name, template_file
             )
             keymap_content = template_adapter.render_template(template_path, context)
 
-    file_adapter.write_text(output_path, keymap_content)
+    return keymap_content
 
 
 def convert_keymap_section_from_dict(keymap_dict: dict[str, Any]) -> dict[str, Any]:
@@ -355,42 +344,25 @@ def generate_keymap_file_with_result(
     profile: "KeyboardProfile",
     keymap_data: LayoutData,
     components: dict[str, Any],
-    output_path: Path,
-    behavior_formatter: Any,
     template_adapter: Any,
-    file_adapter: FileProvider,
-    force: bool = False,
-) -> "LayoutResult":
-    """Generate keymap file and return result object for LayoutService.
+) -> str:
+    """Generate keymap file content and return as string.
 
-    This is a wrapper function that matches the signature expected by LayoutService
-    and returns a LayoutResult object instead of void.
+    This function generates keymap content without any file I/O operations.
 
     Args:
         profile: Keyboard profile configuration
         keymap_data: Layout data for keymap generation
         components: Processed component data (unused but kept for compatibility)
-        output_path: Path to write the keymap file
-        behavior_formatter: Behavior formatter (unused but kept for compatibility)
         template_adapter: Template adapter for rendering
-        file_adapter: File adapter for writing files
-        force: Whether to overwrite existing files
 
     Returns:
-        LayoutResult with generation status
+        Generated keymap content as string
 
     Raises:
-        LayoutError: If keymap generation fails
+        Exception: If keymap generation fails
     """
-    result = LayoutResult(success=False)
-
     try:
-        # Check if file exists and force flag
-        if file_adapter.exists(output_path) and not force:
-            error_msg = f"Keymap file already exists: {output_path}"
-            result.add_error(error_msg)
-            return result
-
         # Create stub dtsi_generator and behavior components
         class StubDtsiGenerator:
             def __init__(self) -> None:
@@ -399,85 +371,52 @@ def generate_keymap_file_with_result(
         dtsi_generator = StubDtsiGenerator()
 
         # Use the existing generate_keymap_file function
-        generate_keymap_file(
-            file_adapter=file_adapter,
+        keymap_content = generate_keymap_file(
             template_adapter=template_adapter,
             dtsi_generator=dtsi_generator,
             keymap_data=keymap_data,
             profile=profile,
-            output_path=output_path,
             behavior_manager=None,  # Let it create its own
         )
 
-        result.success = True
-        result.keymap_path = str(output_path)
-        result.add_message(f"Generated keymap file: {output_path}")
-
-        return result
+        return keymap_content
 
     except Exception as e:
         exc_info = logger.isEnabledFor(logging.DEBUG)
         logger.error("Keymap generation failed: %s", e, exc_info=exc_info)
-        result.add_error(f"Keymap generation failed: {e}")
-        return result
+        raise
 
 
 def generate_config_file_with_result(
     profile: "KeyboardProfile",
     keymap_data: LayoutData,
     components: dict[str, Any],
-    output_path: Path,
-    dtsi_generator: Any,
-    file_adapter: FileProvider,
-    force: bool = False,
-) -> "LayoutResult":
-    """Generate config file and return result object for LayoutService.
+) -> tuple[str, dict[str, str | int]]:
+    """Generate config file content and return as string with settings.
 
-    This is a wrapper function that matches the signature expected by LayoutService
-    and returns a LayoutResult object instead of a simple dictionary.
+    This function generates config content without any file I/O operations.
 
     Args:
         profile: Keyboard profile configuration
         keymap_data: Layout data for configuration generation
         components: Processed component data (unused but kept for compatibility)
-        output_path: Path to write the configuration file
-        dtsi_generator: DTSI generator (unused but kept for compatibility)
-        file_adapter: File adapter for writing files
-        force: Whether to overwrite existing files
 
     Returns:
-        LayoutResult with generation status
+        Tuple of (config_content, kconfig_settings)
 
     Raises:
-        LayoutError: If config generation fails
+        Exception: If config generation fails
     """
-    result = LayoutResult(success=False)
-
     try:
-        # Check if file exists and force flag
-        if file_adapter.exists(output_path) and not force:
-            error_msg = f"Config file already exists: {output_path}"
-            result.add_error(error_msg)
-            return result
-
         # Use the existing generate_config_file function
-        kconfig_settings = generate_config_file(
-            file_adapter=file_adapter,
+        config_content, kconfig_settings = generate_config_file(
             profile=profile,
             keymap_data=keymap_data,
-            output_path=output_path,
         )
 
-        result.success = True
-        result.conf_path = str(output_path)
-        result.add_message(f"Generated config file: {output_path}")
-        if kconfig_settings:
-            result.add_message(f"Applied {len(kconfig_settings)} configuration options")
-
-        return result
+        return config_content, kconfig_settings
 
     except Exception as e:
         exc_info = logger.isEnabledFor(logging.DEBUG)
         logger.error("Config generation failed: %s", e, exc_info=exc_info)
-        result.add_error(f"Config generation failed: {e}")
-        return result
+        raise

@@ -3,45 +3,19 @@
 Integration Patterns for zmk-layout Library
 
 This example shows how to integrate the zmk-layout library into larger applications,
-work with custom providers, and handle advanced use cases.
+work with custom providers, and handle advanced use cases using the new data-only API.
 """
 
+import json
 from pathlib import Path
 
 from zmk_layout import Layout
 from zmk_layout.providers import create_default_providers
+from zmk_layout.utils.json_operations import parse_json_data, serialize_json_data
 
 
-class CustomFileProvider:
-    """Example custom file provider for special file handling."""
-
-    def __init__(self, base_path: str = "/tmp"):
-        self.base_path = Path(base_path)
-        self.base_path.mkdir(exist_ok=True)
-
-    def read_text(self, file_path: str) -> str:
-        """Read text file with custom logging."""
-        path = self.base_path / file_path
-        print(f"[CustomFileProvider] Reading: {path}")
-        return path.read_text(encoding="utf-8")
-
-    def write_text(self, file_path: str, content: str) -> None:
-        """Write text file with custom logging."""
-        path = self.base_path / file_path
-        print(f"[CustomFileProvider] Writing: {path}")
-        path.write_text(content, encoding="utf-8")
-
-    def exists(self, file_path: str) -> bool:
-        """Check if file exists."""
-        return (self.base_path / file_path).exists()
-
-    def is_file(self, file_path: str) -> bool:
-        """Check if path is a file."""
-        return (self.base_path / file_path).is_file()
-
-    def mkdir(self, dir_path: str) -> None:
-        """Create directory."""
-        (self.base_path / dir_path).mkdir(parents=True, exist_ok=True)
+# Custom file operations now handled directly through pathlib.Path
+# No need for a separate file provider class
 
 
 class CustomLogger:
@@ -77,7 +51,7 @@ def example_1_custom_providers():
 
     # Create custom providers
     custom_providers = create_default_providers()
-    custom_providers.file = CustomFileProvider("/tmp/zmk_custom")
+    # File operations now handled directly by the library
     custom_providers.logger = CustomLogger("CustomZMK")
 
     # Use layout with custom providers
@@ -94,7 +68,10 @@ def example_1_custom_providers():
     layout.layers.get("base").set(0, "&kp Q").set(1, "&kp W")
 
     # Save using custom file provider
-    layout.save("custom_layout.json")
+    # Save using data-only API
+    layout_data = layout.to_dict()
+    json_content = serialize_json_data(layout_data, indent=2)
+    Path("custom_layout.json").write_text(json_content)
 
     print("✓ Custom providers working correctly!")
     return layout
@@ -132,7 +109,10 @@ def example_2_batch_layout_processing():
     # Batch save all layouts
     print("\nSaving all layouts...")
     for keyboard, layout in layouts.items():
-        layout.save(f"/tmp/{keyboard}_batch_layout.json")
+        # Save using data-only API
+        layout_data = layout.to_dict()
+        json_content = serialize_json_data(layout_data, indent=2)
+        Path(f"/tmp/{keyboard}_batch_layout.json").write_text(json_content)
 
     # Batch statistics
     print("\nBatch Statistics:")
@@ -326,7 +306,10 @@ def example_4_layout_templating():
         templated_layouts[keyboard] = layout
 
         # Save the templated layout
-        layout.save(f"/tmp/{keyboard}_templated.json")
+        # Save using data-only API
+        layout_data = layout.to_dict()
+        json_content = serialize_json_data(layout_data, indent=2)
+        Path(f"/tmp/{keyboard}_templated.json").write_text(json_content)
 
     # Show template results
     print("\nTemplate Results:")

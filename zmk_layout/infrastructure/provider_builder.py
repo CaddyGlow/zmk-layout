@@ -271,8 +271,7 @@ class ProviderBuilder:
             >>> builder = builder.validate()
         """
         # Validate required providers for certain operations
-        if self._config.template_adapter and not self._config.file_adapter:
-            print("Warning: Template adapter configured without file adapter")
+        # Note: File operations now handled directly by Path objects
 
         if self._config.performance_tracking and not self._config.logger:
             print("Warning: Performance tracking enabled without logger")

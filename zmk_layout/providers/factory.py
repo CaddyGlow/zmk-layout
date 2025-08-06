@@ -9,12 +9,10 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .configuration import ConfigurationProvider, SystemBehavior
-    from .file import FileProvider
     from .logger import LayoutLogger
     from .template import TemplateProvider
 else:
     from .configuration import ConfigurationProvider
-    from .file import FileProvider
     from .logger import LayoutLogger
     from .template import TemplateProvider
 
@@ -30,7 +28,6 @@ class LayoutProviders:
     configuration: ConfigurationProvider
     template: TemplateProvider
     logger: LayoutLogger
-    file: FileProvider
 
 
 class DefaultLogger:
@@ -75,29 +72,6 @@ class DefaultLogger:
     ) -> None:
         extra: dict[str, str | int | float | bool | None] = kwargs
         self._logger.exception(message, extra=extra)
-
-
-class DefaultFileProvider:
-    """Default file provider implementation using pathlib."""
-
-    def read_text(self, path: Path | str, encoding: str = "utf-8") -> str:
-        return Path(path).read_text(encoding=encoding)
-
-    def write_text(
-        self, path: Path | str, content: str, encoding: str = "utf-8"
-    ) -> None:
-        Path(path).write_text(content, encoding=encoding)
-
-    def exists(self, path: Path | str) -> bool:
-        return Path(path).exists()
-
-    def is_file(self, path: Path | str) -> bool:
-        return Path(path).is_file()
-
-    def mkdir(
-        self, path: Path | str, parents: bool = False, exist_ok: bool = False
-    ) -> None:
-        Path(path).mkdir(parents=parents, exist_ok=exist_ok)
 
 
 class DefaultTemplateProvider:
@@ -176,5 +150,16 @@ def create_default_providers() -> LayoutProviders:
         configuration=DefaultConfigurationProvider(),
         template=DefaultTemplateProvider(),
         logger=DefaultLogger(),
-        file=DefaultFileProvider(),
     )
+
+
+def create_data_only_providers() -> LayoutProviders:
+    """Create providers optimized for data-only operations.
+
+    These are the same as default providers but with the understanding
+    that they won't perform any file I/O operations.
+
+    Returns:
+        LayoutProviders suitable for data-only operations
+    """
+    return create_default_providers()

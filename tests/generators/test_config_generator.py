@@ -35,22 +35,7 @@ class MockConfigOption:
 # ConfigParameter removed - using ConfigParameter directly
 
 
-@pytest.fixture
-def mock_file_provider() -> MagicMock:
-    """A mock FileProvider that uses an in-memory dict as a filesystem."""
-    fs = {}
-
-    def write_text(path: Any, content: str) -> None:
-        fs[str(path)] = content
-
-    def exists(path: Any) -> bool:
-        return str(path) in fs
-
-    provider = MagicMock()
-    provider.write_text.side_effect = write_text
-    provider.exists.side_effect = exists
-    provider.fs = fs  # Expose for assertions
-    return provider
+# FileProvider functionality removed - tests now use real Path operations
 
 
 @pytest.fixture
@@ -113,13 +98,11 @@ class TestGenerateConfigFile:
 
     def test_successful_generation(
         self,
-        mock_file_provider: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test successful config file generation."""
         # Arrange
-        output_path = Path("/test/zmk.conf")
         base_keymap_data.config_parameters = [
             ConfigParameter(paramName="IDLE_TIMEOUT", value=60000)
         ]
@@ -128,64 +111,48 @@ class TestGenerateConfigFile:
         }
 
         # Act
-        settings = generate_config_file(
-            mock_file_provider, base_profile, base_keymap_data, output_path
-        )
+        content, settings = generate_config_file(base_profile, base_keymap_data)
 
         # Assert
-        assert str(output_path) in mock_file_provider.fs
         assert settings == {"CONFIG_ZMK_IDLE_TIMEOUT": 60000}
-        content = mock_file_provider.fs[str(output_path)]
         assert "CONFIG_ZMK_IDLE_TIMEOUT=60000" in content
 
     def test_empty_config_parameters(
         self,
-        mock_file_provider: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test generation with no config parameters."""
-        # Arrange
-        output_path = Path("/test/zmk.conf")
-
         # Act
-        settings = generate_config_file(
-            mock_file_provider, base_profile, base_keymap_data, output_path
-        )
+        content, settings = generate_config_file(base_profile, base_keymap_data)
 
         # Assert
-        assert str(output_path) in mock_file_provider.fs
         assert settings == {}
-        content = mock_file_provider.fs[str(output_path)]
         assert "# Generated ZMK configuration" in content
 
     def test_file_write_error(
         self,
-        mock_file_provider: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
-        """Test handling of file write errors."""
-        # Arrange
-        output_path = Path("/test/zmk.conf")
-        mock_file_provider.write_text.side_effect = OSError("Permission denied")
+        """Test that function returns content (no file I/O in this function)."""
+        # This test is no longer relevant since generate_config_file doesn't do file I/O
+        # It just returns content - file operations are handled elsewhere
+        # Act
+        content, settings = generate_config_file(base_profile, base_keymap_data)
 
-        # Act & Assert
-        with pytest.raises(IOError, match="Permission denied"):
-            generate_config_file(
-                mock_file_provider, base_profile, base_keymap_data, output_path
-            )
+        # Assert - just verify it returns proper types
+        assert isinstance(content, str)
+        assert isinstance(settings, dict)
 
     def test_logging_of_settings(
         self,
-        mock_file_provider: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
         caplog: LogCaptureFixture,
     ) -> None:
         """Test that kconfig settings are logged."""
         # Arrange
-        output_path = Path("/test/zmk.conf")
         base_keymap_data.config_parameters = [
             ConfigParameter(paramName="IDLE_TIMEOUT", value=60000),
             ConfigParameter(paramName="SLEEP", value="y"),
@@ -197,9 +164,7 @@ class TestGenerateConfigFile:
 
         # Act
         with caplog.at_level(logging.DEBUG):
-            settings = generate_config_file(
-                mock_file_provider, base_profile, base_keymap_data, output_path
-            )
+            content, settings = generate_config_file(base_profile, base_keymap_data)
 
         # Assert
         assert len(settings) == 2
@@ -456,103 +421,87 @@ class TestGenerateKeymapFile:
 
     def test_inline_template_rendering(
         self,
-        mock_file_provider: MagicMock,
         mock_template_adapter: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test rendering with inline template."""
         # Arrange
-        output_path = Path("/test/keymap.dtsi")
         base_profile.keyboard_config.keymap.keymap_dtsi = "Keyboard: {keyboard}"
         dtsi_generator = MagicMock()
         dtsi_generator._behavior_registry = {}
 
         # Act
-        generate_keymap_file(
-            mock_file_provider,
+        content = generate_keymap_file(
             mock_template_adapter,
             dtsi_generator,
             base_keymap_data,
             base_profile,
-            output_path,
         )
 
         # Assert
         mock_template_adapter.render_string.assert_called_once()
-        assert str(output_path) in mock_file_provider.fs
+        assert isinstance(content, str)
 
-    @patch("zmk_layout.utils.resolve_template_file_path")
+    @patch("zmk_layout.generators.core_operations.resolve_template_file_path")
     def test_file_template_rendering(
         self,
         mock_resolve: MagicMock,
-        mock_file_provider: MagicMock,
         mock_template_adapter: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test rendering with file-based template."""
         # Arrange
-        output_path = Path("/test/keymap.dtsi")
         base_profile.keyboard_config.keymap.keymap_dtsi_file = "keymap.template"
         template_path = Path("/templates/keymap.template")
         mock_resolve.return_value = template_path
         dtsi_generator = MagicMock()
 
         # Act
-        generate_keymap_file(
-            mock_file_provider,
+        content = generate_keymap_file(
             mock_template_adapter,
             dtsi_generator,
             base_keymap_data,
             base_profile,
-            output_path,
         )
 
         # Assert
         mock_resolve.assert_called_once_with("test_board", "keymap.template")
         mock_template_adapter.render_template.assert_called_once()
-        assert str(output_path) in mock_file_provider.fs
+        assert isinstance(content, str)
 
     def test_no_template_fallback(
         self,
-        mock_file_provider: MagicMock,
         mock_template_adapter: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test fallback when no template is specified."""
         # Arrange
-        output_path = Path("/test/keymap.dtsi")
         base_profile.keyboard_config.keymap.keymap_dtsi = None
         base_profile.keyboard_config.keymap.keymap_dtsi_file = None
         dtsi_generator = MagicMock()
 
         # Act
-        generate_keymap_file(
-            mock_file_provider,
+        content = generate_keymap_file(
             mock_template_adapter,
             dtsi_generator,
             base_keymap_data,
             base_profile,
-            output_path,
         )
 
         # Assert
-        assert str(output_path) in mock_file_provider.fs
-        content = mock_file_provider.fs[str(output_path)]
         assert "/* Generated ZMK keymap */" in content
 
     def test_template_rendering_error(
         self,
-        mock_file_provider: MagicMock,
         mock_template_adapter: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test handling of template rendering errors."""
         # Arrange
-        output_path = Path("/test/keymap.dtsi")
         base_profile.keyboard_config.keymap.keymap_dtsi = "Bad template"
         mock_template_adapter.render_string.side_effect = ValueError("Template error")
         dtsi_generator = MagicMock()
@@ -560,12 +509,10 @@ class TestGenerateKeymapFile:
         # Act & Assert
         with pytest.raises(ValueError, match="Template error"):
             generate_keymap_file(
-                mock_file_provider,
                 mock_template_adapter,
                 dtsi_generator,
                 base_keymap_data,
                 base_profile,
-                output_path,
             )
 
 
@@ -633,124 +580,44 @@ class TestGenerateKeymapFileWithResult:
 
     def test_successful_generation(
         self,
-        mock_file_provider: MagicMock,
         mock_template_adapter: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test successful keymap generation."""
-        # Arrange
-        output_path = Path("/test/keymap.dtsi")
-        behavior_formatter = MagicMock()
-
         # Act
-        result = generate_keymap_file_with_result(
+        content = generate_keymap_file_with_result(
             base_profile,
             base_keymap_data,
             {},
-            output_path,
-            behavior_formatter,
             mock_template_adapter,
-            mock_file_provider,
-            force=False,
         )
 
         # Assert
-        assert result.success is True
-        assert result.keymap_path == str(output_path)
-        assert "Generated keymap file" in result.messages[0]
-        assert str(output_path) in mock_file_provider.fs
+        assert isinstance(content, str)
+        assert len(content) > 0
 
-    def test_file_exists_without_force(
-        self,
-        mock_file_provider: MagicMock,
-        mock_template_adapter: MagicMock,
-        base_profile: SimpleNamespace,
-        base_keymap_data: LayoutData,
-    ) -> None:
-        """Test generation fails when file exists and force is False."""
-        # Arrange
-        output_path = Path("/test/keymap.dtsi")
-        mock_file_provider.fs[str(output_path)] = "existing"
-        behavior_formatter = MagicMock()
-
-        # Act
-        result = generate_keymap_file_with_result(
-            base_profile,
-            base_keymap_data,
-            {},
-            output_path,
-            behavior_formatter,
-            mock_template_adapter,
-            mock_file_provider,
-            force=False,
-        )
-
-        # Assert
-        assert result.success is False
-        assert "Keymap file already exists" in result.errors[0]
-        assert mock_file_provider.fs[str(output_path)] == "existing"
-
-    def test_file_exists_with_force(
-        self,
-        mock_file_provider: MagicMock,
-        mock_template_adapter: MagicMock,
-        base_profile: SimpleNamespace,
-        base_keymap_data: LayoutData,
-    ) -> None:
-        """Test generation succeeds when file exists and force is True."""
-        # Arrange
-        output_path = Path("/test/keymap.dtsi")
-        mock_file_provider.fs[str(output_path)] = "existing"
-        behavior_formatter = MagicMock()
-
-        # Act
-        result = generate_keymap_file_with_result(
-            base_profile,
-            base_keymap_data,
-            {},
-            output_path,
-            behavior_formatter,
-            mock_template_adapter,
-            mock_file_provider,
-            force=True,
-        )
-
-        # Assert
-        assert result.success is True
-        assert "Generated keymap file" in result.messages[0]
-        assert mock_file_provider.fs[str(output_path)] != "existing"
-
-    @patch("zmk_layout.generators.config_generator.generate_keymap_file")
     def test_exception_handling(
         self,
-        mock_generate: MagicMock,
-        mock_file_provider: MagicMock,
         mock_template_adapter: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test exception handling during generation."""
         # Arrange
-        output_path = Path("/test/keymap.dtsi")
-        mock_generate.side_effect = RuntimeError("Generation failed")
-        behavior_formatter = MagicMock()
-
-        # Act
-        result = generate_keymap_file_with_result(
-            base_profile,
-            base_keymap_data,
-            {},
-            output_path,
-            behavior_formatter,
-            mock_template_adapter,
-            mock_file_provider,
-            force=True,
+        mock_template_adapter.render_string.side_effect = RuntimeError(
+            "Generation failed"
         )
+        base_profile.keyboard_config.keymap.keymap_dtsi = "template {keyboard}"
 
-        # Assert
-        assert result.success is False
-        assert "Keymap generation failed: Generation failed" in result.errors[0]
+        # Act & Assert
+        with pytest.raises(RuntimeError, match="Generation failed"):
+            generate_keymap_file_with_result(
+                base_profile,
+                base_keymap_data,
+                {},
+                mock_template_adapter,
+            )
 
 
 class TestGenerateConfigFileWithResult:
@@ -758,126 +625,50 @@ class TestGenerateConfigFileWithResult:
 
     def test_successful_generation(
         self,
-        mock_file_provider: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test successful config generation."""
-        # Arrange
-        output_path = Path("/test/zmk.conf")
-        dtsi_generator = MagicMock()
-
         # Act
-        result = generate_config_file_with_result(
+        content, settings = generate_config_file_with_result(
             base_profile,
             base_keymap_data,
             {},
-            output_path,
-            dtsi_generator,
-            mock_file_provider,
-            force=False,
         )
 
         # Assert
-        assert result.success is True
-        assert result.conf_path == str(output_path)
-        assert "Generated config file" in result.messages[0]
-        assert str(output_path) in mock_file_provider.fs
+        assert isinstance(content, str)
+        assert isinstance(settings, dict)
 
-    def test_file_exists_without_force(
-        self,
-        mock_file_provider: MagicMock,
-        base_profile: SimpleNamespace,
-        base_keymap_data: LayoutData,
-    ) -> None:
-        """Test generation fails when file exists and force is False."""
-        # Arrange
-        output_path = Path("/test/zmk.conf")
-        mock_file_provider.fs[str(output_path)] = "existing"
-        dtsi_generator = MagicMock()
-
-        # Act
-        result = generate_config_file_with_result(
-            base_profile,
-            base_keymap_data,
-            {},
-            output_path,
-            dtsi_generator,
-            mock_file_provider,
-            force=False,
-        )
-
-        # Assert
-        assert result.success is False
-        assert "Config file already exists" in result.errors[0]
-        assert mock_file_provider.fs[str(output_path)] == "existing"
-
-    def test_file_exists_with_force(
-        self,
-        mock_file_provider: MagicMock,
-        base_profile: SimpleNamespace,
-        base_keymap_data: LayoutData,
-    ) -> None:
-        """Test generation succeeds when file exists and force is True."""
-        # Arrange
-        output_path = Path("/test/zmk.conf")
-        mock_file_provider.fs[str(output_path)] = "existing"
-        dtsi_generator = MagicMock()
-
-        # Act
-        result = generate_config_file_with_result(
-            base_profile,
-            base_keymap_data,
-            {},
-            output_path,
-            dtsi_generator,
-            mock_file_provider,
-            force=True,
-        )
-
-        # Assert
-        assert result.success is True
-        assert "Generated config file" in result.messages[0]
-        assert mock_file_provider.fs[str(output_path)] != "existing"
-
-    @patch("zmk_layout.generators.config_generator.generate_config_file")
     def test_exception_handling(
         self,
-        mock_generate: MagicMock,
-        mock_file_provider: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
         """Test exception handling during generation."""
-        # Arrange
-        output_path = Path("/test/zmk.conf")
-        mock_generate.side_effect = OSError("Disk full")
-        dtsi_generator = MagicMock()
+        # Arrange - create a parameter that might cause logging warnings
+        base_keymap_data.config_parameters = [
+            ConfigParameter(paramName="INVALID_PARAM", value="test_value")
+        ]
 
-        # Act
-        result = generate_config_file_with_result(
+        # Act & Assert - this should not raise an exception since the function is robust
+        content, settings = generate_config_file_with_result(
             base_profile,
             base_keymap_data,
             {},
-            output_path,
-            dtsi_generator,
-            mock_file_provider,
-            force=True,
         )
 
-        # Assert
-        assert result.success is False
-        assert "Config generation failed: Disk full" in result.errors[0]
+        # The function should handle this gracefully
+        assert isinstance(content, str)
+        assert isinstance(settings, dict)
 
     def test_with_kconfig_settings(
         self,
-        mock_file_provider: MagicMock,
         base_profile: SimpleNamespace,
         base_keymap_data: LayoutData,
     ) -> None:
-        """Test message includes kconfig settings count."""
+        """Test with kconfig settings."""
         # Arrange
-        output_path = Path("/test/zmk.conf")
         base_keymap_data.config_parameters = [
             ConfigParameter(paramName="OPT1", value="val1"),
             ConfigParameter(paramName="OPT2", value="val2"),
@@ -886,22 +677,18 @@ class TestGenerateConfigFileWithResult:
             "OPT1": MockConfigOption("CONFIG_OPT1"),
             "OPT2": MockConfigOption("CONFIG_OPT2"),
         }
-        dtsi_generator = MagicMock()
 
         # Act
-        result = generate_config_file_with_result(
+        content, settings = generate_config_file_with_result(
             base_profile,
             base_keymap_data,
             {},
-            output_path,
-            dtsi_generator,
-            mock_file_provider,
-            force=False,
         )
 
         # Assert
-        assert result.success is True
-        assert "Applied 2 configuration options" in result.messages[1]
+        assert len(settings) == 2
+        assert "CONFIG_OPT1" in settings
+        assert "CONFIG_OPT2" in settings
 
 
 class TestEdgeCasesAndBoundaryConditions:

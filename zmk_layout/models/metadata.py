@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import (
     Field,
     field_serializer,
+    field_validator,
     model_validator,
 )
 
@@ -101,6 +102,34 @@ class LayoutData(LayoutMetadata):
 
     # Essential structure fields
     layers: list[LayerBindings] = Field(default_factory=list)
+
+    @field_validator("layers", mode="before")
+    @classmethod
+    def validate_layers(cls, v: Any) -> Any:
+        """Convert mixed layer bindings to proper LayoutBinding objects."""
+        if not isinstance(v, list):
+            return v
+
+        from .core import LayoutBinding
+
+        result = []
+        for layer in v:
+            if not isinstance(layer, list):
+                result.append(layer)
+                continue
+
+            # Convert each layer's bindings
+            layer_bindings = []
+            for binding in layer:
+                if isinstance(binding, str):
+                    layer_bindings.append(LayoutBinding.from_str(binding))
+                elif isinstance(binding, dict):
+                    layer_bindings.append(LayoutBinding.model_validate(binding))
+                else:
+                    layer_bindings.append(binding)
+            result.append(layer_bindings)
+
+        return result
 
     # Custom code
     custom_defined_behaviors: str = Field(default="", alias="custom_defined_behaviors")

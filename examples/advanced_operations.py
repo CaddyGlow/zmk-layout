@@ -3,14 +3,18 @@
 Advanced Operations Examples for zmk-layout Library
 
 This file demonstrates advanced features like complex behaviors, layer manipulation,
-and integration with external providers.
+and integration with external providers using the new data-only API approach.
+File operations are handled externally, while Layout operates on dictionary data.
 """
 
+import json
 from pathlib import Path
+from typing import Any
 
 from zmk_layout import Layout
 from zmk_layout.core.exceptions import InvalidBindingError, LayerNotFoundError
 from zmk_layout.providers import create_default_providers
+from zmk_layout.utils.json_operations import parse_json_data, serialize_json_data
 
 
 def example_1_complex_behaviors():
@@ -448,8 +452,8 @@ def example_5_performance_testing():
 
 
 def example_6_file_operations():
-    """Advanced file operations and format handling."""
-    print("\n=== Advanced Example 6: File Operations ===")
+    """Advanced file operations and format handling using data-only API."""
+    print("\n=== Advanced Example 6: File Operations (Data-Only API) ===")
 
     # Create a comprehensive layout
     layout = Layout.create_empty("sofle", "Sofle RGB Layout")
@@ -494,13 +498,17 @@ def example_6_file_operations():
         elif behavior_type == "macro":
             layout.behaviors.add_macro(name, **params)
 
-    # Save to multiple formats/locations
+    # Save to multiple formats/locations using data-only API
     base_path = Path("/tmp/sofle_layout")
     base_path.mkdir(exist_ok=True)
 
+    # Get layout data
+    layout_data = layout.to_dict()
+    json_content = serialize_json_data(layout_data, indent=2)
+
     # Save main layout file
     main_file = base_path / "sofle_layout.json"
-    layout.save(str(main_file))
+    main_file.write_text(json_content)
     print(f"✓ Saved main layout to: {main_file}")
 
     # Save backup with timestamp
@@ -508,12 +516,16 @@ def example_6_file_operations():
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_file = base_path / f"sofle_layout_backup_{timestamp}.json"
-    layout.save(str(backup_file))
+    backup_file.write_text(json_content)
     print(f"✓ Saved backup to: {backup_file}")
 
-    # Test file integrity
+    # Test file integrity using data-only API
     try:
-        loaded_layout = Layout.from_file(str(main_file))
+        # Load using data-only API
+        file_content = main_file.read_text()
+        layout_dict = parse_json_data(file_content)
+        loaded_layout = Layout.from_dict(layout_dict)
+
         original_stats = layout.get_statistics()
         loaded_stats = loaded_layout.get_statistics()
 
@@ -532,7 +544,7 @@ def example_6_file_operations():
             ),
         ]
 
-        print("File integrity checks:")
+        print("File integrity checks using data-only API:")
         for check_name, passed in integrity_checks:
             status = "✓" if passed else "✗"
             print(f"  {status} {check_name}")

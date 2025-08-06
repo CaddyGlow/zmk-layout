@@ -1,5 +1,6 @@
 """Integration tests for the fluent API specification."""
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -13,11 +14,11 @@ class TestFluentAPISpecification:
     """Test the target API specification exactly as planned."""
 
     def test_target_api_specification(self) -> None:
-        """Test the exact API from the plan: Layout().layers.add().set().save()"""
+        """Test the exact API from the plan: Layout().layers.add().set().to_dict()"""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "test_layout.json"
 
-            # Target API: Layout().layers.add().set().save()
+            # Target API: Layout().layers.add().set().to_dict()
             layout = Layout.create_empty("test_keyboard", "Test Layout")
             result = (
                 layout.layers.add("newlayer")
@@ -30,18 +31,20 @@ class TestFluentAPISpecification:
             assert hasattr(result, "name")
             assert result.name == "newlayer"
 
-            # Complete the chain and save
-            saved_layout = layout.save(output_path)
+            # Get data as dict instead of saving to file
+            layout_dict = layout.to_dict()
 
-            # Verify chainable - save returns Layout
-            assert isinstance(saved_layout, Layout)
-            assert saved_layout is layout  # Same instance
+            # Write to file using Path.write_text() for testing file output
+            json_content = json.dumps(layout_dict, indent=2, ensure_ascii=False)
+            output_path.write_text(json_content, encoding="utf-8")
 
             # Verify the file was created and contains expected data
             assert output_path.exists()
 
-            # Load and verify content
-            loaded_layout = Layout.from_file(output_path)
+            # Load and verify content using Path.read_text() and Layout.from_dict()
+            file_content = output_path.read_text(encoding="utf-8")
+            loaded_data = json.loads(file_content)
+            loaded_layout = Layout.from_dict(loaded_data)
             assert loaded_layout.data.keyboard == "test_keyboard"
             assert "newlayer" in loaded_layout.layers.names
             assert len(loaded_layout.layers.get("newlayer")) == 5
@@ -251,9 +254,14 @@ class TestPerformanceRequirements:
             layout.behaviors.add_hold_tap(f"ht_{i}", "&kp A", "&mo 1")
             layout.behaviors.add_combo(f"combo_{i}", [i, i + 1], "&kp ESC")
 
-        # Save to measure serialization
-        with tempfile.NamedTemporaryFile(suffix=".json") as tmp:
-            layout.save(tmp.name)
+        # Convert to dict to measure serialization
+        layout_dict = layout.to_dict()
+        json_content = json.dumps(layout_dict, indent=2)
+
+        # Write to temp file to simulate actual usage
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
+            tmp.write(json_content)
+            tmp.flush()
 
         end_time = time.time()
         elapsed = end_time - start_time

@@ -551,9 +551,13 @@ def example_keymap_workflow():
         # Step 1: Create the layout
         layout = create_simple_corne_layout()
 
-        # Step 2: Save layout as JSON for reference
-        layout.save("/tmp/corne_layout.json")
-        print("✓ Saved layout JSON for reference")
+        # Step 2: Save layout as JSON for reference using data-only API
+        layout_data = layout.to_dict()
+        from zmk_layout.utils.json_operations import serialize_json_data
+
+        json_content = serialize_json_data(layout_data, indent=2)
+        Path("/tmp/corne_layout.json").write_text(json_content)
+        print("✓ Saved layout JSON for reference using data-only API")
 
         # Step 3: Generate ZMK keymap files
         keymap_file = generate_zmk_keymap_file(layout)

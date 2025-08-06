@@ -2,10 +2,17 @@
 """
 Basic Usage Examples for zmk-layout Library
 
-This file demonstrates the core fluent API functionality of the zmk-layout library.
+This file demonstrates the core fluent API functionality of the zmk-layout library
+using the new data-only API approach. File operations are handled externally using
+pathlib.Path, while Layout operates purely on dictionary data.
 """
 
+import json
+from pathlib import Path
+from typing import Any
+
 from zmk_layout import Layout
+from zmk_layout.utils.json_operations import parse_json_data, serialize_json_data
 
 
 def example_1_create_empty_layout():
@@ -174,8 +181,8 @@ def example_6_query_and_search():
 
 
 def example_7_save_and_load():
-    """Save and load layouts."""
-    print("\n=== Example 7: Save and Load ===")
+    """Save and load layouts using data-only API."""
+    print("\n=== Example 7: Save and Load (Data-Only API) ===")
 
     # Create and configure a layout
     layout = Layout.create_empty("lily58", "Lily58 Pro Layout")
@@ -186,14 +193,27 @@ def example_7_save_and_load():
 
     layout.behaviors.add_hold_tap(name="home_a", tap="&kp A", hold="&kp LGUI")
 
-    # Save layout to JSON file
-    output_file = "/tmp/lily58_layout.json"
-    layout.save(output_file)
+    # Save layout using data-only API
+    output_file = Path("/tmp/lily58_layout.json")
+
+    # Get layout data and serialize to JSON
+    layout_data = layout.to_dict()
+    json_content = serialize_json_data(layout_data, indent=2)
+
+    # Write to file using Path
+    output_file.write_text(json_content)
     print(f"Layout saved to: {output_file}")
 
-    # Load layout from file
+    # Load layout from file using data-only API
     try:
-        loaded_layout = Layout.from_file(output_file)
+        # Read file content using Path
+        file_content = output_file.read_text()
+
+        # Parse JSON to dictionary
+        layout_dict = parse_json_data(file_content)
+
+        # Create layout from dictionary
+        loaded_layout = Layout.from_dict(layout_dict)
         print(
             f"Successfully loaded layout with {len(loaded_layout.get_layer_names())} layers"
         )
@@ -203,7 +223,7 @@ def example_7_save_and_load():
         loaded_stats = loaded_layout.get_statistics()
 
         if original_stats["layer_count"] == loaded_stats["layer_count"]:
-            print("✓ Save/load integrity verified")
+            print("✓ Save/load integrity verified using data-only API")
         else:
             print("✗ Save/load integrity check failed")
 
@@ -226,7 +246,12 @@ def main():
         example_7_save_and_load()
 
         print("\n" + "=" * 50)
-        print("✓ All examples completed successfully!")
+        print("✓ All examples completed successfully using data-only API!")
+        print("\nKey differences with data-only API:")
+        print("  • Layout.from_dict(data) instead of Layout.from_file(path)")
+        print("  • Layout.to_dict() instead of Layout.save(path)")
+        print("  • Path.read_text()/write_text() for file operations")
+        print("  • JSON utilities for robust data handling")
 
     except Exception as e:
         print(f"\n✗ Example failed: {e}")

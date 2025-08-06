@@ -4,14 +4,12 @@ from pathlib import Path
 
 from zmk_layout.providers import (
     ConfigurationProvider,
-    FileProvider,
     LayoutLogger,
     LayoutProviders,
     TemplateProvider,
 )
 from zmk_layout.providers.factory import (
     DefaultConfigurationProvider,
-    DefaultFileProvider,
     DefaultLogger,
     DefaultTemplateProvider,
     create_default_providers,
@@ -44,13 +42,6 @@ class TestProviderProtocols:
         assert hasattr(LayoutLogger, "warning")
         assert hasattr(LayoutLogger, "debug")
         assert hasattr(LayoutLogger, "exception")
-
-    def test_file_provider_protocol(self) -> None:
-        """Test FileProvider protocol methods."""
-        assert hasattr(FileProvider, "read_text")
-        assert hasattr(FileProvider, "write_text")
-        assert hasattr(FileProvider, "exists")
-        assert hasattr(FileProvider, "mkdir")
 
 
 class TestDefaultProviders:
@@ -119,29 +110,6 @@ class TestDefaultProviders:
         assert "key_gap" in formatting
         assert "base_indent" in formatting
 
-    def test_default_file_provider(self, tmp_path: Path) -> None:
-        """Test default file provider."""
-        provider = DefaultFileProvider()
-
-        test_file = tmp_path / "test.txt"
-        test_content = "Hello, World!"
-
-        # Test write
-        provider.write_text(test_file, test_content)
-
-        # Test exists
-        assert provider.exists(test_file)
-        assert not provider.exists(tmp_path / "nonexistent.txt")
-
-        # Test read
-        read_content = provider.read_text(test_file)
-        assert read_content == test_content
-
-        # Test mkdir
-        new_dir = tmp_path / "new_directory"
-        provider.mkdir(new_dir)
-        assert provider.exists(new_dir)
-
 
 class TestLayoutProviders:
     """Test LayoutProviders dataclass."""
@@ -154,13 +122,11 @@ class TestLayoutProviders:
         assert hasattr(providers, "configuration")
         assert hasattr(providers, "template")
         assert hasattr(providers, "logger")
-        assert hasattr(providers, "file")
 
         # Test that all providers implement the expected interfaces
         assert hasattr(providers.configuration, "get_behavior_definitions")
         assert hasattr(providers.template, "render_string")
         assert hasattr(providers.logger, "info")
-        assert hasattr(providers.file, "read_text")
 
     def test_providers_functionality(self, tmp_path: Path) -> None:
         """Test that providers work together."""
@@ -176,11 +142,11 @@ class TestLayoutProviders:
         )
         assert template_result == "Keyboard: Test"
 
-        # Test file operations
+        # Test file operations using pathlib directly
         test_file = tmp_path / "test.txt"
-        providers.file.write_text(test_file, "test content")
-        assert providers.file.exists(test_file)
-        content = providers.file.read_text(test_file)
+        test_file.write_text("test content")
+        assert test_file.exists()
+        content = test_file.read_text()
         assert content == "test content"
 
         # Test logging (should not raise)

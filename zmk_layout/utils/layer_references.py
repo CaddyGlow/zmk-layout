@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 
 if TYPE_CHECKING:
-    from ..providers import ConfigurationProvider, FileProvider, LayoutLogger
+    from ..providers import ConfigurationProvider, LayoutLogger
 
 from ..models import LayoutData
 
@@ -75,7 +75,6 @@ def process_json_file(
     file_path: Path,
     operation_name: str,
     operation_func: Callable[[LayoutData], T],
-    file_provider: "FileProvider",
     logger: "LayoutLogger | None" = None,
     process_templates: bool = True,
 ) -> T:
@@ -85,7 +84,6 @@ def process_json_file(
         file_path: Path to the JSON file to process
         operation_name: Human-readable name of the operation for error messages
         operation_func: Function that takes LayoutData and returns result
-        file_provider: File provider for reading operations
         logger: Optional logger for status messages
         process_templates: Whether to process Jinja2 templates (default: True)
 
@@ -99,13 +97,20 @@ def process_json_file(
         if logger:
             logger.info(f"{operation_name} from {file_path}...")
 
-        # Load with or without template processing based on parameter
-        from .json_operations import load_layout_file
+        # Load JSON data directly using pathlib
+        import json
 
-        layout_data = load_layout_file(
-            file_path,
-            file_provider,
-            skip_template_processing=(not process_templates),
+        json_content = Path(file_path).read_text(encoding="utf-8")
+
+        # Parse JSON data
+        from .json_operations import parse_json_data, parse_layout_data
+
+        json_data = parse_json_data(json_content)
+
+        # Create layout data with optional template processing
+        layout_data = parse_layout_data(
+            json_data,
+            skip_variable_resolution=(not process_templates),
         )
 
         # Perform the operation

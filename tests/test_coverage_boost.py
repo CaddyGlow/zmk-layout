@@ -19,7 +19,6 @@ from zmk_layout.models.core import (
 from zmk_layout.models.metadata import LayoutData, LayoutResult
 from zmk_layout.providers.factory import (
     DefaultConfigurationProvider,
-    DefaultFileProvider,
     DefaultLogger,
     DefaultTemplateProvider,
 )
@@ -255,17 +254,6 @@ class TestProviderFactory:
         # Test search paths
         paths = provider.get_search_paths()
         assert isinstance(paths, list)
-
-    def test_default_file_provider(self) -> None:
-        """Test default file provider."""
-        provider = DefaultFileProvider()
-
-        Path("/tmp/test_file.txt")
-
-        # Test file operations
-        assert hasattr(provider, "read_text")
-        assert hasattr(provider, "write_text")
-        assert hasattr(provider, "exists")
 
     def test_default_logger(self) -> None:
         """Test default logger."""

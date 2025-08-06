@@ -166,12 +166,10 @@ class TestConfigGenerator:
         ) as mock_gen:
             mock_gen.return_value = ("# Test config", {"setting": "value"})
 
-            result = generate_config_file(
-                mock_file_provider, mock_profile, layout_data, Path("/tmp/test.conf")
-            )
+            result = generate_config_file(mock_profile, layout_data)
 
-            assert isinstance(result, dict)
-            mock_file_provider.write_text.assert_called_once()
+            assert isinstance(result, tuple)
+            assert len(result) == 2
 
 
 class TestTemplateContext:

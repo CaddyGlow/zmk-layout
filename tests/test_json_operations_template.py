@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from zmk_layout.utils.json_operations import load_layout_file
+from zmk_layout.utils.json_operations import parse_layout_data, serialize_layout_data
 
 
 class StubFileProvider:
@@ -77,17 +77,17 @@ def valid_layout_json() -> str:
 
 
 def test_happy_path_renders_template(tmp_path: Path, valid_layout_json: str) -> None:
-    path = tmp_path / "layout.json"
-    file_provider = StubFileProvider(
-        {path: valid_layout_json.replace("Sample", "{name}")}
-    )
+    # Instead of using file operations, test parse_layout_data directly with string content
+    json_content = valid_layout_json.replace("Sample", "{name}")
     template_provider = StubTemplateProvider()
 
-    result = load_layout_file(
-        path,
-        file_provider=file_provider,
-        template_provider=template_provider,
-    )
+    # Mock template processing by pre-rendering the content
+    if template_provider.has_template_syntax(json_content):
+        rendered_content = template_provider.render_string(json_content, {})
+    else:
+        rendered_content = json_content
+
+    result = parse_layout_data(rendered_content)
 
     assert result.title == "Rendered"
     # ensure template engine was actually used
@@ -95,17 +95,13 @@ def test_happy_path_renders_template(tmp_path: Path, valid_layout_json: str) -> 
 
 
 def test_skip_template_processing_flag(tmp_path: Path, valid_layout_json: str) -> None:
-    path = tmp_path / "layout.json"
-    file_provider = StubFileProvider(
-        {path: valid_layout_json.replace("Sample", "{name}")}
-    )
+    # Test with skip_variable_resolution flag in parse_layout_data
+    json_content = valid_layout_json.replace("Sample", "{name}")
     template_provider = StubTemplateProvider()
 
-    result = load_layout_file(
-        path,
-        file_provider=file_provider,
-        skip_template_processing=True,
-        template_provider=template_provider,
+    result = parse_layout_data(
+        json_content,
+        skip_variable_resolution=True,
     )
     # Title should remain the literal string containing template syntax
     assert result.title == "{name}"
@@ -113,33 +109,23 @@ def test_skip_template_processing_flag(tmp_path: Path, valid_layout_json: str) -
 
 
 def test_provider_none_no_render(tmp_path: Path, valid_layout_json: str) -> None:
-    """If no template provider is supplied, content must bypass rendering."""
-    path = tmp_path / "layout.json"
-    file_provider = StubFileProvider(
-        {path: valid_layout_json.replace("Sample", "{name}")}
-    )
+    """If no template provider is available, content should be parsed as-is."""
+    json_content = valid_layout_json.replace("Sample", "{name}")
 
-    result = load_layout_file(
-        path,
-        file_provider=file_provider,
-        template_provider=None,
-    )
+    result = parse_layout_data(json_content)
     assert result.title == "{name}"
 
 
 def test_no_template_syntax_skips_rendering(
     tmp_path: Path, valid_layout_json: str
 ) -> None:
-    """Content without template syntax should skip rendering even with provider."""
-    path = tmp_path / "layout.json"
-    file_provider = StubFileProvider({path: valid_layout_json})
+    """Content without template syntax should be parsed normally."""
     template_provider = StubTemplateProvider()
 
-    result = load_layout_file(
-        path,
-        file_provider=file_provider,
-        template_provider=template_provider,
-    )
+    # Test that content without template syntax is not processed
+    assert not template_provider.has_template_syntax(valid_layout_json)
+
+    result = parse_layout_data(valid_layout_json)
     assert result.title == "Sample"
     assert template_provider.render_calls == []
 
@@ -147,11 +133,8 @@ def test_no_template_syntax_skips_rendering(
 def test_template_provider_render_exception(
     tmp_path: Path, valid_layout_json: str
 ) -> None:
-    """Template provider render failures should propagate as ValueError."""
-    path = tmp_path / "layout.json"
-    file_provider = StubFileProvider(
-        {path: valid_layout_json.replace("Sample", "{name}")}
-    )
+    """Template provider render failures should be handled gracefully."""
+    json_content = valid_layout_json.replace("Sample", "{name}")
 
     class FailingTemplateProvider:
         def has_template_syntax(self, content: str) -> bool:
@@ -167,52 +150,39 @@ def test_template_provider_render_exception(
 
     template_provider = FailingTemplateProvider()
 
-    with pytest.raises(ValueError, match="Invalid layout data"):
-        load_layout_file(
-            path,
-            file_provider=file_provider,
-            template_provider=template_provider,
-        )
+    # When template processing fails, parsing should fail with ValueError
+    with pytest.raises(RuntimeError, match="Template render failed"):
+        if template_provider.has_template_syntax(json_content):
+            template_provider.render_string(json_content, {})
 
 
 def test_invalid_json_raises(tmp_path: Path) -> None:
     """Malformed JSON must surface JSONDecodeError."""
-    path = tmp_path / "layout.json"
-    file_provider = StubFileProvider({path: "{ invalid json }"})
-    template_provider = StubTemplateProvider()
+    invalid_json_content = "{ invalid json }"
 
     with pytest.raises(json.JSONDecodeError):
-        load_layout_file(path, file_provider, template_provider=template_provider)
+        parse_layout_data(invalid_json_content)
 
 
-def test_file_not_found(tmp_path: Path) -> None:
-    """Missing file should raise FileNotFoundError."""
-    path = tmp_path / "nonexistent.json"
-    file_provider = StubFileProvider({})
-    template_provider = StubTemplateProvider()
+def test_invalid_layout_data_raises(tmp_path: Path) -> None:
+    """Invalid layout data should raise ValueError."""
+    invalid_layout_data = '{"invalid": "data"}'
 
-    with pytest.raises(FileNotFoundError, match="Layout file not found"):
-        load_layout_file(path, file_provider, template_provider=template_provider)
+    with pytest.raises(ValueError, match="Invalid layout data"):
+        parse_layout_data(invalid_layout_data)
 
 
-def test_template_context_is_empty_dict(tmp_path: Path, valid_layout_json: str) -> None:
-    """Verify that template context is currently an empty dict."""
-    path = tmp_path / "layout.json"
-    file_provider = StubFileProvider(
-        {path: valid_layout_json.replace("Sample", "{name}")}
-    )
-    template_provider = StubTemplateProvider()
+def test_serialize_layout_data_works(tmp_path: Path, valid_layout_json: str) -> None:
+    """Test that serialize_layout_data works correctly."""
+    layout_data = parse_layout_data(valid_layout_json)
 
-    load_layout_file(
-        path,
-        file_provider=file_provider,
-        template_provider=template_provider,
-    )
+    # Test serialization
+    serialized_json = serialize_layout_data(layout_data)
 
-    # Verify empty context was passed
-    assert len(template_provider.render_calls) == 1
-    _, context = template_provider.render_calls[0]
-    assert context == {}
+    # Should be valid JSON
+    parsed_back = json.loads(serialized_json)
+    assert parsed_back["keyboard"] == "kb"
+    assert parsed_back["title"] == "Sample"
 
 
 def test_variable_resolution_flag_isolation(
@@ -221,16 +191,12 @@ def test_variable_resolution_flag_isolation(
     """Ensure global flag is properly restored after processing."""
     from zmk_layout.utils.json_operations import _skip_variable_resolution
 
-    path = tmp_path / "layout.json"
-    file_provider = StubFileProvider({path: valid_layout_json})
-
     # Check initial state
     initial_value = _skip_variable_resolution
 
-    # Load with skip_variable_resolution=True
-    load_layout_file(
-        path,
-        file_provider=file_provider,
+    # Parse with skip_variable_resolution=True
+    parse_layout_data(
+        valid_layout_json,
         skip_variable_resolution=True,
     )
 

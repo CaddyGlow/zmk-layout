@@ -10,10 +10,8 @@ import pytest
 from zmk_layout.models import LayoutBinding, LayoutData
 from zmk_layout.utils.json_operations import (
     VariableResolutionContext,
-    load_json_data,
-    load_layout_file,
-    save_json_data,
-    save_layout_file,
+    parse_layout_data,
+    serialize_layout_data,
     should_skip_variable_resolution,
 )
 from zmk_layout.utils.layer_references import (
@@ -86,86 +84,74 @@ class TestJSONOperations:
             keyboard="test_keyboard", title="Test Layout", layers=[], layer_names=[]
         )
 
-    def test_load_layout_file_success(self, mock_file_provider: Mock) -> None:
-        """Test successful layout file loading."""
-        result = load_layout_file(Path("test.json"), mock_file_provider)
+    def test_parse_layout_data_success(self) -> None:
+        """Test successful layout data parsing."""
+        json_content = '{"keyboard": "test", "title": "Test Layout", "layers": [], "layer_names": []}'
+        result = parse_layout_data(json_content)
 
         assert isinstance(result, LayoutData)
         assert result.keyboard == "test"
         assert result.title == "Test Layout"
 
-    def test_load_layout_file_not_found(self, mock_file_provider: Mock) -> None:
-        """Test loading non-existent file."""
-        mock_file_provider.exists.return_value = False
-
-        with pytest.raises(FileNotFoundError, match="Layout file not found"):
-            load_layout_file(Path("missing.json"), mock_file_provider)
-
-    def test_load_layout_file_invalid_json(self, mock_file_provider: Mock) -> None:
-        """Test loading invalid JSON."""
-        mock_file_provider.read_text.return_value = "invalid json"
+    def test_parse_layout_data_invalid_json(self) -> None:
+        """Test parsing invalid JSON."""
+        invalid_json = "invalid json"
 
         with pytest.raises(json.JSONDecodeError):
-            load_layout_file(Path("invalid.json"), mock_file_provider)
+            parse_layout_data(invalid_json)
 
-    def test_load_layout_file_invalid_data(self, mock_file_provider: Mock) -> None:
-        """Test loading invalid layout data."""
-        mock_file_provider.read_text.return_value = '{"invalid": "data"}'
+    def test_parse_layout_data_invalid_data(self) -> None:
+        """Test parsing invalid layout data."""
+        invalid_data = '{"invalid": "data"}'
 
         with pytest.raises(ValueError, match="Invalid layout data"):
-            load_layout_file(Path("invalid.json"), mock_file_provider)
+            parse_layout_data(invalid_data)
 
-    def test_save_layout_file_success(
-        self, mock_file_provider: Mock, sample_layout_data: LayoutData
+    def test_serialize_layout_data_success(
+        self, sample_layout_data: LayoutData
     ) -> None:
-        """Test successful layout file saving."""
-        save_layout_file(sample_layout_data, Path("output.json"), mock_file_provider)
+        """Test successful layout data serialization."""
+        result = serialize_layout_data(sample_layout_data)
 
-        mock_file_provider.write_text.assert_called_once()
-        args = mock_file_provider.write_text.call_args
-        assert args[0][0] == Path("output.json")
+        # Should be valid JSON
+        parsed_back = json.loads(result)
+        assert parsed_back["keyboard"] == "test_keyboard"
 
-        # Verify JSON content
-        saved_content = args[0][1]
-        saved_data = json.loads(saved_content)
-        assert saved_data["keyboard"] == "test_keyboard"
+    def test_parse_layout_data_roundtrip(self, sample_layout_data: LayoutData) -> None:
+        """Test roundtrip serialization and parsing."""
+        # Serialize to JSON string
+        serialized = serialize_layout_data(sample_layout_data)
 
-    def test_save_layout_file_os_error(
-        self, mock_file_provider: Mock, sample_layout_data: LayoutData
+        # Parse back from string
+        parsed = parse_layout_data(serialized)
+
+        # Should match original
+        assert parsed.keyboard == sample_layout_data.keyboard
+        assert parsed.title == sample_layout_data.title
+
+    def test_parse_layout_data_with_skip_variable_resolution(
+        self, sample_layout_data: LayoutData
     ) -> None:
-        """Test save failure due to OS error."""
-        mock_file_provider.write_text.side_effect = OSError("Permission denied")
+        """Test parsing with skip variable resolution flag."""
+        serialized = serialize_layout_data(sample_layout_data)
 
-        with pytest.raises(OSError, match="Failed to save layout file"):
-            save_layout_file(
-                sample_layout_data, Path("output.json"), mock_file_provider
-            )
+        # Parse with skip_variable_resolution=True
+        parsed = parse_layout_data(serialized, skip_variable_resolution=True)
 
-    def test_load_json_data_success(self, mock_file_provider: Mock) -> None:
-        """Test successful raw JSON loading."""
-        test_data = {"key": "value", "number": 42}
-        mock_file_provider.read_text.return_value = json.dumps(test_data)
+        assert parsed.keyboard == sample_layout_data.keyboard
 
-        result = load_json_data(Path("test.json"), mock_file_provider)
-        assert result == test_data
+    def test_parse_layout_data_with_dict_input(self) -> None:
+        """Test parsing with dictionary input instead of JSON string."""
+        test_data = {
+            "keyboard": "test",
+            "title": "Test",
+            "layers": [],
+            "layer_names": [],
+        }
 
-    def test_load_json_data_not_dict(self, mock_file_provider: Mock) -> None:
-        """Test loading JSON that's not a dictionary."""
-        mock_file_provider.read_text.return_value = '["not", "a", "dict"]'
-
-        with pytest.raises(ValueError, match="does not contain a dictionary"):
-            load_json_data(Path("test.json"), mock_file_provider)
-
-    def test_save_json_data_success(self, mock_file_provider: Mock) -> None:
-        """Test successful raw JSON saving."""
-        test_data: dict[str, Any] = {"key": "value", "list": [1, 2, 3]}
-
-        save_json_data(test_data, Path("output.json"), mock_file_provider)
-
-        mock_file_provider.write_text.assert_called_once()
-        args = mock_file_provider.write_text.call_args
-        saved_content = args[0][1]
-        assert json.loads(saved_content) == test_data
+        result = parse_layout_data(test_data)
+        assert isinstance(result, LayoutData)
+        assert result.keyboard == "test"
 
 
 class TestValidation:
@@ -320,11 +306,6 @@ class TestLayerReferences:
         )
         test_file.write_text(layout_data.model_dump_json())
 
-        # Mock file provider
-        file_provider = Mock()
-        file_provider.exists.return_value = True
-        file_provider.read_text.return_value = test_file.read_text()
-
         # Mock logger
         logger = Mock()
 
@@ -333,7 +314,7 @@ class TestLayerReferences:
             return f"Processed {data.keyboard}"
 
         result = process_json_file(
-            test_file, "test operation", test_operation, file_provider, logger
+            test_file, "test operation", test_operation, logger
         )
 
         assert result == "Processed test"
@@ -341,11 +322,7 @@ class TestLayerReferences:
 
     def test_process_json_file_failure(self, tmp_path: Path) -> None:
         """Test JSON file processing failure."""
-        test_file = tmp_path / "test.json"
-
-        # Mock file provider that fails
-        file_provider = Mock()
-        file_provider.exists.return_value = False
+        test_file = tmp_path / "nonexistent.json"  # File doesn't exist
 
         # Mock logger
         logger = Mock()
@@ -355,7 +332,7 @@ class TestLayerReferences:
 
         with pytest.raises(LayoutError, match="test operation failed"):
             process_json_file(
-                test_file, "test operation", test_operation, file_provider, logger
+                test_file, "test operation", test_operation, logger
             )
 
         logger.error.assert_called_once()

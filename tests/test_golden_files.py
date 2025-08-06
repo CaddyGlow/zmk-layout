@@ -215,7 +215,6 @@ class TestProviderIntegration:
         assert providers.logger is not None
         assert providers.template is not None
         assert providers.configuration is not None
-        assert providers.file is not None
 
         # Test basic provider functionality
         providers.logger.info("Test log message")

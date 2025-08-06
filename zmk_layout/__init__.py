@@ -24,7 +24,6 @@ from .models import (
 # Import provider interfaces
 from .providers import (
     ConfigurationProvider,
-    FileProvider,
     LayoutLogger,
     LayoutProviders,
     TemplateProvider,
@@ -50,7 +49,6 @@ __all__ = [
     "ConfigurationProvider",
     "TemplateProvider",
     "LayoutLogger",
-    "FileProvider",
     "LayoutProviders",
     # Factory functions
     "create_default_providers",

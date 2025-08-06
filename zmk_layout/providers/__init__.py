@@ -7,14 +7,12 @@ logging, and file operations.
 
 from .configuration import ConfigurationProvider
 from .factory import LayoutProviders
-from .file import FileProvider
 from .logger import LayoutLogger
 from .template import TemplateProvider
 
 
 __all__ = [
     "ConfigurationProvider",
-    "FileProvider",
     "LayoutLogger",
     "LayoutProviders",
     "TemplateProvider",

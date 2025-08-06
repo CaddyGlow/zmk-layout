@@ -2,11 +2,15 @@
 """
 Simple Demo of zmk-layout Library
 
-This demonstrates the core fluent API working exactly as specified in the plan:
-Layout().layers.add().set().save()
+This demonstrates the core fluent API working with the new data-only approach:
+Layout().layers.add().set() with external file operations using Path.
 """
 
+import json
+from pathlib import Path
+
 from zmk_layout import Layout
+from zmk_layout.utils.json_operations import serialize_json_data
 
 
 def target_api_demo():
@@ -29,10 +33,14 @@ def target_api_demo():
     print("3. Setting key binding with chaining...")
     new_layer.set(0, "&kp D")
 
-    print("4. Saving layout with chaining...")
-    layout.save("/tmp/demo_layout.json")
+    print("4. Saving layout using data-only API...")
+    # Convert to dictionary and save using Path
+    layout_data = layout.to_dict()
+    json_content = serialize_json_data(layout_data, indent=2)
+    output_file = Path("/tmp/demo_layout.json")
+    output_file.write_text(json_content)
 
-    print("✓ Target API working perfectly!")
+    print("✓ Target API working perfectly with data-only approach!")
 
     # Show what we created
     stats = layout.get_statistics()
@@ -117,9 +125,15 @@ def context_manager_demo():
             name="mt_space", tap="&kp SPACE", hold="&kp LSHIFT"
         )
 
-        # Save within context
-        layout.save("/tmp/context_demo.json")
-        layout.save("/tmp/context_demo.keymap")
+        # Save within context using data-only API
+        layout_data = layout.to_dict()
+        json_content = serialize_json_data(layout_data, indent=2)
+
+        json_file = Path("/tmp/context_demo.json")
+        json_file.write_text(json_content)
+
+        # Note: For keymap generation, use generators (see data_only_usage.py example)
+        print("  JSON file saved, keymap generation requires generators")
 
         stats = layout.get_statistics()
         print("✓ Context operations completed:")
@@ -153,8 +167,12 @@ def main():
             print()
 
     print("=" * 60)
-    print("✓ All demonstrations completed!")
-    print("\nThe zmk-layout library fluent API is working exactly as designed!")
+    print("✓ All demonstrations completed using data-only API!")
+    print("\nThe zmk-layout library fluent API is working with clean data separation!")
+    print("\nKey changes in data-only approach:")
+    print("  • Layout.to_dict() instead of Layout.save()")
+    print("  • Path.write_text() for file operations")
+    print("  • Generators for keymap file creation")
 
 
 if __name__ == "__main__":

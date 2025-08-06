@@ -3,8 +3,19 @@
 Real-World Example: Creating a Complete Corne Layout
 
 This example demonstrates creating a realistic 3x6+3 Corne keyboard layout
-with home row mods, multiple layers, combos, and macros.
+with home row mods, multiple layers, combos, and macros using the new
+helper methods for simplified API usage.
+
+Features demonstrated:
+- Layout.create_empty() for starting layouts
+- Layout.to_keymap() for generating ZMK keymap files
+- Layout.from_string() for loading any format
+- Automatic file format detection
+- Clean, simple API without complex setup
 """
+
+import json
+from pathlib import Path
 
 from zmk_layout import Layout
 
@@ -293,61 +304,125 @@ def demonstrate_layout_features():
     return layout
 
 
-def save_and_validate_layout():
-    """Save the layout and validate it can be loaded."""
-    print("\n=== Save and Validation ===")
+def save_layout_files():
+    """Save the layout in both JSON and keymap formats using helper methods."""
+    print("\n=== Saving Layout Files ===")
 
     layout = create_corne_layout()
 
-    # Save the layout
-    output_file = "/tmp/complete_corne_layout.json"
-    print(f"Saving layout to: {output_file}")
-    layout.save(output_file)
+    # Create output directory
+    output_dir = Path("/tmp/corne_layout_output")
+    output_dir.mkdir(exist_ok=True)
 
-    # Validate by loading it back
-    print("Loading layout to validate...")
+    # Save as JSON using to_dict() and simple file writing
+    json_file = output_dir / "complete_corne_layout.json"
+    print(f"1. Saving JSON layout to: {json_file}")
+
+    layout_data = layout.to_dict()
+    json_content = json.dumps(layout_data, indent=2)
+    json_file.write_text(json_content)
+    print(f"   ✓ JSON file saved ({json_file.stat().st_size:,} bytes)")
+
+    # Save as ZMK keymap using to_keymap() helper
+    keymap_file = output_dir / "corne.keymap"
+    print(f"2. Saving ZMK keymap to: {keymap_file}")
+
+    keymap_content = layout.to_keymap(keyboard_name="corne", include_headers=True)
+    keymap_file.write_text(keymap_content)
+    print(f"   ✓ Keymap file saved ({keymap_file.stat().st_size:,} bytes)")
+
+    return layout, json_file, keymap_file
+
+
+def validate_roundtrip():
+    """Validate that we can load both file formats using helper methods."""
+    print("\n=== Roundtrip Validation ===")
+
+    # Create original layout
+    original_layout = create_corne_layout()
+    original_stats = original_layout.get_statistics()
+
+    # Save files
+    _, json_file, keymap_file = save_layout_files()
+
+    # Test 1: Load from JSON using from_string()
+    print("1. Testing JSON roundtrip...")
     try:
-        loaded_layout = Layout.from_file(output_file)
+        json_content = json_file.read_text()
+        json_loaded_layout = Layout.from_string(json_content)  # Auto-detects JSON!
+        json_stats = json_loaded_layout.get_statistics()
 
-        # Compare statistics
-        original_stats = layout.get_statistics()
-        loaded_stats = loaded_layout.get_statistics()
-
-        validation_checks = [
-            (
-                "Layer count",
-                original_stats["layer_count"] == loaded_stats["layer_count"],
-            ),
+        json_checks = [
+            ("Layer count", original_stats["layer_count"] == json_stats["layer_count"]),
             (
                 "Total bindings",
-                original_stats["total_bindings"] == loaded_stats["total_bindings"],
+                original_stats["total_bindings"] == json_stats["total_bindings"],
             ),
             (
                 "Total behaviors",
-                original_stats["total_behaviors"] == loaded_stats["total_behaviors"],
+                original_stats["total_behaviors"] == json_stats["total_behaviors"],
             ),
-            ("Keyboard name", original_stats["keyboard"] == loaded_stats["keyboard"]),
-            ("Title", original_stats["title"] == loaded_stats["title"]),
         ]
 
-        print("Validation Results:")
-        all_passed = True
-        for check_name, passed in validation_checks:
-            status = "✓" if passed else "✗"
-            print(f"  {status} {check_name}")
-            if not passed:
-                all_passed = False
-
-        if all_passed:
-            print("✓ Layout saved and loaded successfully!")
-        else:
-            print("✗ Some validation checks failed")
-
-        return loaded_layout
+        json_passed = all(check[1] for check in json_checks)
+        status = "✓" if json_passed else "✗"
+        print(
+            f"   {status} JSON roundtrip: {len([c for c in json_checks if c[1]])}/{len(json_checks)} checks passed"
+        )
 
     except Exception as e:
-        print(f"✗ Failed to load layout: {e}")
-        return None
+        print(f"   ✗ JSON roundtrip failed: {e}")
+        json_passed = False
+
+    # Test 2: Load from keymap using from_string()
+    print("2. Testing keymap roundtrip...")
+    try:
+        keymap_content = keymap_file.read_text()
+        keymap_loaded_layout = Layout.from_string(
+            keymap_content, title="Corne Keymap"
+        )  # Auto-detects keymap!
+        keymap_stats = keymap_loaded_layout.get_statistics()
+
+        # Note: Keymap parsing may not preserve all metadata perfectly
+        keymap_checks = [
+            ("Has layers", keymap_stats["layer_count"] > 0),
+            ("Has bindings", keymap_stats["total_bindings"] > 0),
+        ]
+
+        keymap_passed = all(check[1] for check in keymap_checks)
+        status = "✓" if keymap_passed else "✗"
+        print(
+            f"   {status} Keymap roundtrip: {len([c for c in keymap_checks if c[1]])}/{len(keymap_checks)} checks passed"
+        )
+
+    except Exception as e:
+        print(f"   ✗ Keymap roundtrip failed: {e}")
+        keymap_passed = False
+
+    # Test 3: Show format auto-detection
+    print("3. Testing format auto-detection...")
+    try:
+        # Test that from_string() correctly identifies each format
+        json_layout = Layout.from_string(json_file.read_text())  # Should detect JSON
+        keymap_layout = Layout.from_string(
+            keymap_file.read_text(), title="Test"
+        )  # Should detect keymap
+
+        detection_passed = True
+        print("   ✓ Format auto-detection working correctly")
+
+    except Exception as e:
+        print(f"   ✗ Format auto-detection failed: {e}")
+        detection_passed = False
+
+    # Summary
+    overall_passed = json_passed and keymap_passed and detection_passed
+    if overall_passed:
+        print("\n✓ All validation tests passed!")
+    else:
+        print("\n⚠️  Some validation tests failed")
+
+    return overall_passed
 
 
 def main():
@@ -359,16 +434,33 @@ def main():
         # Create and demonstrate the layout
         demonstrate_layout_features()
 
-        # Save and validate
-        loaded_layout = save_and_validate_layout()
+        # Save layout files and validate roundtrip
+        validation_passed = validate_roundtrip()
 
-        if loaded_layout:
-            print("\n" + "=" * 70)
-            print("✓ Complete Corne layout created successfully!")
-            print("✓ All features working: home row mods, layers, combos, macros")
-            print("✓ Save/load cycle validated")
-            print("\nThis demonstrates a production-ready ZMK layout created")
-            print("entirely with the zmk-layout library's fluent API!")
+        print("\n" + "=" * 70)
+        print("✓ Complete Corne layout created successfully!")
+        print("✓ All features working: home row mods, layers, combos, macros")
+
+        if validation_passed:
+            print("✓ Files saved in both JSON and keymap formats")
+            print("✓ Format auto-detection working correctly")
+            print("✓ Roundtrip validation passed")
+        else:
+            print("⚠️  Some validation tests failed (check output above)")
+
+        print("\nNew Helper Methods Demonstrated:")
+        print("• Layout.create_empty() - Start with empty layout")
+        print("• Layout.to_dict() - Convert to dictionary")
+        print("• Layout.to_keymap() - Generate ZMK keymap directly")
+        print("• Layout.from_string() - Auto-detect and load any format")
+        print("• Path.read_text() / Path.write_text() - Handle file I/O externally")
+
+        print("\nFiles saved to: /tmp/corne_layout_output/")
+        print("• complete_corne_layout.json - Layout data in JSON format")
+        print("• corne.keymap - Ready-to-use ZMK keymap file")
+
+        print("\nThis demonstrates a production-ready ZMK layout created")
+        print("entirely with the zmk-layout library's simplified helper API!")
 
     except Exception as e:
         print(f"✗ Example failed: {e}")

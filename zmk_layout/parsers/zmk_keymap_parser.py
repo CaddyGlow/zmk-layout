@@ -4,7 +4,6 @@
 import re
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 from zmk_layout.models.base import LayoutBaseModel
@@ -172,18 +171,20 @@ class ZMKKeymapParser:
 
     def parse_keymap(
         self,
-        keymap_file: Path,
+        keymap_content: str,
         mode: ParsingMode = ParsingMode.TEMPLATE_AWARE,
         profile: Optional["KeyboardProfile"] = None,
         method: ParsingMethod = ParsingMethod.AST,
+        title: str = "unknown",
     ) -> KeymapParseResult:
-        """Parse ZMK keymap file to JSON layout.
+        """Parse ZMK keymap content to JSON layout.
 
         Args:
-            keymap_file: Path to .keymap file
+            keymap_content: String content of the keymap
             mode: Parsing mode (full or template-aware)
-            keyboard_profile: Keyboard profile name (required for template-aware mode)
+            profile: Keyboard profile (optional)
             method: Parsing method (always AST now)
+            title: Title for the layout (optional)
 
         Returns:
             KeymapParseResult with layout data or errors
@@ -195,20 +196,12 @@ class ZMKKeymapParser:
         )
 
         try:
-            # Read keymap file content
-            if not keymap_file.exists():
-                result.errors.append(f"Keymap file not found: {keymap_file}")
-                return result
-
-            keymap_content = keymap_file.read_text(encoding="utf-8")
-
             # Get extraction configuration
             # TODO: currently not implemented in profile parser will used a default
             extraction_config = self._get_extraction_config(profile)
 
             # Create parsing context
             keyboard_name = profile.keyboard_name if profile else "unknown"
-            title = f"{keymap_file.stem}"  # file name without extension
 
             context = ParsingContext(
                 keymap_content=keymap_content,
@@ -225,9 +218,7 @@ class ZMKKeymapParser:
             if layout_data:
                 layout_data.date = datetime.now()
                 layout_data.creator = "glovebox"
-                layout_data.notes = (
-                    f"Automatically generated from keymap file {keymap_file.name}"
-                )
+                layout_data.notes = "Automatically generated from keymap content"
 
                 result.layout_data = layout_data
                 result.success = True
@@ -278,43 +269,37 @@ class ZMKKeymapParser:
         # Return None for default configuration
         return None
 
-    def _get_template_path(self, profile: "KeyboardProfile") -> Path | None:
-        """Get template file path from keyboard profile.
+    def _get_template_content(self, profile: "KeyboardProfile") -> str | None:
+        """Get template content from keyboard profile.
 
         Args:
             profile: Keyboard profile object
 
         Returns:
-            Path to template file or None if not found
+            Template content as string or None if not found
         """
         try:
             # Check if profile has keymap template configuration
             if (
                 hasattr(profile, "keymap")
                 and profile.keymap
-                and hasattr(profile.keymap, "keymap_dtsi_file")
+                and hasattr(profile.keymap, "keymap_dtsi_content")
             ):
-                # External template file
-                template_file = profile.keymap.keymap_dtsi_file
-                if template_file:
-                    # Resolve relative to profile config directory if available
-                    if hasattr(profile, "config_path") and profile.config_path:
-                        config_dir = Path(profile.config_path).parent
-                        return Path(config_dir / template_file)
-                    else:
-                        # Fallback to treating template_file as relative to built-in keyboards
-                        package_path = Path(__file__).parent.parent.parent.parent
-                        return Path(package_path / "keyboards" / template_file)
+                # Direct template content
+                template_content = profile.keymap.keymap_dtsi_content
+                if template_content:
+                    # Ensure we return a string type, handle potential non-string values
+                    return str(template_content) if template_content else None
 
-            # Fallback to default template location in the project
-            project_root = Path(__file__).parent.parent.parent.parent
-            return Path(
-                project_root / "keyboards" / "config" / "templates" / "keymap.dtsi.j2"
-            )
+            # If no direct content available, return None
+            # Template handling is now responsibility of the caller
+            return None
 
         except Exception as e:
             if self.logger:
-                self.logger.warning("Could not determine template path", error=str(e))
+                self.logger.warning(
+                    "Could not determine template content", error=str(e)
+                )
             return None
 
     def _extract_balanced_node(self, content: str, node_name: str) -> str | None:
