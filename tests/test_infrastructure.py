@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
-
 import json
 import os
 import tempfile
 import time
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from zmk_layout.infrastructure import (
     BuilderState,

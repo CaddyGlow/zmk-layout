@@ -2,12 +2,14 @@
 
 import gc
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
 from zmk_layout.models import HoldTapBehavior, LayoutBinding, LayoutData
 from zmk_layout.providers.factory import create_default_providers
+
 
 @pytest.mark.performance
 class TestPerformance:

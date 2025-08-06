@@ -149,7 +149,7 @@ from zmk_layout.providers import LayoutProviders
 class MyConfigProvider:
     def get_behavior_definitions(self):
         return [...]
-    
+
     def get_validation_rules(self):
         return {...}
 

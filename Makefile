@@ -24,7 +24,7 @@ check:
 	@echo "Running ruff format check..."
 	uv run ruff format --check .
 	@echo "Running mypy..."
-	uv run mypy zmk_layout 
+	uv run mypy zmk_layout
 	@echo "Running tests..."
 	uv run pytest tests/ -v -m "not performance"
 	@echo "All checks passed!"
@@ -36,7 +36,7 @@ fix-hard:
 
 # Run tests only
 test:
-	uv run pytest tests/ 
+	uv run pytest tests/
 
 # Run performance tests only
 test-perf:
@@ -70,11 +70,12 @@ clean:
 
 # Install package in development mode
 install:
-	uv pip install -e ".[dev]"
+	uv sync --all-extras --dev
+	uv run pre-commit install-hooks
 
 # Quick check for pre-commit
-pre-commit: fix check
-	@echo "Pre-commit checks passed!"
+pre-commit:
+	uv run pre-commit run --all-files
 
 # CI/CD target for GitHub Actions
 ci: check

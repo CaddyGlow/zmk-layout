@@ -52,7 +52,7 @@ class ChainInspector:
 
     def __init__(self, lightweight: bool = False) -> None:
         """Initialize chain inspector.
-        
+
         Args:
             lightweight: Enable lightweight mode with minimal overhead
         """
@@ -76,36 +76,43 @@ class ChainInspector:
         """
         if not self._enabled:
             return builder
-        
+
         # In lightweight mode, return a minimal wrapper
         if self._lightweight:
             return self._wrap_lightweight(builder)
-        
+
         # Use full inspection mode
         return self._wrap_full(builder)
+
     def _wrap_lightweight(self, builder: Any) -> Any:
         """Lightweight wrapper with minimal overhead."""
+
         class LightweightWrapper:
             def __init__(self, target: Any) -> None:
                 self._target = target
-            
+
             def __getattr__(self, name: str) -> Any:
                 attr = getattr(self._target, name)
                 if not callable(attr):
                     return attr
-                
+
                 def wrapped(*args: Any, **kwargs: Any) -> Any:
                     result = attr(*args, **kwargs)
                     # Only wrap if it's a builder
-                    if hasattr(result, "__class__") and "Builder" in result.__class__.__name__:
+                    if (
+                        hasattr(result, "__class__")
+                        and "Builder" in result.__class__.__name__
+                    ):
                         return LightweightWrapper(result)
                     return result
+
                 return wrapped
-        
+
         return LightweightWrapper(builder)
-    
+
     def _wrap_full(self, builder: Any) -> Any:
         """Full wrapper with complete inspection."""
+
         class InspectedBuilder:
             """Wrapper that tracks builder calls."""
 
@@ -127,7 +134,7 @@ class ChainInspector:
                 """Extract builder attributes efficiently."""
                 # Only capture public attributes from __dict__ for performance
                 attrs = {}
-                if hasattr(self._target, '__dict__'):
+                if hasattr(self._target, "__dict__"):
                     for attr_name, attr_value in self._target.__dict__.items():
                         if not attr_name.startswith("_"):
                             attrs[attr_name] = attr_value

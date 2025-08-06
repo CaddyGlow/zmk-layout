@@ -114,6 +114,7 @@ python_functions = ["test_*"]
 [dependency-groups]
 dev = [
   "mypy>=1.17.1",
+  "pre-commit>=4.2.0",
   "psutil>=7.0.0",
   "pytest>=8.4.1",
   "pytest-cov>=6.2.1",

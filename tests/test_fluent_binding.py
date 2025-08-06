@@ -1,7 +1,5 @@
 """Test suite for fluent binding builders."""
 
-import pytest
-
 import time
 from concurrent.futures import ThreadPoolExecutor
 
