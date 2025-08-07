@@ -121,55 +121,75 @@ class TestZmkGenerator:
         assert len(layout_data.hold_taps) == 1
 
 
-class TestConfigGenerator:
-    """Test configuration file generation (simplified)."""
+class TestKeymapGenerator:
+    """Test keymap generation with fluent API."""
 
-    def test_config_generation_imports(self) -> None:
-        """Test that config generation module imports work."""
-        from zmk_layout.generators.config_generator import (
-            generate_config_file,
-            get_required_includes_for_layout,
+    def test_keymap_generation_imports(self) -> None:
+        """Test that keymap generation module imports work."""
+        from zmk_layout.core.layout import Layout
+        from zmk_layout.generators.keymap_generator import (
+            ConfigBuilder,
+            ExportManager,
+            KeymapBuilder,
         )
 
-        # Functions should be importable
-        assert generate_config_file is not None
-        assert get_required_includes_for_layout is not None
+        # Classes should be importable
+        assert Layout is not None
+        assert ExportManager is not None
+        assert KeymapBuilder is not None
+        assert ConfigBuilder is not None
 
-    def test_get_required_includes_stub(self) -> None:
-        """Test stub implementation of get_required_includes_for_layout."""
-        from zmk_layout.generators.config_generator import (
-            get_required_includes_for_layout,
-        )
+    def test_layout_export_property(self) -> None:
+        """Test that Layout has export property."""
+        from zmk_layout.core.layout import Layout
 
-        mock_profile = Mock()
         layout_data = LayoutData(
             keyboard="test", title="Test", layers=[], layer_names=[]
         )
+        layout = Layout(layout_data)
 
-        result = get_required_includes_for_layout(mock_profile, layout_data)
-        assert isinstance(result, list)
-        # Stub implementation returns empty list
-        assert result == []
+        # Should have export property
+        assert hasattr(layout, "export")
+        export_manager = layout.export
+        assert export_manager is not None
 
-    def test_generate_config_file_basic(self) -> None:
+        # Should have keymap and config methods
+        assert hasattr(export_manager, "keymap")
+        assert hasattr(export_manager, "config")
+
+    def test_keymap_generation_basic(self) -> None:
+        """Test basic keymap generation."""
+        from zmk_layout.core.layout import Layout
+
+        layout_data = LayoutData(
+            keyboard="test",
+            title="Test",
+            layers=[[LayoutBinding.from_str("&kp A")]],
+            layer_names=["default"]
+        )
+        layout = Layout(layout_data)
+
+        # Generate keymap
+        keymap = layout.export.keymap().generate()
+
+        assert isinstance(keymap, str)
+        assert len(keymap) > 0
+        assert "keymap" in keymap
+
+    def test_config_generation_basic(self) -> None:
         """Test basic config file generation."""
-        from zmk_layout.generators.config_generator import generate_config_file
+        from zmk_layout.core.layout import Layout
 
-        mock_file_provider = Mock()
-        mock_profile = Mock()
         layout_data = LayoutData(
             keyboard="test", title="Test", layers=[], layer_names=[]
         )
+        layout = Layout(layout_data)
 
-        with patch(
-            "zmk_layout.generators.config_generator.generate_kconfig_conf"
-        ) as mock_gen:
-            mock_gen.return_value = ("# Test config", {"setting": "value"})
+        # Generate config
+        config_content, settings = layout.export.config().generate()
 
-            result = generate_config_file(mock_profile, layout_data)
-
-            assert isinstance(result, tuple)
-            assert len(result) == 2
+        assert isinstance(config_content, str)
+        assert isinstance(settings, dict)
 
 
 class TestTemplateContext:

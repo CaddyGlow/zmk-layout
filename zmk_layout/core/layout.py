@@ -10,6 +10,7 @@ from zmk_layout.models.metadata import LayoutData
 
 if TYPE_CHECKING:
     from zmk_layout.core.managers import BehaviorManager, LayerManager
+    from zmk_layout.generators.keymap_generator import ExportManager
     from zmk_layout.providers import LayoutProviders
 
 
@@ -181,122 +182,17 @@ class Layout:
         """
         return self._data.model_dump(exclude_none=True)
 
-    def to_keymap(
-        self, keyboard_name: str | None = None, include_headers: bool = True
-    ) -> str:
-        """Convert layout to ZMK keymap format string.
-
-        Args:
-            keyboard_name: Optional keyboard name for the profile (defaults to layout's keyboard)
-            include_headers: Whether to include standard keymap headers and wrapper
+    @property
+    def export(self) -> "ExportManager":
+        """Access export functionality with fluent interface.
 
         Returns:
-            ZMK keymap content as string
+            Export manager for generating various output formats
         """
-        from types import SimpleNamespace
-
-        from zmk_layout.generators.zmk_generator import ZMKGenerator
-
-        # Get providers
-        providers = self._providers
-        if providers is None:
-            from zmk_layout.providers.factory import create_default_providers
-
-            providers = create_default_providers()
-
-        # Create generator
-        generator = ZMKGenerator(
-            configuration_provider=providers.configuration,
-            template_provider=providers.template,
-            logger=providers.logger,
-        )
-
-        # Get layout data
-        layout_dict = self.to_dict()
-
-        # Process layers to extract binding objects
-        layers_data = []
-        for layer in layout_dict.get("layers", []):
-            if isinstance(layer, list):
-                layer_bindings = []
-                for binding in layer:
-                    if isinstance(binding, dict):
-                        # Convert binding dict to LayoutBinding object
-                        try:
-                            layout_binding = LayoutBinding.model_validate(binding)
-                            layer_bindings.append(layout_binding)
-                        except Exception:
-                            # Fallback: create LayoutBinding from string
-                            if "value" in binding:
-                                value = binding["value"]
-                                params = binding.get("params", [])
-                                if (
-                                    params
-                                    and isinstance(params[0], dict)
-                                    and "value" in params[0]
-                                ):
-                                    binding_str = f"{value} {params[0]['value']}"
-                                else:
-                                    binding_str = value
-                            else:
-                                binding_str = str(binding)
-                            layout_binding = LayoutBinding.from_str(binding_str)
-                            layer_bindings.append(layout_binding)
-                    else:
-                        # Convert string to LayoutBinding
-                        layout_binding = LayoutBinding.from_str(str(binding))
-                        layer_bindings.append(layout_binding)
-                layers_data.append(layer_bindings)
-            else:
-                # Handle layer as a single item
-                if isinstance(layer, dict):
-                    try:
-                        layer_bindings = [
-                            LayoutBinding.model_validate(binding) for binding in layer
-                        ]
-                        layers_data.append(layer_bindings)
-                    except Exception:
-                        layers_data.append([])
-                else:
-                    layers_data.append([])
-
-        # Create a minimal keyboard profile
-        keyboard = keyboard_name or layout_dict.get("keyboard", "generic")
-        profile = SimpleNamespace(
-            keyboard_config=SimpleNamespace(
-                zmk=SimpleNamespace(
-                    compatible_strings=SimpleNamespace(keymap="zmk,keymap"),
-                    layout=SimpleNamespace(
-                        keys=len(layers_data[0]) if layers_data else 42
-                    ),
-                )
-            )
-        )
-
-        # Generate keymap node
-        keymap_node = generator.generate_keymap_node(
-            profile=profile,
-            layer_names=layout_dict.get("layer_names", ["default"]),
-            layers_data=layers_data,
-        )
-
-        if include_headers:
-            # Add standard keymap wrapper
-            return f"""/*
- * Copyright (c) 2024 The ZMK Contributors
- * SPDX-License-Identifier: MIT
- */
-
-#include <behaviors.dtsi>
-#include <dt-bindings/zmk/keys.h>
-#include <dt-bindings/zmk/bt.h>
-
-/ {{
-{keymap_node}
-}};
-"""
-        else:
-            return keymap_node
+        if not hasattr(self, "_export_manager"):
+            from zmk_layout.generators.keymap_generator import ExportManager
+            self._export_manager = ExportManager(self)
+        return self._export_manager
 
     def validate(self) -> "Layout":
         """Validate layout and return self for chaining.
