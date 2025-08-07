@@ -1,6 +1,5 @@
 """Tests specifically designed to boost coverage of under-tested modules."""
 
-from pathlib import Path
 
 import pytest
 

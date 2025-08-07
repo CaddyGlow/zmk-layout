@@ -4,7 +4,6 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from zmk_layout.core.exceptions import ValidationError
-from zmk_layout.models.core import LayoutBinding
 from zmk_layout.models.metadata import LayoutData
 
 

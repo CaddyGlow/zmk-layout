@@ -1,7 +1,7 @@
 """JSON data operations for layout data."""
 
 import json
-from typing import Any, Optional, Union
+from typing import Any
 
 from ..models import LayoutData
 

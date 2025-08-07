@@ -1,14 +1,10 @@
 """Comprehensive tests for keymap_generator module with fluent API."""
 
-import logging
-from datetime import datetime
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
-from pytest import LogCaptureFixture
 
 from zmk_layout.core.layout import Layout
 from zmk_layout.generators.keymap_generator import (
@@ -17,7 +13,6 @@ from zmk_layout.generators.keymap_generator import (
     KeymapBuilder,
 )
 from zmk_layout.models import LayoutBinding, LayoutData
-from zmk_layout.models.behaviors import ComboBehavior, HoldTapBehavior, MacroBehavior
 from zmk_layout.models.metadata import ConfigParameter
 
 

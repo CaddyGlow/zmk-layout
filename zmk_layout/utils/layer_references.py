@@ -98,7 +98,6 @@ def process_json_file(
             logger.info(f"{operation_name} from {file_path}...")
 
         # Load JSON data directly using pathlib
-        import json
 
         json_content = Path(file_path).read_text(encoding="utf-8")
 

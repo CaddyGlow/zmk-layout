@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest

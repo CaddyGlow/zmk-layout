@@ -28,7 +28,6 @@ NEW WAY (simple):
 import json
 import sys
 from pathlib import Path
-from typing import Any
 
 
 # Add the keyboards directory to the path for profile imports

@@ -7,9 +7,7 @@ and integration with external providers using the new data-only API approach.
 File operations are handled externally, while Layout operates on dictionary data.
 """
 
-import json
 from pathlib import Path
-from typing import Any
 
 from zmk_layout import Layout
 from zmk_layout.core.exceptions import InvalidBindingError, LayerNotFoundError

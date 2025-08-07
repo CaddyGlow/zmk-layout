@@ -7,9 +7,7 @@ using the new data-only API approach. File operations are handled externally usi
 pathlib.Path, while Layout operates purely on dictionary data.
 """
 
-import json
 from pathlib import Path
-from typing import Any
 
 from zmk_layout import Layout
 from zmk_layout.utils.json_operations import parse_json_data, serialize_json_data

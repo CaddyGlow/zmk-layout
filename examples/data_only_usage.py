@@ -17,7 +17,6 @@ Key concepts:
 
 import json
 from pathlib import Path
-from typing import Any
 
 from zmk_layout import Layout
 from zmk_layout.generators.zmk_generator import ZMKGenerator

@@ -14,18 +14,11 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from zmk_layout.models import LayoutBinding, LayoutData
-from zmk_layout.models.behaviors import (
-    ComboBehavior,
-    HoldTapBehavior,
-    MacroBehavior,
-    TapDanceBehavior,
-)
 
 
 if TYPE_CHECKING:
     from zmk_layout.core.layout import Layout
     from zmk_layout.generators.zmk_generator import ZMKGenerator
-    from zmk_layout.providers import LayoutProviders
 
 logger = logging.getLogger(__name__)
 

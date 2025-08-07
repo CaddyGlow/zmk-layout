@@ -4,7 +4,6 @@
 from types import SimpleNamespace
 
 from zmk_layout.core.layout import Layout
-from zmk_layout.models import LayoutData
 from zmk_layout.models.core import LayoutBinding
 
 

@@ -7,11 +7,10 @@ glovebox with minimal changes to existing code.
 """
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # Import from zmk-layout library
 from zmk_layout import Layout
-from zmk_layout.infrastructure import ProviderBuilder
 from zmk_layout.providers import LayoutProviders
 
 

@@ -6,7 +6,6 @@ This demonstrates the core fluent API working with the new data-only approach:
 Layout().layers.add().set() with external file operations using Path.
 """
 
-import json
 from pathlib import Path
 
 from zmk_layout import Layout

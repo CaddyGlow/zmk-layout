@@ -1,6 +1,5 @@
 """Performance benchmarking tests to ensure <5% overhead."""
 
-import gc
 import time
 from collections.abc import Callable
 from typing import Any

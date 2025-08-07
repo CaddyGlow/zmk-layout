@@ -1,7 +1,6 @@
 """Simplified tests for zmk_layout generators modules."""
 
-from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from zmk_layout.generators.zmk_generator import (
     BehaviorFormatter,

@@ -32,6 +32,8 @@ check:
 # Fix code with unsafe fixes
 fix-hard:
 	uv run ruff check . --fix --unsafe-fixes
+	uv run uv run ruff check . --select F401 --fix --unsafe-fixes # Used variable import
+	uv run uv run ruff check . --select I --fix --unsafe-fixes  # Import order
 	uv run ruff format .
 
 # Run tests only

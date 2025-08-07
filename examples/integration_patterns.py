@@ -6,12 +6,11 @@ This example shows how to integrate the zmk-layout library into larger applicati
 work with custom providers, and handle advanced use cases using the new data-only API.
 """
 
-import json
 from pathlib import Path
 
 from zmk_layout import Layout
 from zmk_layout.providers import create_default_providers
-from zmk_layout.utils.json_operations import parse_json_data, serialize_json_data
+from zmk_layout.utils.json_operations import serialize_json_data
 
 
 # Custom file operations now handled directly through pathlib.Path
