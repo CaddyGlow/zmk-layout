@@ -20,7 +20,7 @@ class BehaviorExtractorProtocol(Protocol):
     """Protocol for behavior extraction."""
 
     def extract_behaviors_as_models(
-        self, roots: list[DTNode], content: str, defines: dict[str, str] | None = None
+        self, roots: list[DTNode], source_content: str = "", defines: dict[str, str] | None = None
     ) -> dict[str, Any]:
         """Extract behaviors from AST roots and return as models."""
         ...
@@ -47,28 +47,12 @@ class SectionExtractorProtocol(Protocol):
         ...
 
 
-class UniversalBehaviorExtractor:
-    """Universal behavior extractor that can extract all types of behaviors."""
-
-    def __init__(self, logger: "LayoutLogger | None" = None) -> None:
-        self.logger = logger
-
-    def extract_behaviors_as_models(
-        self, roots: list[DTNode], content: str, defines: dict[str, str] | None = None
-    ) -> dict[str, Any]:
-        """Extract behaviors from AST roots and convert to models."""
-        # Simplified behavior extraction - for now just return empty dict
-        # In a full implementation, this would walk the AST and extract behaviors
-        return {
-            "hold_taps": [],
-            "macros": [],
-            "combos": [],
-            "tap_dances": [],
-            "sticky_keys": [],
-            "caps_words": [],
-            "mod_morphs": [],
-            "input_listeners": [],
-        }
+# Import the real UniversalBehaviorExtractor from ast_walker
+# The stub implementation is removed and replaced with import
+def _get_real_behavior_extractor(logger: "LayoutLogger | None" = None):
+    """Get the real UniversalBehaviorExtractor from ast_walker.py"""
+    from .ast_walker import UniversalBehaviorExtractor
+    return UniversalBehaviorExtractor(logger)
 
 
 class SectionExtractor:
@@ -81,7 +65,7 @@ class SectionExtractor:
     ) -> None:
         """Initialize section extractor with dependencies."""
         self.logger = logger
-        self.behavior_extractor = behavior_extractor or UniversalBehaviorExtractor(
+        self.behavior_extractor = behavior_extractor or _get_real_behavior_extractor(
             logger
         )
 
@@ -319,7 +303,7 @@ class SectionExtractor:
                 context.defines if context and hasattr(context, "defines") else None
             )
             converted_behaviors = self.behavior_extractor.extract_behaviors_as_models(
-                roots, content_raw, defines
+                roots=roots, source_content=content_raw, defines=defines
             )
 
             # Return appropriate data based on section type

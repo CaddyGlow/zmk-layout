@@ -201,7 +201,7 @@ class BaseKeymapProcessor:
             return {}
         behavior_models = (
             self.section_extractor.behavior_extractor.extract_behaviors_as_models(
-                roots, content, defines
+                roots=roots, source_content=content, defines=defines
             )
         )
         return behavior_models
@@ -603,7 +603,7 @@ class TemplateAwareProcessor(BaseKeymapProcessor):
                 behavior_models = {}
             else:
                 behavior_models = self.section_extractor.behavior_extractor.extract_behaviors_as_models(
-                    roots, dtsi_content
+                    roots=roots, source_content=dtsi_content
                 )
 
             # Extract input listeners from behavior models

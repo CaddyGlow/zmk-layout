@@ -497,7 +497,13 @@ class Glove80KeymapConfig:
     system_behaviors_dts: str = """
 / {
     behaviors {
-        ZMK_TD_LAYER(lower, LAYER_Lower)
+        lower: lower {
+            compatible = "zmk,behavior-tap-dance";
+            label = "LAYER_Lower";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&mo 1>, <&to 1>;
+        };
     };
 };
 
