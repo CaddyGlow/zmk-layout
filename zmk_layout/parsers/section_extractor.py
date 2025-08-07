@@ -20,7 +20,10 @@ class BehaviorExtractorProtocol(Protocol):
     """Protocol for behavior extraction."""
 
     def extract_behaviors_as_models(
-        self, roots: list[DTNode], source_content: str = "", defines: dict[str, str] | None = None
+        self,
+        roots: list[DTNode],
+        source_content: str = "",
+        defines: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Extract behaviors from AST roots and return as models."""
         ...
@@ -49,9 +52,12 @@ class SectionExtractorProtocol(Protocol):
 
 # Import the real UniversalBehaviorExtractor from ast_walker
 # The stub implementation is removed and replaced with import
-def _get_real_behavior_extractor(logger: "LayoutLogger | None" = None):
+def _get_real_behavior_extractor(
+    logger: "LayoutLogger | None" = None,
+) -> "BehaviorExtractorProtocol":
     """Get the real UniversalBehaviorExtractor from ast_walker.py"""
     from .ast_walker import UniversalBehaviorExtractor
+
     return UniversalBehaviorExtractor(logger)
 
 
@@ -416,39 +422,7 @@ class SectionExtractor:
             )
 
 
-# Legacy stub classes for backward compatibility
-class StubBehaviorExtractor:
-    """Stub implementation of behavior extractor."""
-
-    def extract_behaviors_as_models(
-        self, roots: list[DTNode], content: str, defines: dict[str, str] | None = None
-    ) -> dict[str, Any]:
-        """Stub implementation."""
-        return {}
-
-
-class StubSectionExtractor:
-    """Stub implementation of section extractor."""
-
-    def __init__(self) -> None:
-        self._behavior_extractor = StubBehaviorExtractor()
-
-    def extract_sections(
-        self, content: str, configs: list[Any]
-    ) -> dict[str, ExtractedSection]:
-        """Stub implementation."""
-        return {}
-
-    def process_extracted_sections(
-        self, sections: dict[str, ExtractedSection], context: ParsingContext
-    ) -> dict[str, Any]:
-        """Stub implementation."""
-        return {}
-
-    @property
-    def behavior_extractor(self) -> BehaviorExtractorProtocol:
-        """Get behavior extractor."""
-        return self._behavior_extractor
+# Legacy stub classes removed - using real implementations from ast_walker.py
 
 
 def create_section_extractor(

@@ -72,17 +72,16 @@ def base_profile() -> SimpleNamespace:
                     hold_tap="zmk,behavior-hold-tap",
                     tap_dance="zmk,behavior-tap-dance",
                     macro="zmk,behavior-macro",
-                    combos="zmk,combos"
+                    combos="zmk,combos",
                 ),
                 patterns=SimpleNamespace(
                     kconfig_prefix="CONFIG_ZMK_",
-                    layer_define="#define {layer_name} {layer_index}"
+                    layer_define="#define {layer_name} {layer_index}",
                 ),
                 layout=SimpleNamespace(keys=42),
                 validation_limits=SimpleNamespace(
-                    required_holdtap_bindings=2,
-                    max_macro_params=32
-                )
+                    required_holdtap_bindings=2, max_macro_params=32
+                ),
             ),
         ),
     )
@@ -168,7 +167,9 @@ class TestKeymapBuilder:
     def test_generate_without_headers(self, base_layout: Layout) -> None:
         """Test keymap generation without headers."""
         keymap_with_headers = base_layout.export.keymap().with_headers(True).generate()
-        keymap_without_headers = base_layout.export.keymap().with_headers(False).generate()
+        keymap_without_headers = (
+            base_layout.export.keymap().with_headers(False).generate()
+        )
 
         # Without headers should be shorter
         assert len(keymap_without_headers) < len(keymap_with_headers)
@@ -191,10 +192,7 @@ class TestKeymapBuilder:
         """Test keymap generation with behaviors."""
         # Add a behavior to the layout
         base_layout.behaviors.add_hold_tap(
-            name="mt_ctrl",
-            tap="&kp A",
-            hold="&kp LCTRL",
-            tapping_term_ms=200
+            name="mt_ctrl", tap="&kp A", hold="&kp LCTRL", tapping_term_ms=200
         )
 
         keymap = base_layout.export.keymap().with_behaviors(True).generate()
@@ -204,29 +202,31 @@ class TestKeymapBuilder:
 
     def test_generate_with_custom_context(self, base_layout: Layout) -> None:
         """Test keymap generation with custom context variables."""
-        keymap = (base_layout.export
-            .keymap()
+        keymap = (
+            base_layout.export.keymap()
             .with_context(
-                author="Test Author",
-                version="1.2.3",
-                custom_var="custom_value"
+                author="Test Author", version="1.2.3", custom_var="custom_value"
             )
-            .generate())
+            .generate()
+        )
 
         assert isinstance(keymap, str)
         # Context variables should be accessible in template
 
-    def test_method_chaining(self, base_layout: Layout, base_profile: SimpleNamespace) -> None:
+    def test_method_chaining(
+        self, base_layout: Layout, base_profile: SimpleNamespace
+    ) -> None:
         """Test complete method chaining."""
-        keymap = (base_layout.export
-            .keymap(base_profile)
+        keymap = (
+            base_layout.export.keymap(base_profile)
             .with_headers(True)
             .with_behaviors(True)
             .with_combos(True)
             .with_macros(True)
             .with_tap_dances(True)
             .with_context(test="value")
-            .generate())
+            .generate()
+        )
 
         assert isinstance(keymap, str)
         assert len(keymap) > 0
@@ -276,25 +276,26 @@ class TestConfigBuilder:
         self, base_layout: Layout, base_profile: SimpleNamespace
     ) -> None:
         """Test config generation with additional options."""
-        config_content, settings = (base_layout.export
-            .config(base_profile)
-            .with_options(
-                SLEEP_ENABLE=True,
-                IDLE_TIMEOUT=45000
-            )
-            .generate())
+        config_content, settings = (
+            base_layout.export.config(base_profile)
+            .with_options(SLEEP_ENABLE=True, IDLE_TIMEOUT=45000)
+            .generate()
+        )
 
         assert isinstance(config_content, str)
         assert isinstance(settings, dict)
         # Should include the additional options
 
-    def test_method_chaining(self, base_layout: Layout, base_profile: SimpleNamespace) -> None:
+    def test_method_chaining(
+        self, base_layout: Layout, base_profile: SimpleNamespace
+    ) -> None:
         """Test complete method chaining."""
-        config_content, settings = (base_layout.export
-            .config(base_profile)
+        config_content, settings = (
+            base_layout.export.config(base_profile)
             .with_options(TEST_OPTION=123)
             .with_defaults(False)
-            .generate())
+            .generate()
+        )
 
         assert isinstance(config_content, str)
         assert isinstance(settings, dict)
@@ -303,30 +304,36 @@ class TestConfigBuilder:
 class TestIntegration:
     """Integration tests for the complete fluent API."""
 
-    def test_complete_workflow(self, base_layout: Layout, base_profile: SimpleNamespace) -> None:
+    def test_complete_workflow(
+        self, base_layout: Layout, base_profile: SimpleNamespace
+    ) -> None:
         """Test a complete workflow with the fluent API."""
         # Add behaviors
         base_layout.behaviors.add_hold_tap("mt_shift", "&kp A", "&kp LSHIFT")
         base_layout.behaviors.add_combo("esc_combo", [0, 1], "&kp ESC")
-        base_layout.behaviors.add_macro("email", ["&kp E", "&kp M", "&kp A", "&kp I", "&kp L"])
+        base_layout.behaviors.add_macro(
+            "email", ["&kp E", "&kp M", "&kp A", "&kp I", "&kp L"]
+        )
 
         # Generate keymap with all features
-        keymap = (base_layout.export
-            .keymap(base_profile)
+        keymap = (
+            base_layout.export.keymap(base_profile)
             .with_headers(True)
             .with_behaviors(True)
             .with_combos(True)
             .with_macros(True)
-            .generate())
+            .generate()
+        )
 
         assert isinstance(keymap, str)
         assert len(keymap) > 100  # Should have substantial content
 
         # Generate config
-        config_content, settings = (base_layout.export
-            .config(base_profile)
+        config_content, settings = (
+            base_layout.export.config(base_profile)
             .with_options(COMBO_MAX=10)
-            .generate())
+            .generate()
+        )
 
         assert isinstance(config_content, str)
         assert isinstance(settings, dict)
@@ -377,10 +384,7 @@ class TestErrorHandling:
     def test_empty_layout(self) -> None:
         """Test handling of empty layout."""
         empty_data = LayoutData(
-            keyboard="empty",
-            title="Empty",
-            layers=[],
-            layer_names=[]
+            keyboard="empty", title="Empty", layers=[], layer_names=[]
         )
         empty_layout = Layout(empty_data)
 

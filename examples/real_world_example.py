@@ -451,7 +451,9 @@ def main():
         print("\nNew Fluent API Methods Demonstrated:")
         print("• Layout.create_empty() - Start with empty layout")
         print("• Layout.to_dict() - Convert to dictionary")
-        print("• Layout.export.keymap().generate() - Generate ZMK keymap with fluent API")
+        print(
+            "• Layout.export.keymap().generate() - Generate ZMK keymap with fluent API"
+        )
         print("• Layout.from_string() - Auto-detect and load any format")
         print("• Path.read_text() / Path.write_text() - Handle file I/O externally")
 

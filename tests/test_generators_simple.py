@@ -165,7 +165,7 @@ class TestKeymapGenerator:
             keyboard="test",
             title="Test",
             layers=[[LayoutBinding.from_str("&kp A")]],
-            layer_names=["default"]
+            layer_names=["default"],
         )
         layout = Layout(layout_data)
 

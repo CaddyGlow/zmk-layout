@@ -26,6 +26,20 @@ class TemplateProvider(Protocol):
         """
         ...
 
+    def render_template(
+        self, template_path: str, context: dict[str, str | int | float | bool | None]
+    ) -> str:
+        """Render a template file with given context.
+
+        Args:
+            template_path: Path to template file
+            context: Dictionary of variables for template rendering
+
+        Returns:
+            Rendered content with template variables substituted
+        """
+        ...
+
     def has_template_syntax(self, content: str) -> bool:
         """Check if content contains template syntax requiring processing.
 

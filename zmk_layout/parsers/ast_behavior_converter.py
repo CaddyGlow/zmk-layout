@@ -638,15 +638,39 @@ class ASTBehaviorConverter:
             else:
                 # Fallback to raw parsing for non-array values
                 raw_value = prop.value.raw.strip()
-                # For device tree bindings, split by comma and clean each part
+                # For device tree bindings, parse properly to preserve parameters
                 import re
 
-                # Remove outer angle brackets and split by comma
-                cleaned_raw = re.sub(r"<\s*([^>]+)\s*>", r"\1", raw_value)
-                parts = [part.strip() for part in cleaned_raw.split(",")]
+                # Remove outer angle brackets first
+                cleaned_raw = re.sub(r"^\s*<\s*(.+?)\s*>\s*$", r"\1", raw_value)
+                
+                # Split by comma but be careful about parameters within bindings
+                # This handles cases like: "&kp LGUI, &kp A" or "&mo 2, &rgb_ug_status_macro"
+                parts = []
+                current_binding = ""
+                paren_depth = 0
+                
+                for char in cleaned_raw:
+                    if char == "(":
+                        paren_depth += 1
+                    elif char == ")":
+                        paren_depth -= 1
+                    elif char == "," and paren_depth == 0:
+                        # This is a real separator, not within parentheses
+                        if current_binding.strip():
+                            parts.append(current_binding.strip())
+                        current_binding = ""
+                        continue
+                    
+                    current_binding += char
+                
+                # Add the last binding
+                if current_binding.strip():
+                    parts.append(current_binding.strip())
 
                 result = []
                 for part in parts:
+                    part = part.strip()
                     if part and part.startswith("&"):
                         result.append(part)
                 return result

@@ -313,9 +313,7 @@ class TestLayerReferences:
         def test_operation(data: LayoutData) -> str:
             return f"Processed {data.keyboard}"
 
-        result = process_json_file(
-            test_file, "test operation", test_operation, logger
-        )
+        result = process_json_file(test_file, "test operation", test_operation, logger)
 
         assert result == "Processed test"
         logger.info.assert_called_once()
@@ -331,9 +329,7 @@ class TestLayerReferences:
             return "success"
 
         with pytest.raises(LayoutError, match="test operation failed"):
-            process_json_file(
-                test_file, "test operation", test_operation, logger
-            )
+            process_json_file(test_file, "test operation", test_operation, logger)
 
         logger.error.assert_called_once()
 

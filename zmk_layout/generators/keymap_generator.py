@@ -87,6 +87,7 @@ class ExportManager:
             Layout data as JSON string
         """
         import json
+
         return json.dumps(self.to_dict(), indent=indent)
 
 
@@ -114,6 +115,11 @@ class KeymapBuilder:
         self._template_path: str | None = None
         self._template_context: dict[str, Any] = {}
         self._zmk_generator: ZMKGenerator | None = None
+        
+        # Use default template from profile if available
+        if hasattr(self._profile, 'keyboard_config') and hasattr(self._profile.keyboard_config, 'keymap'):
+            if hasattr(self._profile.keyboard_config.keymap, 'default_template_path'):
+                self._template_path = self._profile.keyboard_config.keymap.default_template_path
 
     def with_headers(self, include: bool = True) -> KeymapBuilder:
         """Include/exclude standard ZMK headers.
@@ -232,26 +238,29 @@ class KeymapBuilder:
             keyboard_name=keyboard_name,
             firmware_version="1.0.0",
             keyboard_config=SimpleNamespace(
-                key_count=len(self._layout.data.layers[0]) if self._layout.data.layers else 42,
+                key_count=len(self._layout.data.layers[0])
+                if self._layout.data.layers
+                else 42,
                 zmk=SimpleNamespace(
                     compatible_strings=SimpleNamespace(
                         keymap="zmk,keymap",
                         hold_tap="zmk,behavior-hold-tap",
                         tap_dance="zmk,behavior-tap-dance",
                         macro="zmk,behavior-macro",
-                        combos="zmk,combos"
+                        combos="zmk,combos",
                     ),
                     layout=SimpleNamespace(
-                        keys=len(self._layout.data.layers[0]) if self._layout.data.layers else 42
+                        keys=len(self._layout.data.layers[0])
+                        if self._layout.data.layers
+                        else 42
                     ),
                     patterns=SimpleNamespace(
                         kconfig_prefix="CONFIG_ZMK_",
-                        layer_define="#define {layer_name} {layer_index}"
+                        layer_define="#define {layer_name} {layer_index}",
                     ),
                     validation_limits=SimpleNamespace(
-                        required_holdtap_bindings=2,
-                        max_macro_params=32
-                    )
+                        required_holdtap_bindings=2, max_macro_params=32
+                    ),
                 ),
                 keymap=SimpleNamespace(
                     header_includes=["behaviors.dtsi", "dt-bindings/zmk/keys.h"],
@@ -259,9 +268,9 @@ class KeymapBuilder:
                     system_behaviors_dts="",
                     keymap_dtsi=None,
                     keymap_dtsi_file=None,
-                )
+                ),
             ),
-            kconfig_options={}
+            kconfig_options={},
         )
 
     def _get_zmk_generator(self) -> ZMKGenerator:
@@ -294,23 +303,33 @@ class KeymapBuilder:
         layout_data = self._layout.data
 
         # Generate DTSI components based on flags
-        layer_defines = generator.generate_layer_defines(self._profile, layout_data.layer_names)
+        layer_defines = generator.generate_layer_defines(
+            self._profile, layout_data.layer_names
+        )
 
         behaviors_dtsi = ""
         if self._include_behaviors and layout_data.hold_taps:
-            behaviors_dtsi = generator.generate_behaviors_dtsi(self._profile, layout_data.hold_taps)
+            behaviors_dtsi = generator.generate_behaviors_dtsi(
+                self._profile, layout_data.hold_taps
+            )
 
         tap_dances_dtsi = ""
         if self._include_tap_dances and layout_data.tap_dances:
-            tap_dances_dtsi = generator.generate_tap_dances_dtsi(self._profile, layout_data.tap_dances)
+            tap_dances_dtsi = generator.generate_tap_dances_dtsi(
+                self._profile, layout_data.tap_dances
+            )
 
         combos_dtsi = ""
         if self._include_combos and layout_data.combos:
-            combos_dtsi = generator.generate_combos_dtsi(self._profile, layout_data.combos, layout_data.layer_names)
+            combos_dtsi = generator.generate_combos_dtsi(
+                self._profile, layout_data.combos, layout_data.layer_names
+            )
 
         macros_dtsi = ""
         if self._include_macros and layout_data.macros:
-            macros_dtsi = generator.generate_macros_dtsi(self._profile, layout_data.macros)
+            macros_dtsi = generator.generate_macros_dtsi(
+                self._profile, layout_data.macros
+            )
 
         # Process layers to extract binding objects
         layers_data = self._process_layers(layout_data.layers)
@@ -319,7 +338,7 @@ class KeymapBuilder:
         keymap_node = generator.generate_keymap_node(
             profile=self._profile,
             layer_names=layout_data.layer_names,
-            layers_data=layers_data
+            layers_data=layers_data,
         )
 
         # Get resolved includes
@@ -396,10 +415,12 @@ class KeymapBuilder:
         """
         includes = []
 
-        if (self._include_headers and
-            hasattr(self._profile, "keyboard_config") and
-            hasattr(self._profile.keyboard_config, "keymap") and
-            hasattr(self._profile.keyboard_config.keymap, "header_includes")):
+        if (
+            self._include_headers
+            and hasattr(self._profile, "keyboard_config")
+            and hasattr(self._profile.keyboard_config, "keymap")
+            and hasattr(self._profile.keyboard_config.keymap, "header_includes")
+        ):
             # Get includes from profile
             for include in self._profile.keyboard_config.keymap.header_includes:
                 includes.append(f"#include <{include}>")
@@ -412,9 +433,11 @@ class KeymapBuilder:
         Returns:
             Key position header string
         """
-        if (hasattr(self._profile, "keyboard_config") and
-            hasattr(self._profile.keyboard_config, "keymap") and
-            hasattr(self._profile.keyboard_config.keymap, "key_position_header")):
+        if (
+            hasattr(self._profile, "keyboard_config")
+            and hasattr(self._profile.keyboard_config, "keymap")
+            and hasattr(self._profile.keyboard_config.keymap, "key_position_header")
+        ):
             return self._profile.keyboard_config.keymap.key_position_header or ""
         return ""
 
@@ -424,9 +447,11 @@ class KeymapBuilder:
         Returns:
             System behaviors DTS string
         """
-        if (hasattr(self._profile, "keyboard_config") and
-            hasattr(self._profile.keyboard_config, "keymap") and
-            hasattr(self._profile.keyboard_config.keymap, "system_behaviors_dts")):
+        if (
+            hasattr(self._profile, "keyboard_config")
+            and hasattr(self._profile.keyboard_config, "keymap")
+            and hasattr(self._profile.keyboard_config.keymap, "system_behaviors_dts")
+        ):
             return self._profile.keyboard_config.keymap.system_behaviors_dts or ""
         return ""
 
@@ -446,7 +471,11 @@ class KeymapBuilder:
         providers = self._layout._providers
         if providers and providers.template:
             template_provider = providers.template
-            return template_provider.render_template(self._template_path, context)
+            if hasattr(template_provider, "render_template"):
+                result = template_provider.render_template(self._template_path, context)
+                return str(result)
+            # Fallback for template providers without render_template method
+            return self._simple_template_replacement(self._template_path, context)
 
         # Fallback: read template file and do simple replacement
         template_path = Path(self._template_path)
@@ -460,6 +489,23 @@ class KeymapBuilder:
             template_content = template_content.replace(f"{{{{{key}}}}}", str(value))
 
         return template_content
+
+    def _simple_template_replacement(
+        self, template_path: str, context: dict[str, Any]
+    ) -> str:
+        """Simple template replacement fallback."""
+        template_file = Path(template_path)
+        if not template_file.exists():
+            raise FileNotFoundError(f"Template file not found: {template_path}")
+
+        content = template_file.read_text()
+
+        # Simple variable replacement
+        for key, value in context.items():
+            placeholder = f"{{{{{key}}}}}"
+            content = content.replace(placeholder, str(value))
+
+        return content
 
     def _generate_direct(self, generator: ZMKGenerator, context: dict[str, Any]) -> str:
         """Generate keymap directly without template.
@@ -604,7 +650,11 @@ class ConfigBuilder:
             # Create a copy of layout data with additional config parameters
             from zmk_layout.models.metadata import ConfigParameter
 
-            config_params = list(layout_data.config_parameters) if layout_data.config_parameters else []
+            config_params = (
+                list(layout_data.config_parameters)
+                if layout_data.config_parameters
+                else []
+            )
 
             for param_name, value in self._kconfig_options.items():
                 # Check if parameter already exists
@@ -616,7 +666,9 @@ class ConfigBuilder:
                         break
 
                 if not existing:
-                    config_params.append(ConfigParameter(paramName=param_name, value=value))
+                    config_params.append(
+                        ConfigParameter(paramName=param_name, value=value)
+                    )
 
             # Create modified layout data
             layout_data_dict = layout_data.model_dump()
@@ -640,16 +692,17 @@ class ConfigBuilder:
             keyboard_name=keyboard_name,
             firmware_version="1.0.0",
             keyboard_config=SimpleNamespace(
-                key_count=len(self._layout.data.layers[0]) if self._layout.data.layers else 42,
+                key_count=len(self._layout.data.layers[0])
+                if self._layout.data.layers
+                else 42,
                 zmk=SimpleNamespace(
                     patterns=SimpleNamespace(kconfig_prefix="CONFIG_ZMK_"),
                     validation_limits=SimpleNamespace(
-                        required_holdtap_bindings=2,
-                        max_macro_params=32
-                    )
-                )
+                        required_holdtap_bindings=2, max_macro_params=32
+                    ),
+                ),
             ),
-            kconfig_options={}
+            kconfig_options={},
         )
 
     def _get_zmk_generator(self) -> ZMKGenerator:

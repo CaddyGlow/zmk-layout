@@ -497,7 +497,15 @@ class Glove80KeymapConfig:
     system_behaviors_dts: str = """
 / {
     behaviors {
-        ZMK_TD_LAYER(lower, LAYER_Lower)
+        // For the "layer" key, it'd nice to be able to use it as either a shift or a toggle.
+        // Configure it as a tap dance, so the first tap (or hold) is a &mo and the second tap is a &to
+        lower: lower {
+            compatible = "zmk,behavior-tap-dance";
+            label = "LAYER_TAP_DANCE";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&mo LAYER_Lower>, <&to LAYER_Lower>;
+        };
     };
 };
 
@@ -621,11 +629,106 @@ class Glove80KeymapConfig:
             "base_indent": "",
             "rows": [
                 [0, 1, 2, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1, 5, 6, 7, 8, 9],
-                [10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, 16, 17, 18, 19, 20, 21],
-                [22, 23, 24, 25, 26, 27, -1, -1, -1, -1, -1, -1, 28, 29, 30, 31, 32, 33],
-                [34, 35, 36, 37, 38, 39, -1, -1, -1, -1, -1, -1, 40, 41, 42, 43, 44, 45],
-                [46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
-                [64, 65, 66, 67, 68, -1, 69, 70, 71, 72, 73, 74, -1, 75, 76, 77, 78, 79],
+                [
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                    21,
+                ],
+                [
+                    22,
+                    23,
+                    24,
+                    25,
+                    26,
+                    27,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    28,
+                    29,
+                    30,
+                    31,
+                    32,
+                    33,
+                ],
+                [
+                    34,
+                    35,
+                    36,
+                    37,
+                    38,
+                    39,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    -1,
+                    40,
+                    41,
+                    42,
+                    43,
+                    44,
+                    45,
+                ],
+                [
+                    46,
+                    47,
+                    48,
+                    49,
+                    50,
+                    51,
+                    52,
+                    53,
+                    54,
+                    55,
+                    56,
+                    57,
+                    58,
+                    59,
+                    60,
+                    61,
+                    62,
+                    63,
+                ],
+                [
+                    64,
+                    65,
+                    66,
+                    67,
+                    68,
+                    -1,
+                    69,
+                    70,
+                    71,
+                    72,
+                    73,
+                    74,
+                    -1,
+                    75,
+                    76,
+                    77,
+                    78,
+                    79,
+                ],
             ],
         }
     )
@@ -770,11 +873,11 @@ class CompleteGlove80Profile:
     keymap: Glove80KeymapConfig = field(default_factory=Glove80KeymapConfig)
     kconfig: Glove80KConfigOptions = field(default_factory=Glove80KConfigOptions)
     validation: Glove80ValidationRules = field(default_factory=Glove80ValidationRules)
-    
+
     def __post_init__(self):
         """Initialize keyboard_config structure required by generators."""
         from types import SimpleNamespace
-        
+
         # Create the keyboard_config structure that generators expect
         self.keyboard_config = SimpleNamespace(
             key_count=self.hardware.key_count,
@@ -782,27 +885,29 @@ class CompleteGlove80Profile:
                 compatible_strings=SimpleNamespace(
                     keymap="zmk,keymap",
                     hold_tap="zmk,behavior-hold-tap",
-                    tap_dance="zmk,behavior-tap-dance", 
+                    tap_dance="zmk,behavior-tap-dance",
                     macro="zmk,behavior-macro",
-                    combos="zmk,combos"
+                    macro_one_param="zmk,behavior-macro",
+                    macro_two_param="zmk,behavior-macro",
+                    combos="zmk,combos",
                 ),
                 patterns=SimpleNamespace(
                     kconfig_prefix="CONFIG_ZMK_",
-                    layer_define="#define {layer_name} {layer_index}"
+                    layer_define="#define {layer_name} {layer_index}",
                 ),
                 hold_tap_flavors=["balanced", "tap-preferred", "hold-preferred"],
                 layout=SimpleNamespace(keys=self.hardware.key_count),
                 validation_limits=SimpleNamespace(
-                    required_holdtap_bindings=2,
-                    max_macro_params=32
-                )
+                    required_holdtap_bindings=2, max_macro_params=32
+                ),
             ),
             keymap=SimpleNamespace(
                 header_includes=self.keymap.header_includes,
                 key_position_header=self.keymap.key_position_defines,
                 system_behaviors_dts=self.keymap.system_behaviors_dts,
-                formatting=self.keymap.formatting
-            )
+                formatting=self.keymap.formatting,
+                default_template_path="/home/rick/projects-caddy/zmk-glovebox/keyboards/config/templates/keymap.dtsi.j2",
+            ),
         )
 
     def get_template_paths(self) -> list[Path]:

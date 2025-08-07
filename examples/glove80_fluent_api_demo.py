@@ -21,11 +21,12 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+
 # Add the keyboards directory to path for importing the profile
 sys.path.append(str(Path(__file__).parent.parent / "keyboards"))
 
-from zmk_layout import Layout
 from keyboards.glove80_profile import create_complete_glove80_profile
+from zmk_layout import Layout
 
 
 def create_glove80_profile_for_fluent_api():
@@ -270,7 +271,6 @@ def create_glove80_layout():
 
     # Row 5 (Function row and thumbs)
     row5_left = ["LCTRL", "LALT", "HOME", "LEFT", "RIGHT", "END"]
-    row5_thumbs = ["BSPC", "DEL", "ENTER", "SPACE"]
     row5_right = ["UP", "DOWN", "LBKT", "RBKT", "RALT", "RCTRL"]
 
     # Left side
@@ -379,6 +379,7 @@ def create_glove80_layout():
         "UNDER",
         "PLUS",
     ]
+
     for i, key in enumerate(symbol_row2):
         if i < 6:
             symbol_layer.set(10 + i, f"&kp {key}")
@@ -386,20 +387,13 @@ def create_glove80_layout():
             symbol_layer.set(10 + i + 1, f"&kp {key}")
 
     # Row 3: Brackets and operators (home row)
+    # fmt: off
     symbol_row3 = [
-        "TILDE",
-        "LBRC",
-        "RBRC",
-        "LPAR",
-        "RPAR",
-        "PIPE",
-        "MINUS",
-        "EQUAL",
-        "LBKT",
-        "RBKT",
-        "BSLH",
-        "DQT",
+        "TILDE", "LBRC", "RBRC", "LPAR", "RPAR", "PIPE",
+        "MINUS", "EQUAL", "LBKT", "RBKT", "BSLH", "DQT",
     ]
+    # fmt: on
+
     for i, key in enumerate(symbol_row3):
         if i < 6:
             symbol_layer.set(22 + i, f"&kp {key}")
@@ -407,20 +401,13 @@ def create_glove80_layout():
             symbol_layer.set(22 + i + 1, f"&kp {key}")
 
     # Row 4: Additional symbols
-    symbol_row4 = [
-        "trans",
-        "LT",
-        "GT",
-        "COMMA",
-        "DOT",
-        "SLASH",
-        "COLON",
-        "SEMI",
-        "SQT",
-        "QMARK",
-        "FSLH",
-        "trans",
+    # fmt: off
+    symbol_row4 = [ 
+        "trans", "LT", "GT", "COMMA", "DOT", "SLASH",
+        "COLON", "SEMI", "SQT", "QMARK", "FSLH", "trans", 
     ]
+    # fmt: on
+
     for i, key in enumerate(symbol_row4):
         if i < 6:
             symbol_layer.set(34 + i, "&trans" if key == "trans" else f"&kp {key}")
@@ -473,7 +460,7 @@ def demonstrate_glove80_fluent_api():
 
     # Get layout statistics
     stats = layout.get_statistics()
-    print(f"Layout Statistics:")
+    print("Layout Statistics:")
     print(f"  Keyboard: {stats['keyboard']}")
     print(f"  Title: {stats['title']}")
     print(f"  Total Layers: {stats['layer_count']}")
@@ -563,78 +550,121 @@ def demonstrate_glove80_fluent_api():
     try:
         # Load the generated keymap back
         keymap_content = keymap_file.read_text()
-        loaded_layout = Layout.from_string(keymap_content, title="Loaded Glove80 Layout")
+        loaded_layout = Layout.from_string(
+            keymap_content, title="Loaded Glove80 Layout"
+        )
+
+        # DEBUG: Print behaviors from original and loaded layouts
+        print("   === DEBUG: Behavior Comparison ===")
+        print("   Original Hold-tap behaviors:")
+        for ht in layout.data.hold_taps:
+            print(f"     {ht.name}: bindings={ht.bindings}, tapping_term={ht.tapping_term_ms}ms")
         
+        print("   Loaded Hold-tap behaviors:")
+        for ht in loaded_layout.data.hold_taps:
+            print(f"     {ht.name}: bindings={ht.bindings}, tapping_term={ht.tapping_term_ms}ms")
+        
+        print("   Original Combos:")
+        for combo in layout.data.combos:
+            print(f"     {combo.name}: binding={combo.binding}, keys={combo.key_positions}")
+        
+        print("   Loaded Combos:")
+        for combo in loaded_layout.data.combos:
+            print(f"     {combo.name}: binding={combo.binding}, keys={combo.key_positions}")
+        
+        print("   === END DEBUG ===")
+        print()
+
         # Compare basic statistics
         original_stats = layout.get_statistics()
         loaded_stats = loaded_layout.get_statistics()
-        
+
         print(f"   Original layout layers: {original_stats['layer_count']}")
         print(f"   Loaded layout layers: {loaded_stats['layer_count']}")
-        
+
         print(f"   Original bindings: {original_stats['total_bindings']}")
         print(f"   Loaded bindings: {loaded_stats['total_bindings']}")
-        
+
         print(f"   Original behaviors: {original_stats['total_behaviors']}")
         print(f"   Loaded behaviors: {loaded_stats['total_behaviors']}")
-        
+
         # Check if layer names match
-        layer_names_match = original_stats['layer_names'] == loaded_stats['layer_names']
+        layer_names_match = original_stats["layer_names"] == loaded_stats["layer_names"]
         print(f"   Layer names match: {layer_names_match}")
-        
+
         # Compare individual layers
         print("   Layer-by-layer comparison:")
-        for i, (orig_name, loaded_name) in enumerate(zip(original_stats['layer_names'], loaded_stats['layer_names'])):
+        for i, (orig_name, loaded_name) in enumerate(
+            zip(
+                original_stats["layer_names"], loaded_stats["layer_names"], strict=False
+            )
+        ):
             orig_layer = layout.layers.get(orig_name)
             loaded_layer = loaded_layout.layers.get(loaded_name)
-            
+
             # Count non-transparent bindings in each layer
             orig_bindings = [str(b) for b in orig_layer.bindings if str(b) != "&trans"]
-            loaded_bindings = [str(b) for b in loaded_layer.bindings if str(b) != "&trans"]
-            
-            print(f"     Layer {i} ({orig_name}): Original={len(orig_bindings)}, Loaded={len(loaded_bindings)}")
-        
+            loaded_bindings = [
+                str(b) for b in loaded_layer.bindings if str(b) != "&trans"
+            ]
+
+            print(
+                f"     Layer {i} ({orig_name}): Original={len(orig_bindings)}, Loaded={len(loaded_bindings)}"
+            )
+
         # Test regeneration - can we generate the same keymap again?
-        regenerated_keymap = loaded_layout.export.keymap(profile).with_headers(True).generate()
-        
+        regenerated_keymap = (
+            loaded_layout.export.keymap(profile).with_headers(True).generate()
+        )
+
         # Compare file sizes (rough validation)
         original_size = len(keymap_with_profile)
         regenerated_size = len(regenerated_keymap)
         size_diff = abs(original_size - regenerated_size)
-        
+
         print(f"   Original keymap size: {original_size} chars")
-        print(f"   Regenerated size: {regenerated_size} chars") 
-        print(f"   Size difference: {size_diff} chars ({size_diff/original_size*100:.1f}%)")
-        
+        print(f"   Regenerated size: {regenerated_size} chars")
+        print(
+            f"   Size difference: {size_diff} chars ({size_diff / original_size * 100:.1f}%)"
+        )
+
         # Basic validation - check if key structures are present
         has_behaviors = "behaviors {" in regenerated_keymap
-        has_combos = "combos {" in regenerated_keymap  
+        has_combos = "combos {" in regenerated_keymap
         has_keymap = "keymap {" in regenerated_keymap
-        has_layers = all(name in regenerated_keymap for name in original_stats['layer_names'])
-        
+        has_layers = all(
+            name in regenerated_keymap for name in original_stats["layer_names"]
+        )
+
         print(f"   Regenerated keymap has behaviors: {has_behaviors}")
         print(f"   Regenerated keymap has combos: {has_combos}")
         print(f"   Regenerated keymap has keymap section: {has_keymap}")
         print(f"   Regenerated keymap has all layers: {has_layers}")
-        
+
         # Overall round-trip success
         round_trip_success = (
-            layer_names_match and
-            loaded_stats['layer_count'] == original_stats['layer_count'] and
-            has_behaviors and has_combos and has_keymap and has_layers and
-            size_diff < original_size * 0.1  # Less than 10% size difference
+            layer_names_match
+            and loaded_stats["layer_count"] == original_stats["layer_count"]
+            and has_behaviors
+            and has_combos
+            and has_keymap
+            and has_layers
+            and size_diff < original_size * 0.1  # Less than 10% size difference
         )
-        
+
         if round_trip_success:
             print("   ✓ Round-trip test PASSED - Generated keymap loads correctly!")
         else:
             print("   ✗ Round-trip test FAILED - Some discrepancies found")
-            
+
+        keymap_regen_file = output_dir / "glove80_regen.keymap"
+        keymap_regen_file.write_text(regenerated_keymap)
     except Exception as e:
         print(f"   ✗ Round-trip test ERROR: {e}")
         import traceback
+
         traceback.print_exc()
-    
+
     print()
 
     print("✓ Glove80 Fluent API demonstration completed!")

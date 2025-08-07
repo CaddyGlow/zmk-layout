@@ -70,17 +70,16 @@ def demo_fluent_api():
                     hold_tap="zmk,behavior-hold-tap",
                     tap_dance="zmk,behavior-tap-dance",
                     macro="zmk,behavior-macro",
-                    combos="zmk,combos"
+                    combos="zmk,combos",
                 ),
                 patterns=SimpleNamespace(
                     kconfig_prefix="CONFIG_ZMK_",
-                    layer_define="#define {layer_name} {layer_index}"
+                    layer_define="#define {layer_name} {layer_index}",
                 ),
                 layout=SimpleNamespace(keys=42),
                 validation_limits=SimpleNamespace(
-                    required_holdtap_bindings=2,
-                    max_macro_params=32
-                )
+                    required_holdtap_bindings=2, max_macro_params=32
+                ),
             ),
             keymap=SimpleNamespace(
                 header_includes=["behaviors.dtsi", "dt-bindings/zmk/keys.h"],
@@ -88,14 +87,13 @@ def demo_fluent_api():
                 system_behaviors_dts="",
                 keymap_dtsi=None,
                 keymap_dtsi_file=None,
-            )
+            ),
         ),
         kconfig_options={
             "ZMK_COMBO_MAX_PRESSED_COMBOS": SimpleNamespace(
-                name="CONFIG_ZMK_COMBO_MAX_PRESSED_COMBOS",
-                default=8
+                name="CONFIG_ZMK_COMBO_MAX_PRESSED_COMBOS", default=8
             )
-        }
+        },
     )
 
     print("3. Keymap with Custom Profile:")
@@ -106,17 +104,15 @@ def demo_fluent_api():
 
     print("4. Keymap with Chained Configuration:")
     print("-" * 50)
-    keymap_custom = (layout.export
-        .keymap(profile)
+    keymap_custom = (
+        layout.export.keymap(profile)
         .with_headers(True)
         .with_behaviors(True)
         .with_combos(True)
         .with_macros(True)
-        .with_context(
-            author="Demo User",
-            description="Example keymap generation"
-        )
-        .generate())
+        .with_context(author="Demo User", description="Example keymap generation")
+        .generate()
+    )
     print(f"   Generated custom keymap: {len(keymap_custom)} characters")
     print()
 
@@ -131,13 +127,11 @@ def demo_fluent_api():
 
     print("6. Config with Additional Options:")
     print("-" * 50)
-    config_with_options, settings = (layout.export
-        .config(profile)
-        .with_options(
-            IDLE_TIMEOUT=30000,
-            SLEEP_ENABLE=True
-        )
-        .generate())
+    config_with_options, settings = (
+        layout.export.config(profile)
+        .with_options(IDLE_TIMEOUT=30000, SLEEP_ENABLE=True)
+        .generate()
+    )
     print(f"   Config with options: {len(config_with_options)} characters")
     print(f"   Settings: {settings}")
     print()
@@ -154,17 +148,13 @@ def demo_fluent_api():
     print("-" * 50)
     # Add some behaviors using the behavior manager
     layout.behaviors.add_hold_tap(
-        name="mt_ctrl",
-        tap="&kp A",
-        hold="&kp LCTRL",
-        tapping_term_ms=200
+        name="mt_ctrl", tap="&kp A", hold="&kp LCTRL", tapping_term_ms=200
     )
 
     # Now export with the new behaviors
-    keymap_with_behaviors = (layout.export
-        .keymap(profile)
-        .with_behaviors(True)
-        .generate())
+    keymap_with_behaviors = (
+        layout.export.keymap(profile).with_behaviors(True).generate()
+    )
     print(f"   Keymap with custom behaviors: {len(keymap_with_behaviors)} characters")
     print()
 

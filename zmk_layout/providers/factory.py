@@ -75,25 +75,83 @@ class DefaultLogger:
 
 
 class DefaultTemplateProvider:
-    """Default template provider with basic string substitution."""
+    """Default template provider with Jinja2 support and fallback."""
 
     def render_string(
         self, template: str, context: dict[str, str | int | float | bool | None]
     ) -> str:
-        """Basic template rendering using str.format()."""
+        """Render template string using Jinja2 or basic format."""
         try:
-            return template.format(**context)
-        except KeyError as e:
-            raise ValueError(f"Template variable not found in context: {e}") from e
+            import jinja2
+            from jinja2 import Environment, DictLoader
+            
+            # Create a Jinja2 environment with the template
+            env = Environment(
+                loader=DictLoader({"template": template}),
+                trim_blocks=True,
+                lstrip_blocks=True
+            )
+            template_obj = env.get_template("template")
+            return template_obj.render(context)
+        except ImportError:
+            # Fallback to basic str.format()
+            try:
+                return template.format(**context)
+            except KeyError as e:
+                raise ValueError(f"Template variable not found in context: {e}") from e
+
+    def render_template(
+        self, template_path: str, context: dict[str, str | int | float | bool | None]
+    ) -> str:
+        """Render template file using Jinja2 or basic substitution."""
+        from pathlib import Path
+        
+        template_file = Path(template_path)
+        if not template_file.exists():
+            raise FileNotFoundError(f"Template file not found: {template_path}")
+        
+        template_content = template_file.read_text()
+        
+        try:
+            import jinja2
+            from jinja2 import Environment, FileSystemLoader
+            
+            # Create Jinja2 environment with the template directory
+            env = Environment(
+                loader=FileSystemLoader(template_file.parent),
+                trim_blocks=True,
+                lstrip_blocks=True
+            )
+            template_obj = env.get_template(template_file.name)
+            return template_obj.render(context)
+        except ImportError:
+            # Fallback to simple variable replacement
+            for key, value in context.items():
+                template_content = template_content.replace(f"{{{{{key}}}}}", str(value))
+            return template_content
 
     def has_template_syntax(self, content: str) -> bool:
-        """Check for basic template syntax."""
-        template_patterns = ["{", "}", "{{", "}}", "${"]
+        """Check for Jinja2 or basic template syntax."""
+        jinja2_patterns = ["{%", "%}", "{{", "}}", "{#", "#}"]
+        basic_patterns = ["{", "}", "${"]
+        template_patterns = jinja2_patterns + basic_patterns
         return any(pattern in content for pattern in template_patterns)
 
     def escape_content(self, content: str) -> str:
-        """Basic escaping by doubling braces."""
-        return content.replace("{", "{{").replace("}", "}}")
+        """Escape content for Jinja2 processing."""
+        try:
+            import jinja2
+            # For Jinja2, we need to escape template syntax
+            return (content
+                    .replace("{%", "{{ '{%' }}")
+                    .replace("%}", "{{ '%}' }}")
+                    .replace("{{", "{{ '{{' }}")
+                    .replace("}}", "{{ '}}' }}")
+                    .replace("{#", "{{ '{#' }}")
+                    .replace("#}", "{{ '#}' }}"))
+        except ImportError:
+            # Basic escaping by doubling braces
+            return content.replace("{", "{{").replace("}", "}}")
 
 
 class DefaultConfigurationProvider:

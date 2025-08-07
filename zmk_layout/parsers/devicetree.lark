@@ -164,12 +164,12 @@ array_content: [array_item*]
 array_item: array_token
           | preprocessor_directive
 
-array_token: reference_token    // References like &kp
-           | function_call      // Function calls like LS(END)
-           | IDENTIFIER         // Identifiers like Q, A, etc.
-           | HEX_NUMBER        // Numbers like 0x1234
-           | DEC_NUMBER        // Numbers like 123
-           | STRING            // Strings like "text"
+array_token: reference_token         // References like &kp LGUI or &kp (with or without params)
+           | function_call          // Function calls like LS(END)
+           | IDENTIFIER             // Identifiers like Q, A, etc.
+           | HEX_NUMBER            // Numbers like 0x1234
+           | DEC_NUMBER            // Numbers like 123
+           | STRING                // Strings like "text"
 
 // Function call syntax (e.g., LS(END), LCTRL(A), _C(LS(Z)))
 function_call: IDENTIFIER "(" function_args ")"
@@ -183,7 +183,7 @@ function_arg: function_call    // Nested function calls like LS(Z) in _C(LS(Z))
             | STRING           // String literals
             | CHAR_LITERAL     // Character literals
 
-reference_token: AMPERSAND IDENTIFIER
+reference_token: AMPERSAND IDENTIFIER (IDENTIFIER | HEX_NUMBER | DEC_NUMBER)*
 
 reference_value: "&" IDENTIFIER
                | "&{" path "}"
