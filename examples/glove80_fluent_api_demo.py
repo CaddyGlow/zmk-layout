@@ -64,6 +64,7 @@ def create_glove80_profile_for_fluent_api():
                     layer_define="#define LAYER_{layer_name} {layer_index}",
                 ),
                 layout=SimpleNamespace(keys=80),
+                hold_tap_flavors=["balanced", "tap-preferred", "hold-preferred"],
                 validation_limits=SimpleNamespace(
                     required_holdtap_bindings=2, max_macro_params=32
                 ),

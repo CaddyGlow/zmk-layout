@@ -497,13 +497,7 @@ class Glove80KeymapConfig:
     system_behaviors_dts: str = """
 / {
     behaviors {
-        lower: lower {
-            compatible = "zmk,behavior-tap-dance";
-            label = "LAYER_Lower";
-            #binding-cells = <0>;
-            tapping-term-ms = <200>;
-            bindings = <&mo 1>, <&to 1>;
-        };
+        ZMK_TD_LAYER(lower, LAYER_Lower)
     };
 };
 
@@ -776,6 +770,40 @@ class CompleteGlove80Profile:
     keymap: Glove80KeymapConfig = field(default_factory=Glove80KeymapConfig)
     kconfig: Glove80KConfigOptions = field(default_factory=Glove80KConfigOptions)
     validation: Glove80ValidationRules = field(default_factory=Glove80ValidationRules)
+    
+    def __post_init__(self):
+        """Initialize keyboard_config structure required by generators."""
+        from types import SimpleNamespace
+        
+        # Create the keyboard_config structure that generators expect
+        self.keyboard_config = SimpleNamespace(
+            key_count=self.hardware.key_count,
+            zmk=SimpleNamespace(
+                compatible_strings=SimpleNamespace(
+                    keymap="zmk,keymap",
+                    hold_tap="zmk,behavior-hold-tap",
+                    tap_dance="zmk,behavior-tap-dance", 
+                    macro="zmk,behavior-macro",
+                    combos="zmk,combos"
+                ),
+                patterns=SimpleNamespace(
+                    kconfig_prefix="CONFIG_ZMK_",
+                    layer_define="#define {layer_name} {layer_index}"
+                ),
+                hold_tap_flavors=["balanced", "tap-preferred", "hold-preferred"],
+                layout=SimpleNamespace(keys=self.hardware.key_count),
+                validation_limits=SimpleNamespace(
+                    required_holdtap_bindings=2,
+                    max_macro_params=32
+                )
+            ),
+            keymap=SimpleNamespace(
+                header_includes=self.keymap.header_includes,
+                key_position_header=self.keymap.key_position_defines,
+                system_behaviors_dts=self.keymap.system_behaviors_dts,
+                formatting=self.keymap.formatting
+            )
+        )
 
     def get_template_paths(self) -> list[Path]:
         """Get template search paths."""
