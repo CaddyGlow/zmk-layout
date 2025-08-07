@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Any, Protocol, Union, runtime_checkable
 
 if TYPE_CHECKING:
     # Import for type checking only
-    from glove80_profile import CompleteGlove80Profile
+    from glove80_profile import CompleteGlove80Profile  # type: ignore[import-not-found]
 
 import pytest
 
@@ -64,7 +64,9 @@ CompleteGlove80ProfileType = Union["CompleteGlove80Profile", Any]
 _profile_available = False
 
 try:
-    from glove80_profile import create_complete_glove80_profile as _create_profile
+    from glove80_profile import (
+        create_complete_glove80_profile as _create_profile,
+    )
 
     _profile_available = True
 except ImportError:

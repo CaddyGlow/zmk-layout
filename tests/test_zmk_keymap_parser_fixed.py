@@ -285,7 +285,7 @@ class TestZMKKeymapParserIntegration:
     def test_parser_memory_efficiency(self) -> None:
         """Test parser doesn't accumulate unnecessary state."""
         parser = ZMKKeymapParser()
-        initial_defines = {}
+        initial_defines: dict[str, str] = {}
         # Perform many operations
         for i in range(100):
             parser.defines[f"key_{i}"] = f"value_{i}"
@@ -348,7 +348,7 @@ class TestZMKKeymapParserFactoryFunctions:
                 return self.name
 
         profile = MockProfile()
-        parser = create_zmk_keymap_parser_from_profile(profile)
+        parser = create_zmk_keymap_parser_from_profile(profile)  # type: ignore[arg-type]
         assert isinstance(parser, ZMKKeymapParser)
         assert hasattr(parser, "defines")
         assert hasattr(parser, "processors")
@@ -359,13 +359,13 @@ class TestZMKKeymapParserEnums:
 
     def test_parsing_mode_enum(self) -> None:
         """Test ParsingMode enum values."""
-        assert ParsingMode.FULL == "full"
-        assert ParsingMode.TEMPLATE_AWARE == "template"
+        assert ParsingMode.FULL.value == "full"
+        assert ParsingMode.TEMPLATE_AWARE.value == "template"
 
     def test_parsing_method_enum(self) -> None:
         """Test ParsingMethod enum values."""
-        assert ParsingMethod.AST == "ast"
-        assert ParsingMethod.REGEX == "regex"
+        assert ParsingMethod.AST.value == "ast"
+        assert ParsingMethod.REGEX.value == "regex"
 
 
 class TestKeymapParseResult:

@@ -61,6 +61,7 @@ class TestDTParserBasics:
         assert len(node.properties) == 1
         prop = list(node.properties.values())[0]
         assert prop.name == "property"
+        assert prop.value is not None
         assert prop.value.value == "value"
 
     def test_parse_multiple_nodes(self) -> None:

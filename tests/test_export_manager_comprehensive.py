@@ -26,7 +26,7 @@ from zmk_layout.providers.factory import create_default_providers
 
 
 @pytest.fixture
-def mock_keyboard_profile():
+def mock_keyboard_profile() -> SimpleNamespace:
     """Mock keyboard profile for generator testing."""
     return SimpleNamespace(
         keyboard_config=SimpleNamespace(
@@ -55,33 +55,39 @@ def mock_keyboard_profile():
 
 
 @pytest.fixture
-def comprehensive_layout():
+def comprehensive_layout() -> Layout:
     """Create a comprehensive layout for testing."""
     data = LayoutData(
         keyboard="comprehensive_test",
         title="Comprehensive Test Layout",
         layers=[
             # Base layer - 80 keys
-            [{"value": f"&kp {chr(65 + (i % 26))}"} for i in range(80)],
+            [LayoutBinding.from_str(f"&kp {chr(65 + (i % 26))}") for i in range(80)],
             # Function layer
-            [{"value": "&trans" if i % 2 == 0 else "&mo 2"} for i in range(80)],
+            [
+                LayoutBinding.from_str("&trans" if i % 2 == 0 else "&mo 2")
+                for i in range(80)
+            ],
             # Numeric layer
-            [{"value": f"&kp {i % 10}" if i < 40 else "&trans"} for i in range(80)],
+            [
+                LayoutBinding.from_str(f"&kp {i % 10}" if i < 40 else "&trans")
+                for i in range(80)
+            ],
         ],
         layer_names=["Base", "Function", "Numeric"],
-        hold_taps=[
+        holdTaps=[
             HoldTapBehavior(name="ht_space", bindings=["&kp SPACE", "&mo 1"]),
             HoldTapBehavior(name="ht_enter", bindings=["&kp ENTER", "&mo 2"]),
         ],
         combos=[
             ComboBehavior(
                 name="combo_esc",
-                key_positions=[0, 1],
+                keyPositions=[0, 1],
                 binding=LayoutBinding.from_str("&kp ESC"),
             ),
             ComboBehavior(
                 name="combo_tab",
-                key_positions=[10, 11],
+                keyPositions=[10, 11],
                 binding=LayoutBinding.from_str("&kp TAB"),
             ),
         ],
@@ -113,7 +119,7 @@ def comprehensive_layout():
 class TestExportManagerComprehensive:
     """Comprehensive tests for ExportManager."""
 
-    def test_export_manager_initialization(self, comprehensive_layout):
+    def test_export_manager_initialization(self, comprehensive_layout: Layout) -> None:
         """Test ExportManager initialization and basic functionality."""
         export_manager = comprehensive_layout.export
 
@@ -122,7 +128,7 @@ class TestExportManagerComprehensive:
         # _zmk_generator is initialized to None and created on-demand
         assert export_manager._zmk_generator is None
 
-    def test_to_dict_comprehensive_export(self, comprehensive_layout):
+    def test_to_dict_comprehensive_export(self, comprehensive_layout: Layout) -> None:
         """Test to_dict exports all layout data comprehensively."""
         # ACT
         exported_dict = comprehensive_layout.export.to_dict()
@@ -149,7 +155,9 @@ class TestExportManagerComprehensive:
         assert "ht_space" in ht_names
         assert "ht_enter" in ht_names
 
-    def test_to_json_formatting_and_structure(self, comprehensive_layout):
+    def test_to_json_formatting_and_structure(
+        self, comprehensive_layout: Layout
+    ) -> None:
         """Test to_json produces well-formatted, parseable JSON."""
         # ACT
         json_str = comprehensive_layout.export.to_json()
@@ -167,7 +175,7 @@ class TestExportManagerComprehensive:
         assert "\n" in json_str
         assert "  " in json_str  # Indentation present
 
-    def test_to_json_custom_formatting(self, comprehensive_layout):
+    def test_to_json_custom_formatting(self, comprehensive_layout: Layout) -> None:
         """Test to_json with custom formatting options."""
         # ACT - Test compact formatting
         with patch.object(comprehensive_layout.export, "to_json") as mock_to_json:
@@ -178,8 +186,8 @@ class TestExportManagerComprehensive:
         assert compact_json == '{"keyboard":"test","compact":true}'
 
     def test_keymap_export_builder_pattern(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test keymap export uses builder pattern correctly."""
         # ACT
         keymap_builder = comprehensive_layout.export.keymap(mock_keyboard_profile)
@@ -197,8 +205,8 @@ class TestExportManagerComprehensive:
         assert len(keymap_content) > 100  # Should have substantial content
 
     def test_config_export_builder_pattern(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test config export uses builder pattern correctly."""
         # ACT
         config_builder = comprehensive_layout.export.config(mock_keyboard_profile)
@@ -220,8 +228,8 @@ class TestKeymapBuilderComprehensive:
     """Comprehensive tests for KeymapBuilder."""
 
     def test_keymap_builder_initialization(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test KeymapBuilder initialization and configuration."""
         builder = comprehensive_layout.export.keymap(mock_keyboard_profile)
 
@@ -231,8 +239,8 @@ class TestKeymapBuilderComprehensive:
         assert builder._profile is mock_keyboard_profile
 
     def test_keymap_builder_fluent_interface(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test KeymapBuilder fluent interface methods."""
         builder = comprehensive_layout.export.keymap(mock_keyboard_profile)
 
@@ -245,8 +253,8 @@ class TestKeymapBuilderComprehensive:
         assert final_result is builder
 
     def test_keymap_generation_comprehensive_content(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test keymap generation produces comprehensive content."""
         builder = comprehensive_layout.export.keymap(mock_keyboard_profile)
 
@@ -263,8 +271,8 @@ class TestKeymapBuilderComprehensive:
         assert "Numeric" in keymap_content or "numeric" in keymap_content.lower()
 
     def test_keymap_generation_with_different_options(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test keymap generation with various builder options."""
         builder = comprehensive_layout.export.keymap(mock_keyboard_profile)
 
@@ -282,7 +290,9 @@ class TestKeymapBuilderComprehensive:
         assert isinstance(with_headers, str)
         assert isinstance(without_headers, str)
 
-    def test_keymap_generation_error_handling(self, comprehensive_layout):
+    def test_keymap_generation_error_handling(
+        self, comprehensive_layout: Layout
+    ) -> None:
         """Test keymap generation error handling with invalid profiles."""
         # Test with None profile - should work with default profile
         keymap_content = comprehensive_layout.export.keymap(None).generate()
@@ -303,8 +313,8 @@ class TestKeymapBuilderComprehensive:
             pass
 
     def test_keymap_generation_consistency(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test keymap generation consistency across multiple calls."""
         builder = comprehensive_layout.export.keymap(mock_keyboard_profile)
 
@@ -323,8 +333,8 @@ class TestConfigBuilderComprehensive:
     """Comprehensive tests for ConfigBuilder."""
 
     def test_config_builder_initialization(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test ConfigBuilder initialization."""
         builder = comprehensive_layout.export.config(mock_keyboard_profile)
 
@@ -332,7 +342,9 @@ class TestConfigBuilderComprehensive:
         assert builder._layout is comprehensive_layout
         assert builder._profile is mock_keyboard_profile
 
-    def test_config_generation_basic(self, comprehensive_layout, mock_keyboard_profile):
+    def test_config_generation_basic(
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test basic config generation."""
         builder = comprehensive_layout.export.config(mock_keyboard_profile)
 
@@ -348,8 +360,8 @@ class TestConfigBuilderComprehensive:
         assert len(config_content) >= 0
 
     def test_config_generation_with_behaviors(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test config generation includes behavior definitions."""
         builder = comprehensive_layout.export.config(mock_keyboard_profile)
 
@@ -376,7 +388,9 @@ class TestConfigBuilderComprehensive:
 class TestExportIntegrationScenarios:
     """Integration tests for export scenarios."""
 
-    def test_full_export_workflow(self, comprehensive_layout, mock_keyboard_profile):
+    def test_full_export_workflow(
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test complete export workflow: dict → json → keymap → config."""
         # Step 1: Export to dict
         dict_export = comprehensive_layout.export.to_dict()
@@ -406,7 +420,9 @@ class TestExportIntegrationScenarios:
         config_export, kconfig_settings = config_result
         assert isinstance(config_export, str)
 
-    def test_export_with_empty_layout(self, mock_keyboard_profile):
+    def test_export_with_empty_layout(
+        self, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test export behavior with empty layout."""
         empty_layout = Layout.create_empty("empty_test", "Empty Layout")
 
@@ -425,7 +441,9 @@ class TestExportIntegrationScenarios:
         keymap_export = empty_layout.export.keymap(mock_keyboard_profile).generate()
         assert isinstance(keymap_export, str)
 
-    def test_export_with_large_layout(self, mock_keyboard_profile):
+    def test_export_with_large_layout(
+        self, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test export performance and correctness with large layout."""
         # Create large layout
         large_layout = Layout.create_empty("large_test", "Large Layout")
@@ -459,8 +477,8 @@ class TestExportIntegrationScenarios:
         assert len(keymap_export) > 1000  # Should be substantial
 
     def test_export_data_integrity_across_formats(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test data integrity is maintained across different export formats."""
         # Get original data
         original_stats = comprehensive_layout.get_statistics()
@@ -493,8 +511,8 @@ class TestExportIntegrationScenarios:
         )
 
     def test_export_with_temporary_files(
-        self, comprehensive_layout, mock_keyboard_profile
-    ):
+        self, comprehensive_layout: Layout, mock_keyboard_profile: SimpleNamespace
+    ) -> None:
         """Test export operations with temporary file handling."""
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -543,13 +561,13 @@ class TestExportIntegrationScenarios:
 class TestExportErrorHandling:
     """Test error handling in export operations."""
 
-    def test_export_with_invalid_data(self):
+    def test_export_with_invalid_data(self) -> None:
         """Test export behavior with invalid or corrupted layout data."""
         # Create layout with problematic data
         problematic_data = LayoutData(
             keyboard="",  # Empty keyboard name
             title="Problematic Layout",
-            layers=[[{"value": ""}]],  # Empty binding value
+            layers=[[LayoutBinding.from_str("")]],  # Empty binding value
             layer_names=[""],  # Empty layer name
         )
 
@@ -562,7 +580,7 @@ class TestExportErrorHandling:
         json_export = layout.export.to_json()
         assert isinstance(json_export, str)
 
-    def test_export_with_none_values(self):
+    def test_export_with_none_values(self) -> None:
         """Test export handling of None values in data."""
         # Create layout and then manipulate to have None values
         layout = Layout.create_empty("none_test", "None Test")
@@ -580,7 +598,9 @@ class TestExportErrorHandling:
             # Acceptable to fail with None values
             pass
 
-    def test_keymap_export_with_missing_profile_data(self, comprehensive_layout):
+    def test_keymap_export_with_missing_profile_data(
+        self, comprehensive_layout: Layout
+    ) -> None:
         """Test keymap export with incomplete profile data."""
         # Profile missing required attributes
         incomplete_profile = SimpleNamespace(

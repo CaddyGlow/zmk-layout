@@ -21,23 +21,23 @@ from zmk_layout.parsers.zmk_keymap_parser import (
 # Mock Classes for testing
 class MockLogger:
     def __init__(self) -> None:
-        self.debug_calls = []
-        self.error_calls = []
-        self.warning_calls = []
+        self.debug_calls: list[tuple[str, dict[str, Any]]] = []
+        self.error_calls: list[tuple[str, dict[str, Any]]] = []
+        self.warning_calls: list[tuple[str, dict[str, Any]]] = []
 
-    def debug(self, message: str, **kwargs) -> None:
+    def debug(self, message: str, **kwargs: Any) -> None:
         self.debug_calls.append((message, dict(kwargs)))
 
-    def error(self, message: str, exc_info: bool = False, **kwargs) -> None:
+    def error(self, message: str, exc_info: bool = False, **kwargs: Any) -> None:
         self.error_calls.append((message, dict(kwargs)))
 
-    def warning(self, message: str, **kwargs) -> None:
+    def warning(self, message: str, **kwargs: Any) -> None:
         self.warning_calls.append((message, dict(kwargs)))
 
-    def info(self, message: str, **kwargs) -> None:
+    def info(self, message: str, **kwargs: Any) -> None:
         pass
 
-    def exception(self, message: str, **kwargs) -> None:
+    def exception(self, message: str, **kwargs: Any) -> None:
         self.error_calls.append((message, dict(kwargs)))
 
 
@@ -70,7 +70,8 @@ def zmk_parser(
     mock_logger: MockLogger, mock_configuration_provider: MockConfigurationProvider
 ) -> ZMKKeymapParser:
     return ZMKKeymapParser(
-        logger=mock_logger, configuration_provider=mock_configuration_provider
+        logger=mock_logger,
+        configuration_provider=mock_configuration_provider,  # type: ignore[arg-type]
     )
 
 
@@ -120,13 +121,13 @@ class TestZMKKeymapParserEnums:
 
     def test_parsing_mode_values(self) -> None:
         """Test ParsingMode enum values."""
-        assert ParsingMode.FULL == "full"
-        assert ParsingMode.TEMPLATE_AWARE == "template"
+        assert ParsingMode.FULL.value == "full"
+        assert ParsingMode.TEMPLATE_AWARE.value == "template"
 
     def test_parsing_method_values(self) -> None:
         """Test ParsingMethod enum values."""
-        assert ParsingMethod.AST == "ast"
-        assert ParsingMethod.REGEX == "regex"
+        assert ParsingMethod.AST.value == "ast"
+        assert ParsingMethod.REGEX.value == "regex"
 
 
 class TestZMKKeymapParserFactories:
@@ -148,7 +149,7 @@ class TestZMKKeymapParserFactories:
                 return self.name
 
         profile = MockProfile()
-        parser = create_zmk_keymap_parser_from_profile(profile)
+        parser = create_zmk_keymap_parser_from_profile(profile)  # type: ignore[arg-type]
         assert isinstance(parser, ZMKKeymapParser)
 
 

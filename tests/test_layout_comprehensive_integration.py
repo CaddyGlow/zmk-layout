@@ -25,7 +25,7 @@ from zmk_layout.providers.factory import create_default_providers
 class TestLayoutCreationComprehensive:
     """Comprehensive tests for Layout creation with full layouts."""
 
-    def test_from_dict_with_full_factory_layout(self):
+    def test_from_dict_with_full_factory_layout(self) -> None:
         """Test Layout.from_dict with complete Factory layout structure."""
         # Load Factory.json if available
         factory_path = (

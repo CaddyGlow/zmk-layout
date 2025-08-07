@@ -1,6 +1,5 @@
 """Comprehensive tests for device tree parser (dt_parser.py)."""
 
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -1190,10 +1189,8 @@ class TestParsingModels:
 
         context = ParsingContext(
             keymap_content="test content",  # Changed from content to keymap_content
-            file_path=Path("test.keymap"),
         )
         assert context.keymap_content == "test content"
-        assert context.file_path == Path("test.keymap")
 
     def test_parsing_mode_enum(self) -> None:
         """Test ParsingMode enum values."""
