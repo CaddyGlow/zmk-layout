@@ -34,7 +34,7 @@ layout = (Layout
             hold="&mo",
             tap="&kp",
             tapping_term_ms=200)
-    .parent()
+    .parent
 
     # Base layer (Colemak-DH)
     .layers.add("base")
@@ -53,7 +53,7 @@ layout = (Layout
             # Right thumb cluster
             "&kp RET",    "&mo 2",     "&kp RALT"
         ])
-    .parent()
+    .parent
 
     # Navigation layer
     .layers.add("nav")
@@ -72,7 +72,7 @@ layout = (Layout
             # Right thumb
             "&trans",     "&trans",    "&trans"
         ])
-    .parent()
+    .parent
 
     # Symbol layer
     .layers.add("sym")
@@ -91,7 +91,7 @@ layout = (Layout
             # Right thumb
             "&trans",     "&trans",    "&trans"
         ])
-    .parent()
+    .parent
 
     .save("crkbd_colemak_dh.json"))
 ```
@@ -135,12 +135,12 @@ layout = (Layout
             ],
             wait_ms=30,
             tap_ms=30)
-    .parent()
+    .parent
 
     # Configure layers with advanced bindings
     .layers.add("base")
         # ... layer configuration
-    .parent()
+    .parent
 
     .validate()
     .save("sofle_advanced.json"))
@@ -178,20 +178,20 @@ def create_multi_layout_keyboard():
 
         base_layout = (base_layout.layers
             .add(f"{layout_name}_base", bindings=layer_bindings)
-            .parent())
+            .parent)
 
     # Add shared layers
     base_layout = (base_layout
         .layers.add("numbers")
             .set_range(0, 10, [f"&kp N{i}" for i in range(10)])
             .pad_to(36, "&trans")
-        .parent()
+        .parent
         .layers.add("symbols")
             # Add symbol bindings
-        .parent()
+        .parent
         .layers.add("navigation")
             # Add navigation bindings
-        .parent())
+        .parent)
 
     return base_layout
 
@@ -219,7 +219,7 @@ def create_ergodox_layout():
                 hold=f"&mo {i}",
                 tap="&kp",
                 tapping_term_ms=200 - (i * 10))  # Faster for higher layers
-            .parent())
+            .parent)
 
     # Layer structure:
     # 0: Base (Colemak)
@@ -243,7 +243,7 @@ def create_ergodox_layout():
     for layer_name, bindings in layers:
         layout = (layout.layers
             .add(layer_name, bindings=bindings)
-            .parent())
+            .parent)
 
     # Add advanced features
     layout = (layout
@@ -251,7 +251,7 @@ def create_ergodox_layout():
         .behaviors
             .add_sticky_key("sk_shift", "&kp LSHIFT", release_after_ms=1000)
             .add_sticky_key("sk_ctrl", "&kp LCTRL", release_after_ms=1000)
-        .parent()
+        .parent
 
         # Leader key sequences
         .behaviors
@@ -259,7 +259,7 @@ def create_ergodox_layout():
                 bindings=["&kp ESC", "&kp COLON", "&kp W", "&kp RET"])
             .add_macro("leader_vim_quit",
                 bindings=["&kp ESC", "&kp COLON", "&kp Q", "&kp RET"])
-        .parent())
+        .parent)
 
     return layout
 
@@ -288,7 +288,7 @@ layout = (Layout
             condition="layer_active(gaming)",
             then_binding="&kp LCTRL",  # Ctrl in gaming
             else_binding="&kp LSHIFT")  # Shift otherwise
-    .parent()
+    .parent
 
     # Adaptive tap dance that changes based on layer
     .behaviors
@@ -298,7 +298,7 @@ layout = (Layout
                 "code": ["&kp LBKT", "&kp RBKT", "&kp LBRC", "&kp RBRC"],
                 "markdown": ["&kp STAR", "&kp STAR STAR", "&kp UNDER UNDER"]
             })
-    .parent())
+    .parent)
 ```
 
 ### Example 6: Custom Modifier Behaviors
@@ -327,7 +327,7 @@ layout = (Layout
             tap="&sk LCTRL",
             tapping_term_ms=150,
             flavor="hold-preferred")
-    .parent())
+    .parent)
 ```
 
 ## Pipeline Examples

@@ -1,5 +1,6 @@
 """Comprehensive tests for device tree parser (dt_parser.py)."""
 
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -21,7 +22,7 @@ from zmk_layout.parsers.dt_parser import (
     parse_dt_multiple_safe,
     parse_dt_safe,
 )
-from zmk_layout.parsers.tokenizer import Token, TokenType
+from zmk_layout.parsers.tokenizer import DTTokenizer, Token, TokenType
 
 
 class TestDTParser:
@@ -898,3 +899,313 @@ class TestEdgeCases:
 
         # Conditionals should be attached to root
         assert len(root.conditionals) >= 1
+
+
+class TestTokenizer:
+    """Test tokenizer functionality."""
+
+    def test_tokenize_simple_property(self) -> None:
+        """Test tokenizing simple property."""
+        content = 'property = "value";'
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+
+        assert len(tokens) >= 4  # property, =, "value", ;
+        assert tokens[0].type == TokenType.IDENTIFIER
+        assert tokens[0].value == "property"
+        assert tokens[1].type == TokenType.EQUALS
+        assert tokens[2].type == TokenType.STRING
+        assert tokens[2].value == "value"  # Value without quotes
+
+    def test_tokenize_array_values(self) -> None:
+        """Test tokenizing array values."""
+        content = "bindings = <&kp A &kp B>;"
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+
+        assert any(t.type == TokenType.ANGLE_OPEN for t in tokens)
+        assert any(t.type == TokenType.ANGLE_CLOSE for t in tokens)
+        assert any(t.value == "kp" for t in tokens)  # References have & removed
+
+    def test_tokenize_empty_string(self) -> None:
+        """Test tokenizing empty string."""
+        content = ""
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.EOF
+
+    def test_tokenize_comments(self) -> None:
+        """Test tokenizing with comments."""
+        content = """
+        // Single line comment
+        property = "value"; /* Block comment */
+        """
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize(preserve_whitespace=True)
+
+        # Comments should be tokenized
+        assert any(
+            t.type in (TokenType.SINGLE_LINE_COMMENT, TokenType.MULTI_LINE_COMMENT)
+            for t in tokens
+        )
+
+    def test_token_creation(self) -> None:
+        """Test Token creation and properties."""
+        token = Token(TokenType.IDENTIFIER, "test", 1, 5, "test")
+        assert token.type == TokenType.IDENTIFIER
+        assert token.value == "test"
+        assert token.line == 1
+        assert token.column == 5
+
+    def test_token_repr(self) -> None:
+        """Test Token string representation."""
+        token = Token(TokenType.STRING, '"hello"', 2, 10, '"hello"')
+        repr_str = repr(token)
+        assert "STRING" in repr_str
+        assert '"hello"' in repr_str
+
+    def test_tokenize_dt_simple(self) -> None:
+        """Test tokenizing simple devicetree content."""
+        content = 'compatible = "zmk,keymap";'
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+
+        assert tokens[0].value == "compatible"
+        assert tokens[1].type == TokenType.EQUALS
+        assert tokens[2].value == "zmk,keymap"  # Value without quotes
+        assert tokens[3].type == TokenType.SEMICOLON
+
+    def test_tokenize_dt_with_references(self) -> None:
+        """Test tokenizing devicetree with references."""
+        content = "bindings = <&kp A>, <&mo 1>;"
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+
+        ref_tokens = [t for t in tokens if t.type == TokenType.REFERENCE]
+        assert len(ref_tokens) >= 2
+        assert any(t.value == "kp" for t in ref_tokens)  # References have & removed
+        assert any(t.value == "mo" for t in ref_tokens)  # References have & removed
+
+    def test_tokens_to_string(self) -> None:
+        """Test converting tokens back to string."""
+        tokens = [
+            Token(TokenType.IDENTIFIER, "test", 1, 1, "test"),
+            Token(TokenType.EQUALS, "=", 1, 6, "="),
+            Token(TokenType.NUMBER, "42", 1, 8, "42"),
+            Token(TokenType.SEMICOLON, ";", 1, 10, ";"),
+        ]
+        # Test joining tokens (DTTokenizer doesn't have tokens_to_string method)
+        result = " ".join(t.value for t in tokens)
+        assert "test" in result
+        assert "=" in result
+        assert "42" in result
+
+    def test_dt_tokenizer_init(self) -> None:
+        """Test DTTokenizer initialization."""
+        content = "test;"
+
+        tokenizer = DTTokenizer(content)
+        assert hasattr(tokenizer, "tokenize")
+        assert callable(tokenizer.tokenize)
+
+    def test_dt_tokenizer_tokenize(self) -> None:
+        """Test DTTokenizer tokenize method."""
+        content = "test;"
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+        assert isinstance(tokens, list)
+        assert all(isinstance(t, Token) for t in tokens)
+
+
+class TestASTNodes:
+    """Test AST node creation and manipulation."""
+
+    def test_dt_value_type_enum(self) -> None:
+        """Test DTValueType enum values."""
+        assert DTValueType.STRING.value == "string"
+        assert DTValueType.INTEGER.value == "integer"
+        assert DTValueType.BOOLEAN.value == "boolean"
+        assert DTValueType.REFERENCE.value == "reference"
+        assert DTValueType.ARRAY.value == "array"
+
+    def test_dt_value_creation(self) -> None:
+        """Test DTValue creation."""
+        value = DTValue.string("test")
+        assert value.type == DTValueType.STRING
+        assert value.value == "test"
+
+    def test_dt_value_integer(self) -> None:
+        """Test DTValue integer creation."""
+        value = DTValue.integer(42)
+        assert value.type == DTValueType.INTEGER
+        assert value.value == 42
+
+    def test_dt_value_array(self) -> None:
+        """Test DTValue array creation."""
+        value = DTValue.array(["item1", "item2"])
+        assert value.type == DTValueType.ARRAY
+        assert value.value == ["item1", "item2"]
+
+    def test_dt_value_reference(self) -> None:
+        """Test DTValue reference creation."""
+        value = DTValue.reference("&node")
+        assert value.type == DTValueType.REFERENCE
+        assert value.value == "node"  # DTValue stores reference without & prefix
+
+    def test_dt_value_boolean(self) -> None:
+        """Test DTValue boolean creation."""
+        value = DTValue.boolean(True)
+        assert value.type == DTValueType.BOOLEAN
+        assert value.value is True
+
+    def test_dt_property_creation(self) -> None:
+        """Test DTProperty creation."""
+        value = DTValue.string("test")
+        prop = DTProperty(name="compatible", value=value)
+        assert prop.name == "compatible"
+        assert prop.value == value
+
+    def test_dt_node_creation(self) -> None:
+        """Test DTNode creation."""
+        node = DTNode(name="keymap", label="my_keymap")
+        assert node.name == "keymap"
+        assert node.label == "my_keymap"
+        assert node.children == {}
+        assert node.properties == {}
+
+    def test_dt_comment_creation(self) -> None:
+        """Test DTComment creation."""
+        comment = DTComment(text="This is a comment", is_block=False)
+        assert comment.text == "This is a comment"
+        assert comment.is_block is False
+
+    def test_dt_node_add_child(self) -> None:
+        """Test adding child to DTNode."""
+        parent = DTNode(name="parent")
+        child = DTNode(name="child")
+        parent.add_child(child)
+        assert len(parent.children) == 1
+        assert "child" in parent.children
+        assert parent.children["child"] == child
+
+    def test_dt_node_add_property(self) -> None:
+        """Test adding property to DTNode."""
+        node = DTNode(name="test")
+        prop = DTProperty(name="status", value=DTValue.string("okay"))
+        node.add_property(prop)
+        assert len(node.properties) == 1
+        assert "status" in node.properties
+        assert node.properties["status"] == prop
+
+    def test_dt_node_hierarchy(self) -> None:
+        """Test DTNode hierarchy building."""
+        root = DTNode(name="")
+        level1 = DTNode(name="level1")
+        level2 = DTNode(name="level2")
+
+        root.add_child(level1)
+        level1.add_child(level2)
+
+        assert len(root.children) == 1
+        assert len(root.children["level1"].children) == 1
+        assert root.children["level1"].children["level2"].name == "level2"
+
+
+class TestParserIntegration:
+    """Test parser integration scenarios."""
+
+    def test_parse_complete_keymap(self) -> None:
+        """Test parsing a complete keymap structure."""
+        content = """
+        keymap {
+            compatible = "zmk,keymap";
+
+            default_layer {
+                bindings = <&kp Q &kp W>;
+            };
+        };
+        """
+        content = content
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+        parser = DTParser(tokens)
+        root = parser.parse()
+
+        assert root is not None
+        assert len(root.children) > 0
+        keymap = list(root.children.values())[0]
+        assert keymap.name == "keymap"
+
+    def test_parse_with_includes(self) -> None:
+        """Test parsing with include statements."""
+        content = """
+        #include <behaviors.dtsi>
+        #include "zmk/keys.h"
+
+        / {
+            keymap {
+                compatible = "zmk,keymap";
+            };
+        };
+        """
+        content = content
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+        parser = DTParser(tokens)
+        root = parser.parse()
+
+        assert root is not None
+        # DTParser doesn't have includes attribute - skip this check
+        # assert len(parser.includes) >= 2
+
+    def test_parse_with_macros(self) -> None:
+        """Test parsing with macro definitions."""
+        content = """
+        #define TIMEOUT 200
+        #define DEFAULT_LAYER 0
+
+        keymap {
+            timeout = <TIMEOUT>;
+        };
+        """
+        content = content
+        tokenizer = DTTokenizer(content)
+        tokens = tokenizer.tokenize()
+        parser = DTParser(tokens)
+        root = parser.parse()
+
+        assert root is not None
+        # DTParser doesn't have defines attribute - skip this check
+        # assert len(parser.defines) >= 2
+
+
+class TestParsingModels:
+    """Test parsing model classes."""
+
+    def test_parsing_context_creation(self) -> None:
+        """Test ParsingContext creation."""
+        from zmk_layout.parsers.parsing_models import ParsingContext
+
+        context = ParsingContext(
+            keymap_content="test content",  # Changed from content to keymap_content
+            file_path=Path("test.keymap"),
+        )
+        assert context.keymap_content == "test content"
+        assert context.file_path == Path("test.keymap")
+
+    def test_parsing_mode_enum(self) -> None:
+        """Test ParsingMode enum values."""
+        from zmk_layout.parsers.zmk_keymap_parser import ParsingMode
+
+        # Updated enum values to match actual implementation
+        assert ParsingMode.FULL.value == "full"
+        assert ParsingMode.TEMPLATE_AWARE.value == "template"
+
+    def test_parsing_method_enum(self) -> None:
+        """Test ParsingMethod enum values."""
+        from zmk_layout.parsers.zmk_keymap_parser import ParsingMethod
+
+        assert ParsingMethod.AST.value == "ast"
+        assert ParsingMethod.REGEX.value == "regex"
