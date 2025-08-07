@@ -55,7 +55,10 @@ class MockBehaviorExtractor:
         pass
 
     def extract_behaviors_as_models(
-        self, roots: list[DTNode], content: str, defines: dict[str, str] | None = None
+        self,
+        roots: list[DTNode],
+        source_content: str = "",
+        defines: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         return {}
 

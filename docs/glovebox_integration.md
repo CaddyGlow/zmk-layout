@@ -106,7 +106,7 @@ from glovebox.core.structlog_logger import get_struct_logger
 
 class GloveboxConfigurationProvider(ConfigurationProvider):
     """Configuration provider using glovebox's profile system."""
-    
+
     def __init__(
         self,
         profile_service: KeyboardProfileService,
@@ -115,23 +115,23 @@ class GloveboxConfigurationProvider(ConfigurationProvider):
         self.profile_service = profile_service
         self.behavior_registry = behavior_registry
         self._profile = None
-    
+
     def set_profile(self, profile_name: str) -> None:
         """Set the active keyboard profile."""
         self._profile = self.profile_service.get_profile(profile_name)
-    
+
     def get_behavior_definitions(self) -> list[dict[str, Any]]:
         """Get all available ZMK behaviors for validation."""
         if not self._profile:
             return self.behavior_registry.get_default_behaviors()
         return self._profile.get_behaviors()
-    
+
     def get_include_files(self) -> list[str]:
         """Get required include files for compilation."""
         if not self._profile:
             return []
         return self._profile.config.firmware.includes
-    
+
     def get_validation_rules(self) -> dict[str, Any]:
         """Get keyboard-specific validation rules."""
         if not self._profile:
@@ -141,7 +141,7 @@ class GloveboxConfigurationProvider(ConfigurationProvider):
             "layer_limit": self._profile.config.layout.max_layers,
             "combo_limit": self._profile.config.firmware.max_combos,
         }
-    
+
     def get_template_context(self) -> dict[str, Any]:
         """Get context data for template processing."""
         if not self._profile:
@@ -156,18 +156,18 @@ class GloveboxConfigurationProvider(ConfigurationProvider):
 
 class GloveboxTemplateProvider(TemplateProvider):
     """Template provider using glovebox's template adapter."""
-    
+
     def __init__(self, template_adapter: TemplateAdapterProtocol):
         self.adapter = template_adapter
-    
+
     def render_string(self, template: str, context: dict[str, Any]) -> str:
         """Render a template string with given context."""
         return self.adapter.render_string(template, context)
-    
+
     def has_template_syntax(self, content: str) -> bool:
         """Check if content contains template syntax."""
         return self.adapter.has_template_syntax(content)
-    
+
     def validate_template(self, template: str) -> list[str]:
         """Validate template syntax, return list of errors."""
         try:
@@ -179,37 +179,37 @@ class GloveboxTemplateProvider(TemplateProvider):
 
 class GloveboxLayoutLogger(LayoutLogger):
     """Logger implementation using glovebox's structured logging."""
-    
+
     def __init__(self, name: str = "zmk_layout"):
         self.logger = get_struct_logger(name)
-    
+
     def info(self, message: str, **kwargs) -> None:
         self.logger.info(message, **kwargs)
-    
+
     def error(self, message: str, exc_info: bool = False, **kwargs) -> None:
         self.logger.error(message, exc_info=exc_info, **kwargs)
-    
+
     def warning(self, message: str, **kwargs) -> None:
         self.logger.warning(message, **kwargs)
-    
+
     def debug(self, message: str, **kwargs) -> None:
         self.logger.debug(message, **kwargs)
 
 
 class GloveboxFileProvider(FileProvider):
     """File provider using glovebox's file adapter."""
-    
+
     def __init__(self, file_adapter: FileAdapterProtocol):
         self.adapter = file_adapter
-    
+
     def read_text(self, path: Path) -> str:
         """Read file contents."""
         return self.adapter.read_text(path)
-    
+
     def write_text(self, path: Path, content: str) -> None:
         """Write file contents."""
         self.adapter.write_text(path, content)
-    
+
     def exists(self, path: Path) -> bool:
         """Check if file exists."""
         return self.adapter.exists(path)
@@ -222,24 +222,24 @@ def create_glovebox_providers(
     file_adapter: Optional[FileAdapterProtocol] = None,
 ) -> LayoutProviders:
     """Create provider instances using glovebox services."""
-    
+
     # Use defaults if not provided
     if not profile_service:
         from glovebox.services import get_keyboard_profile_service
         profile_service = get_keyboard_profile_service()
-    
+
     if not behavior_registry:
         from glovebox.services import get_behavior_registry
         behavior_registry = get_behavior_registry()
-    
+
     if not template_adapter:
         from glovebox.adapters import get_template_adapter
         template_adapter = get_template_adapter()
-    
+
     if not file_adapter:
         from glovebox.adapters import get_file_adapter
         file_adapter = get_file_adapter()
-    
+
     return LayoutProviders(
         configuration=GloveboxConfigurationProvider(profile_service, behavior_registry),
         template=GloveboxTemplateProvider(template_adapter),
@@ -263,7 +263,7 @@ from zmk_layout.providers import validate_providers
 def test_provider_validation():
     """Test that glovebox providers implement all required methods."""
     providers = create_glovebox_providers()
-    
+
     # This will raise if any provider is missing required methods
     errors = validate_providers(providers)
     assert not errors, f"Provider validation failed: {errors}"
@@ -272,22 +272,22 @@ def test_provider_validation():
 def test_provider_functionality():
     """Test basic provider functionality."""
     providers = create_glovebox_providers()
-    
+
     # Test configuration provider
     behaviors = providers.configuration.get_behavior_definitions()
     assert isinstance(behaviors, list)
-    
+
     # Test template provider
     rendered = providers.template.render_string("Hello {{name}}", {"name": "World"})
     assert rendered == "Hello World"
-    
+
     # Test logger
     providers.logger.info("Test message", extra_field="value")
-    
+
     # Test file provider (with temp file)
     from pathlib import Path
     import tempfile
-    
+
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
         test_path = Path(f.name)
         providers.file.write_text(test_path, "test content")
@@ -318,21 +318,21 @@ from glovebox.models.layout import LayoutResult
 
 class LayoutService(BaseService):
     """Layout service with zmk-layout integration."""
-    
+
     def __init__(self):
         super().__init__(service_name="LayoutService", service_version="2.0.0")
         self._providers = None
-    
+
     def _get_providers(self, profile: Optional[str] = None):
         """Get or create providers."""
         if not self._providers:
             self._providers = create_glovebox_providers()
-        
+
         if profile and hasattr(self._providers.configuration, 'set_profile'):
             self._providers.configuration.set_profile(profile)
-        
+
         return self._providers
-    
+
     def compile(
         self,
         layout_data: dict[str, Any],
@@ -342,37 +342,37 @@ class LayoutService(BaseService):
         try:
             # Get providers with profile
             providers = self._get_providers(profile)
-            
+
             # Create layout from data
             layout = ZmkLayout.from_dict(layout_data, providers=providers)
-            
+
             # Validate
             layout = layout.validate()
-            
+
             # Generate output
             keymap = layout.generate_keymap()
             behaviors = layout.generate_behaviors()
-            
+
             return LayoutResult(
                 success=True,
                 keymap=keymap,
                 behaviors=behaviors,
                 metadata=layout.get_metadata(),
             )
-            
+
         except Exception as e:
             self.logger.error("Layout compilation failed", error=str(e))
             return LayoutResult(
                 success=False,
                 error=str(e),
             )
-    
+
     def parse_keymap(self, file_path: Path) -> dict[str, Any]:
         """Parse a keymap file using zmk-layout."""
         providers = self._get_providers()
         layout = ZmkLayout.from_keymap(str(file_path), providers=providers)
         return layout.to_dict()
-    
+
     def validate_layout(
         self,
         layout_data: dict[str, Any],
@@ -401,7 +401,7 @@ from zmk_layout import Layout as ZmkLayout
 
 class LayoutLayerService(BaseService):
     """Layer management service."""
-    
+
     def add_layer(
         self,
         layout_data: dict[str, Any],
@@ -410,12 +410,12 @@ class LayoutLayerService(BaseService):
     ) -> dict[str, Any]:
         """Add a layer to the layout."""
         layout = ZmkLayout.from_dict(layout_data)
-        
+
         # Use fluent API
         layout = layout.layers.add(layer_name, position=position).parent()
-        
+
         return layout.to_dict()
-    
+
     def remove_layer(
         self,
         layout_data: dict[str, Any],
@@ -425,7 +425,7 @@ class LayoutLayerService(BaseService):
         layout = ZmkLayout.from_dict(layout_data)
         layout = layout.layers.remove(layer_name).parent()
         return layout.to_dict()
-    
+
     def update_binding(
         self,
         layout_data: dict[str, Any],
@@ -457,16 +457,16 @@ from zmk_layout import Layout as ZmkLayout
 
 class LegacyLayoutWrapper:
     """Wrapper maintaining old API while using zmk-layout internally."""
-    
+
     def __init__(self, layout_data: Optional[dict] = None):
         if layout_data:
             self._layout = ZmkLayout.from_dict(layout_data)
         else:
             self._layout = ZmkLayout.create_empty("crkbd", "Legacy")
-        
+
         # Track deprecation warnings
         self._deprecation_shown = set()
-    
+
     def _warn_deprecated(self, method: str, alternative: str):
         """Show deprecation warning once per method."""
         if method not in self._deprecation_shown:
@@ -476,23 +476,23 @@ class LegacyLayoutWrapper:
                 stacklevel=2
             )
             self._deprecation_shown.add(method)
-    
+
     # Old API methods (deprecated)
     def add_layer(self, name: str) -> None:
         """Deprecated: Add layer using old API."""
         self._warn_deprecated("add_layer", "layout.layers.add()")
         self._layout = self._layout.layers.add(name).parent()
-    
+
     def set_binding(self, layer: str, pos: int, binding: str) -> None:
         """Deprecated: Set binding using old API."""
         self._warn_deprecated("set_binding", "layout.layers.get().set()")
         self._layout = self._layout.layers.get(layer).set(pos, binding).parent()
-    
+
     # Bridge to new API
     def to_fluent(self) -> ZmkLayout:
         """Get the fluent layout instance."""
         return self._layout
-    
+
     def to_dict(self) -> dict[str, Any]:
         """Export to dictionary."""
         return self._layout.to_dict()
@@ -521,45 +521,45 @@ from glovebox.adapters.zmk_layout_providers import create_glovebox_providers
 
 class TestLayoutServiceIntegration:
     """Test layout service with zmk-layout integration."""
-    
+
     def test_compile_with_profile(self):
         """Test compilation with keyboard profile."""
         service = LayoutService()
-        
+
         layout_data = {
             "keyboard": "crkbd",
             "layers": [
                 {"name": "base", "bindings": ["&kp Q"] * 42}
             ]
         }
-        
+
         result = service.compile(layout_data, profile="crkbd")
-        
+
         assert result.success
         assert result.keymap is not None
         assert "layer_base" in result.keymap
-    
+
     def test_backward_compatibility(self):
         """Test that old API still works."""
         from glovebox.layout.compat import LegacyLayoutWrapper
-        
+
         wrapper = LegacyLayoutWrapper()
         wrapper.add_layer("test")  # Should show deprecation warning
-        
+
         data = wrapper.to_dict()
         assert "test" in data["layer_names"]
-    
+
     def test_performance_comparison(self):
         """Compare performance with old implementation."""
         import time
-        
+
         service = LayoutService()
         layout_data = create_test_layout(1000)  # Large layout
-        
+
         start = time.time()
         result = service.compile(layout_data)
         duration = time.time() - start
-        
+
         assert result.success
         assert duration < 1.0  # Should complete in under 1 second
 ```
@@ -575,21 +575,21 @@ def test_full_workflow():
     """Test complete workflow from parse to generate."""
     from pathlib import Path
     from glovebox.layout.service import LayoutService
-    
+
     service = LayoutService()
-    
+
     # Parse existing keymap
     keymap_path = Path("fixtures/sample.keymap")
     layout_data = service.parse_keymap(keymap_path)
-    
+
     # Modify using fluent API
     from zmk_layout import Layout
     layout = Layout.from_dict(layout_data)
     layout = layout.layers.add("gaming").parent()
-    
+
     # Compile back
     result = service.compile(layout.to_dict(), profile="crkbd")
-    
+
     assert result.success
     assert "layer_gaming" in result.keymap
 ```
@@ -611,12 +611,12 @@ from glovebox.layout.service import LayoutService
 def benchmark_operation(operation, iterations=100):
     """Benchmark an operation."""
     times = []
-    
+
     for _ in range(iterations):
         start = time.perf_counter()
         operation()
         times.append(time.perf_counter() - start)
-    
+
     return {
         "mean": statistics.mean(times),
         "median": statistics.median(times),
@@ -629,15 +629,15 @@ def benchmark_operation(operation, iterations=100):
 def main():
     """Run performance benchmarks."""
     service = LayoutService()
-    
+
     # Test data
     small_layout = create_layout(10)    # 10 bindings
     medium_layout = create_layout(100)  # 100 bindings
     large_layout = create_layout(1000)  # 1000 bindings
-    
+
     print("Performance Benchmark Results")
     print("=" * 50)
-    
+
     # Benchmark compilation
     for size, data in [("Small", small_layout), ("Medium", medium_layout), ("Large", large_layout)]:
         stats = benchmark_operation(lambda: service.compile(data))
@@ -645,7 +645,7 @@ def main():
         print(f"  Mean: {stats['mean']*1000:.2f}ms")
         print(f"  Median: {stats['median']*1000:.2f}ms")
         print(f"  Min/Max: {stats['min']*1000:.2f}ms / {stats['max']*1000:.2f}ms")
-    
+
     # Compare with baseline
     print("\n\nPerformance vs Baseline:")
     print("Acceptable threshold: <5% overhead")
@@ -789,7 +789,7 @@ print(errors)  # Shows missing methods
 
 **Problem**: Operations taking longer than expected
 
-**Solution**: 
+**Solution**:
 1. Check cache configuration
 2. Profile the code to find bottlenecks
 3. Ensure providers are properly cached

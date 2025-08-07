@@ -402,9 +402,9 @@ def create_glove80_layout():
 
     # Row 4: Additional symbols
     # fmt: off
-    symbol_row4 = [ 
+    symbol_row4 = [
         "trans", "LT", "GT", "COMMA", "DOT", "SLASH",
-        "COLON", "SEMI", "SQT", "QMARK", "FSLH", "trans", 
+        "COLON", "SEMI", "SQT", "QMARK", "FSLH", "trans",
     ]
     # fmt: on
 
@@ -558,20 +558,28 @@ def demonstrate_glove80_fluent_api():
         print("   === DEBUG: Behavior Comparison ===")
         print("   Original Hold-tap behaviors:")
         for ht in layout.data.hold_taps:
-            print(f"     {ht.name}: bindings={ht.bindings}, tapping_term={ht.tapping_term_ms}ms")
-        
+            print(
+                f"     {ht.name}: bindings={ht.bindings}, tapping_term={ht.tapping_term_ms}ms"
+            )
+
         print("   Loaded Hold-tap behaviors:")
         for ht in loaded_layout.data.hold_taps:
-            print(f"     {ht.name}: bindings={ht.bindings}, tapping_term={ht.tapping_term_ms}ms")
-        
+            print(
+                f"     {ht.name}: bindings={ht.bindings}, tapping_term={ht.tapping_term_ms}ms"
+            )
+
         print("   Original Combos:")
         for combo in layout.data.combos:
-            print(f"     {combo.name}: binding={combo.binding}, keys={combo.key_positions}")
-        
+            print(
+                f"     {combo.name}: binding={combo.binding}, keys={combo.key_positions}"
+            )
+
         print("   Loaded Combos:")
         for combo in loaded_layout.data.combos:
-            print(f"     {combo.name}: binding={combo.binding}, keys={combo.key_positions}")
-        
+            print(
+                f"     {combo.name}: binding={combo.binding}, keys={combo.key_positions}"
+            )
+
         print("   === END DEBUG ===")
         print()
 

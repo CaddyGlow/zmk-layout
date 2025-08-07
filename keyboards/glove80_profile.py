@@ -874,7 +874,7 @@ class CompleteGlove80Profile:
     kconfig: Glove80KConfigOptions = field(default_factory=Glove80KConfigOptions)
     validation: Glove80ValidationRules = field(default_factory=Glove80ValidationRules)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize keyboard_config structure required by generators."""
         from types import SimpleNamespace
 

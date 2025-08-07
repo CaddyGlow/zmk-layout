@@ -114,7 +114,7 @@ class LimitedPreprocessor:
     def __init__(self):
         self.defines = {}
         self.active_conditions = []
-    
+
     def process(self, content: str) -> str:
         # Two-pass system:
         # 1. Extract all defines and includes
@@ -249,22 +249,22 @@ class EnhancedDefineResolver:
     def __init__(self, defines: dict):
         self.defines = defines
         self.resolved_cache = {}
-    
+
     def resolve(self, token: str, depth=0) -> str:
         # Recursive resolution with cycle detection
         if depth > 10:
             return token
-        
+
         if token in self.resolved_cache:
             return self.resolved_cache[token]
-        
+
         value = self.defines.get(token, token)
         if value != token and value in self.defines:
             value = self.resolve(value, depth + 1)
-        
+
         self.resolved_cache[token] = value
         return value
-    
+
     def evaluate_simple_expr(self, expr: str) -> str:
         # Handle basic arithmetic: +, -, *, /, ()
         # Example: (BASE_LAYER + 1) where BASE_LAYER = 0
@@ -278,7 +278,7 @@ class ConditionalEvaluator:
         self.defines = defines
         self.condition_stack = []
         self.skip_depth = 0
-    
+
     def process_directive(self, directive: str, condition: str):
         if directive == "ifdef":
             is_defined = condition in self.defines
@@ -296,7 +296,7 @@ class ConditionalEvaluator:
         elif directive == "endif":
             # Pop condition stack
             pass
-    
+
     def should_include_content(self) -> bool:
         return self.skip_depth == 0
 ```
@@ -308,29 +308,29 @@ class ZMKHybridPreprocessor:
     Selective preprocessing that preserves structure
     while leveraging pcpp for complex operations.
     """
-    
+
     def __init__(self):
         self.cpp = Preprocessor()
         self.preserve_structure = True
-    
+
     def preprocess_for_parsing(self, content: str) -> tuple[str, dict]:
         # 1. Extract preprocessing directives
         directives = self.extract_directives(content)
-        
+
         # 2. Process includes and complex defines with pcpp
         self.process_includes(directives['includes'])
         resolved_defines = self.process_defines(directives['defines'])
-        
+
         # 3. Apply conditional compilation
         processed = self.apply_conditionals(content, resolved_defines)
-        
+
         # 4. Return processed content with define context
         return processed, resolved_defines
-    
+
     def extract_directives(self, content: str) -> dict:
         """Extract all preprocessing directives while preserving content"""
         pass
-    
+
     def apply_conditionals(self, content: str, defines: dict) -> str:
         """
         Apply conditional compilation while preserving excluded

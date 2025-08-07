@@ -75,7 +75,7 @@ class CompleteLarkTransformer:
         self.comments = []
         self.conditionals = []
         self.errors = []
-        
+
     # Need to implement:
     def transform_property_values(self)  # Complex value transformations
     def transform_preprocessor(self)     # Directive handling
@@ -99,13 +99,13 @@ class CompleteLarkTransformer:
 class LarkErrorHandler:
     def collect_errors(self, parse_exception):
         """Convert Lark exceptions to DTParseError objects"""
-        
+
     def generate_context(self, error, tokens):
         """Generate surrounding context for error messages"""
-        
+
     def attempt_recovery(self, tree, error):
         """Try to continue parsing after error"""
-        
+
     def create_partial_ast(self, valid_sections):
         """Build AST from successfully parsed sections"""
 ```
@@ -142,7 +142,7 @@ class SafeLarkParser:
         self.max_file_size = 10 * 1024 * 1024  # 10MB
         self.max_parse_time = 5.0  # seconds
         self.max_iterations = 10000
-        
+
     def parse_with_limits(self, content):
         """Parse with safety limits"""
 ```
@@ -153,10 +153,10 @@ class SafeLarkParser:
 ```python
 def parse_dt_lark_multiple(text: str) -> list[DTNode]:
     """Parse multiple root nodes"""
-    
+
 def parse_dt_lark_safe(text: str) -> tuple[list[DTNode], list[str]]:
     """Parse with error handling"""
-    
+
 def parse_dt_lark_multiple_safe(text: str) -> tuple[list[DTNode], list[str]]:
     """Parse multiple roots with error handling"""
 ```
@@ -220,13 +220,13 @@ def parse_with_error_handling(self, text):
 class LarkDTParser:
     def parse(self, text: str) -> DTNode:
         """Single root parsing"""
-        
+
     def parse_multiple(self, text: str) -> list[DTNode]:
         """Multiple root parsing"""
-        
+
     def parse_safe(self, text: str) -> tuple[DTNode, list[DTParseError]]:
         """Single root with error handling"""
-        
+
     def parse_multiple_safe(self, text: str) -> tuple[list[DTNode], list[DTParseError]]:
         """Multiple roots with error handling"""
 ```
@@ -281,19 +281,19 @@ class TestParserParity:
     def test_ast_equivalence(self, keymap_file):
         """Both parsers should produce equivalent ASTs"""
         content = read_file(keymap_file)
-        
+
         # Parse with recursive descent
         rd_ast, rd_errors = parse_dt_safe(content)
-        
+
         # Parse with Lark
         lark_ast, lark_errors = parse_dt_lark_safe(content)
-        
+
         # Compare AST structures
         assert_ast_equivalent(rd_ast, lark_ast)
-        
+
     def test_error_parity(self):
         """Both parsers should report similar errors"""
-        
+
     def test_comment_parity(self):
         """Both parsers should preserve comments similarly"""
 ```
@@ -303,10 +303,10 @@ class TestParserParity:
 class TestLarkPerformance:
     def test_parse_speed(self):
         """Lark should be within 20% of recursive descent speed"""
-        
+
     def test_memory_usage(self):
         """Memory usage should be reasonable"""
-        
+
     def test_large_files(self):
         """Handle large keymap files efficiently"""
 ```
@@ -368,15 +368,15 @@ def parse_content(content: str):
 1. **Grammar Complexity**
    - Risk: Grammar changes break existing functionality
    - Mitigation: Version control grammar, comprehensive tests
-   
+
 2. **Performance Degradation**
    - Risk: Lark parser slower than recursive descent
    - Mitigation: Use LALR algorithm, optimize transformer
-   
+
 3. **Error Recovery Limitations**
    - Risk: Lark can't match recursive descent error handling
    - Mitigation: Custom error recovery layer
-   
+
 4. **Memory Usage**
    - Risk: Parse tree uses more memory than token stream
    - Mitigation: Streaming transformation, tree pruning
@@ -386,11 +386,11 @@ def parse_content(content: str):
 1. **Effort Underestimation**
    - Risk: Implementation takes longer than expected
    - Mitigation: Phased approach, MVP first
-   
+
 2. **Compatibility Issues**
    - Risk: Subtle AST differences break downstream code
    - Mitigation: Extensive parity testing
-   
+
 3. **Maintenance Burden**
    - Risk: Two parsers to maintain during transition
    - Mitigation: Share common code, clear deprecation timeline
@@ -463,7 +463,7 @@ def _parse_property(self) -> DTProperty | None:
     # Robust error handling
     if not self._match(TokenType.IDENTIFIER):
         return None
-    
+
     prop_name = self.current_token.value
     # ... detailed implementation with error recovery
 ```
@@ -484,15 +484,15 @@ def property(self, items):
     try:
         name = self.get_property_name(items[0])
         values = self.get_property_values(items[1:])
-        
+
         # Track position
         line = items[0].line if hasattr(items[0], 'line') else 0
         column = items[0].column if hasattr(items[0], 'column') else 0
-        
+
         # Create property with comment association
         prop = DTProperty(name, values, line, column)
         self.associate_comments(prop)
-        
+
         return prop
     except Exception as e:
         self.errors.append(DTParseError(str(e), line, column))

@@ -187,12 +187,12 @@ To update existing code to the data-only API:
    # Old
    layout = Layout.from_file("layout.json")
    layout.save("output.json")
-   
+
    # New
    content = Path("layout.json").read_text()
    data = parse_json_data(content)
    layout = Layout.from_dict(data)
-   
+
    output_data = layout.to_dict()
    json_content = serialize_json_data(output_data)
    Path("output.json").write_text(json_content)

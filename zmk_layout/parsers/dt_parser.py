@@ -451,22 +451,29 @@ class DTParser:
             elif self._match(TokenType.REFERENCE):
                 if self.current_token is None:
                     break
-                
+
                 # Start collecting the reference and its parameters
                 ref_parts = [self.current_token.raw]
                 raw_parts.append(self.current_token.raw)
                 self._advance()
-                
+
                 # Collect parameters until we hit a comma, another reference, or end of array
-                while (not self._match(TokenType.ANGLE_CLOSE) and 
-                       not self._match(TokenType.COMMA) and 
-                       not self._match(TokenType.REFERENCE) and 
-                       not self._is_at_end()):
-                    
-                    if self._match(TokenType.IDENTIFIER) or self._match(TokenType.NUMBER):
+                while (
+                    not self._match(TokenType.ANGLE_CLOSE)
+                    and not self._match(TokenType.COMMA)
+                    and not self._match(TokenType.REFERENCE)
+                    and not self._is_at_end()
+                ):
+                    if self._match(TokenType.IDENTIFIER) or self._match(
+                        TokenType.NUMBER
+                    ):
                         if self.current_token is None:
                             break
-                        param = self.current_token.value if self._match(TokenType.IDENTIFIER) else self.current_token.value
+                        param = (
+                            self.current_token.value
+                            if self._match(TokenType.IDENTIFIER)
+                            else self.current_token.value
+                        )
                         ref_parts.append(param)
                         raw_parts.append(param)
                         self._advance()
@@ -475,7 +482,7 @@ class DTParser:
                         if self.current_token:
                             raw_parts.append(self.current_token.raw)
                         self._advance()
-                
+
                 # Join reference with its parameters
                 complete_reference = " ".join(ref_parts)
                 values.append(complete_reference)

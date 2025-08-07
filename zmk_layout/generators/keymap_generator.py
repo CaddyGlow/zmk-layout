@@ -115,11 +115,16 @@ class KeymapBuilder:
         self._template_path: str | None = None
         self._template_context: dict[str, Any] = {}
         self._zmk_generator: ZMKGenerator | None = None
-        
+
         # Use default template from profile if available
-        if hasattr(self._profile, 'keyboard_config') and hasattr(self._profile.keyboard_config, 'keymap'):
-            if hasattr(self._profile.keyboard_config.keymap, 'default_template_path'):
-                self._template_path = self._profile.keyboard_config.keymap.default_template_path
+        if (
+            hasattr(self._profile, "keyboard_config")
+            and hasattr(self._profile.keyboard_config, "keymap")
+            and hasattr(self._profile.keyboard_config.keymap, "default_template_path")
+        ):
+            self._template_path = (
+                self._profile.keyboard_config.keymap.default_template_path
+            )
 
     def with_headers(self, include: bool = True) -> KeymapBuilder:
         """Include/exclude standard ZMK headers.

@@ -175,16 +175,22 @@ class LarkToDTTransformer:
                                                     ref_name = str(
                                                         token_child.children[1]
                                                     )  # Skip & symbol
-                                                    
+
                                                     # Collect all parameters after the reference name
                                                     params = []
-                                                    for i in range(2, len(token_child.children)):
-                                                        param = str(token_child.children[i])
+                                                    for i in range(
+                                                        2, len(token_child.children)
+                                                    ):
+                                                        param = str(
+                                                            token_child.children[i]
+                                                        )
                                                         params.append(param)
-                                                    
+
                                                     # Build the complete reference string
                                                     if params:
-                                                        values.append(f"&{ref_name} {' '.join(params)}")
+                                                        values.append(
+                                                            f"&{ref_name} {' '.join(params)}"
+                                                        )
                                                     else:
                                                         values.append(f"&{ref_name}")
                                                 elif (

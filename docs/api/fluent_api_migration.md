@@ -169,24 +169,24 @@ For complex migrations, create a wrapper to maintain compatibility:
 ```python
 class LayoutMigrationWrapper:
     """Wrapper to support both old and new APIs during migration"""
-    
+
     def __init__(self, layout=None):
         self._layout = layout or Layout.create_empty("crkbd", "Default")
-    
+
     # Old API support
     @property
     def keyboard(self):
         return self._layout.keyboard
-    
+
     @keyboard.setter
     def keyboard(self, value):
         self._layout = self._layout.with_keyboard(value)
-    
+
     # Bridge to new API
     def fluent(self):
         """Get fluent interface"""
         return self._layout
-    
+
     # Forward fluent methods
     def __getattr__(self, name):
         return getattr(self._layout, name)
@@ -208,7 +208,7 @@ def create_base_layer_old():
 def create_base_layer_new(layout):
     return (layout.layers
         .add("base")
-        .set_range(0, len(QWERTY_KEYS), 
+        .set_range(0, len(QWERTY_KEYS),
                   [f"&kp {key}" for key in QWERTY_KEYS])
         .parent())
 ```
@@ -226,13 +226,13 @@ def add_behaviors_old(layout):
     ht.hold_behavior = "&kp"
     ht.tap_behavior = "&kp"
     layout.behaviors.append(ht)
-    
+
     # Macro
     macro = MacroBehavior()
     macro.name = "copy"
     macro.bindings = ["&kp LC(C)"]
     layout.behaviors.append(macro)
-    
+
     return layout
 
 # After: Fluent behavior definitions
@@ -253,21 +253,21 @@ def process_layout_old(input_file):
     # Load
     with open(input_file) as f:
         data = json.load(f)
-    
+
     # Parse
     layout = Layout.from_dict(data)
-    
+
     # Validate
     validator = Validator()
     errors = validator.validate(layout)
     if errors:
         raise ValidationError(errors)
-    
+
     # Generate
     generator = Generator()
     keymap = generator.generate_keymap(layout)
     behaviors = generator.generate_behaviors(layout)
-    
+
     return keymap, behaviors
 
 # After: Fluent pipeline
@@ -460,23 +460,23 @@ For libraries that need to support both APIs:
 ```python
 class DualAPILayout:
     """Layout supporting both imperative and fluent APIs"""
-    
+
     def __init__(self):
         self._layout = Layout.create_empty("crkbd", "Dual API")
-    
+
     # Imperative API (deprecated)
     def add_layer(self, name: str) -> None:
         """Deprecated: Use fluent API instead"""
-        warnings.warn("add_layer is deprecated, use .layers.add()", 
+        warnings.warn("add_layer is deprecated, use .layers.add()",
                      DeprecationWarning)
         self._layout = self._layout.layers.add(name).parent()
-    
+
     # Fluent API
     @property
     def layers(self):
         """Access fluent layer manager"""
         return self._layout.layers
-    
+
     # Allow fluent chaining from imperative instance
     def fluent(self) -> Layout:
         """Convert to fluent interface"""
@@ -515,7 +515,7 @@ class Layout:
 ```python
 class MigrationHelper:
     """Utilities to help with migration"""
-    
+
     @staticmethod
     def convert_imperative_to_fluent(old_code: str) -> str:
         """Convert imperative code to fluent style"""
@@ -525,13 +525,13 @@ class MigrationHelper:
             (r'layout\.name = "(.*)"', r'layout = layout.with_name("\1")'),
             (r'layout\.add_layer\((.*)\)', r'layout = layout.layers.add(\1).parent()'),
         ]
-        
+
         result = old_code
         for pattern, replacement in replacements:
             result = re.sub(pattern, replacement, result)
-        
+
         return result
-    
+
     @staticmethod
     def validate_migration(old_layout, new_layout) -> bool:
         """Verify migration produced equivalent result"""

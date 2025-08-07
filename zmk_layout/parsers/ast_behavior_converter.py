@@ -643,13 +643,13 @@ class ASTBehaviorConverter:
 
                 # Remove outer angle brackets first
                 cleaned_raw = re.sub(r"^\s*<\s*(.+?)\s*>\s*$", r"\1", raw_value)
-                
+
                 # Split by comma but be careful about parameters within bindings
                 # This handles cases like: "&kp LGUI, &kp A" or "&mo 2, &rgb_ug_status_macro"
                 parts = []
                 current_binding = ""
                 paren_depth = 0
-                
+
                 for char in cleaned_raw:
                     if char == "(":
                         paren_depth += 1
@@ -661,9 +661,9 @@ class ASTBehaviorConverter:
                             parts.append(current_binding.strip())
                         current_binding = ""
                         continue
-                    
+
                     current_binding += char
-                
+
                 # Add the last binding
                 if current_binding.strip():
                     parts.append(current_binding.strip())

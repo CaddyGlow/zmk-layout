@@ -8,12 +8,14 @@ and generates separate keymaps to verify parsing works correctly.
 import sys
 from pathlib import Path
 
+
 # Add the project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from zmk_layout import Layout
-from keyboards.glove80_profile import create_complete_glove80_profile
 from types import SimpleNamespace
+
+from keyboards.glove80_profile import create_complete_glove80_profile
+from zmk_layout import Layout
 
 
 def factory_verification_demo():
@@ -185,10 +187,10 @@ def factory_verification_demo():
 
         round_trip_output = output_dir / "factory_round_trip.keymap"
         round_trip_output.write_text(regenerated_content)
-        
+
         round_trip_json_output = output_dir / "factory_round_trip.json"
         round_trip_json_output.write_text(parsed_layout.export.to_json())
-        
+
         print(f"   ✓ Round-trip keymap saved to: {round_trip_output}")
         print(f"   ✓ Round-trip JSON saved to: {round_trip_json_output}")
 
@@ -205,4 +207,3 @@ def factory_verification_demo():
 
 if __name__ == "__main__":
     factory_verification_demo()
-

@@ -21,7 +21,7 @@ layout = (Layout
     .create_empty("crkbd", "Corne with Home Row Mods")
     .with_author("Your Name")
     .with_description("Colemak-DH with home row modifiers")
-    
+
     # Define behaviors first
     .behaviors
         .add_hold_tap("hm",
@@ -35,7 +35,7 @@ layout = (Layout
             tap="&kp",
             tapping_term_ms=200)
     .parent()
-    
+
     # Base layer (Colemak-DH)
     .layers.add("base")
         .set_range(0, 42, [
@@ -45,7 +45,7 @@ layout = (Layout
             "&kp LSHIFT", "&kp Z",     "&kp X",     "&kp C",     "&kp D",     "&kp V",
             # Left thumb cluster
                                        "&kp LGUI",  "&mo 1",     "&kp SPACE",
-            
+
             # Right side
             "&kp J",      "&kp L",     "&kp U",     "&kp Y",     "&kp SEMI",  "&kp BSPC",
             "&kp M",      "&hm RSHIFT N","&hm RCTRL E","&hm RALT I","&hm RGUI O","&kp SQT",
@@ -54,7 +54,7 @@ layout = (Layout
             "&kp RET",    "&mo 2",     "&kp RALT"
         ])
     .parent()
-    
+
     # Navigation layer
     .layers.add("nav")
         .set_range(0, 42, [
@@ -64,7 +64,7 @@ layout = (Layout
             "&trans",     "&kp HOME",  "&kp END",   "&kp DEL",   "&kp BSPC",  "&kp PG_DN",
             # Left thumb
                                        "&trans",    "&trans",    "&trans",
-            
+
             # Right side
             "&kp N6",     "&kp N7",    "&kp N8",    "&kp N9",    "&kp N0",    "&trans",
             "&kp MINUS",  "&kp EQUAL", "&kp LBKT",  "&kp RBKT",  "&kp BSLH",  "&trans",
@@ -73,7 +73,7 @@ layout = (Layout
             "&trans",     "&trans",    "&trans"
         ])
     .parent()
-    
+
     # Symbol layer
     .layers.add("sym")
         .set_range(0, 42, [
@@ -83,7 +83,7 @@ layout = (Layout
             "&trans",     "&kp LT",    "&kp GT",    "&kp QMARK", "&kp COLON", "&kp SEMI",
             # Left thumb
                                        "&trans",    "&trans",    "&trans",
-            
+
             # Right side
             "&kp CARET",  "&kp AMPS",  "&kp STAR",  "&kp LPAR",  "&kp RPAR",  "&trans",
             "&kp EQUAL",  "&kp PLUS",  "&kp LBKT",  "&kp RBKT",  "&kp BSLH",  "&trans",
@@ -92,7 +92,7 @@ layout = (Layout
             "&trans",     "&trans",    "&trans"
         ])
     .parent()
-    
+
     .save("crkbd_colemak_dh.json"))
 ```
 
@@ -104,7 +104,7 @@ from zmk_layout import Layout
 # Sofle with combos, macros, and tap dances
 layout = (Layout
     .create_empty("sofle", "Sofle Advanced")
-    
+
     # Add combos for common bigrams
     .behaviors
         .add_combo("combo_the",
@@ -112,16 +112,16 @@ layout = (Layout
             bindings=["&kp T", "&kp H", "&kp E"],
             timeout_ms=30,
             layers=["base"])
-        .add_combo("combo_and", 
+        .add_combo("combo_and",
             keys=[27, 28],  # A + N positions
             bindings=["&kp A", "&kp N", "&kp D"],
             timeout_ms=30,
             layers=["base"])
-        
+
         # Tap dance for quotes
         .add_tap_dance("td_quotes",
             bindings=["&kp SQT", "&kp DQT", "&kp GRAVE"])
-        
+
         # Macro for email signature
         .add_macro("email_sig",
             bindings=[
@@ -136,12 +136,12 @@ layout = (Layout
             wait_ms=30,
             tap_ms=30)
     .parent()
-    
+
     # Configure layers with advanced bindings
     .layers.add("base")
         # ... layer configuration
     .parent()
-    
+
     .validate()
     .save("sofle_advanced.json"))
 ```
@@ -155,7 +155,7 @@ from zmk_layout import Layout, Binding
 
 def create_multi_layout_keyboard():
     """Create a keyboard supporting QWERTY, Colemak, and Dvorak"""
-    
+
     base_layout = (Layout
         .create_empty("splitkb_aurora_sweep", "Multi-Layout Sweep")
         .with_metadata({
@@ -163,23 +163,23 @@ def create_multi_layout_keyboard():
             "layouts_supported": ["qwerty", "colemak", "dvorak"],
             "default_layout": "colemak"
         }))
-    
+
     # Add layout-specific layers
     layouts = {
         "qwerty": ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
         "colemak": ["q", "w", "f", "p", "g", "j", "l", "u", "y", "semicolon"],
         "dvorak": ["quote", "comma", "period", "p", "y", "f", "g", "c", "r", "l"]
     }
-    
+
     for layout_name, keys in layouts.items():
         layer_bindings = [f"&kp {key.upper()}" for key in keys]
         # Pad to full layer size
         layer_bindings.extend(["&trans"] * (36 - len(layer_bindings)))
-        
+
         base_layout = (base_layout.layers
             .add(f"{layout_name}_base", bindings=layer_bindings)
             .parent())
-    
+
     # Add shared layers
     base_layout = (base_layout
         .layers.add("numbers")
@@ -192,7 +192,7 @@ def create_multi_layout_keyboard():
         .layers.add("navigation")
             # Add navigation bindings
         .parent())
-    
+
     return base_layout
 
 # Create and save
@@ -207,11 +207,11 @@ from zmk_layout import Layout
 
 def create_ergodox_layout():
     """Create an Ergodox layout with 7 layers and complex behaviors"""
-    
+
     layout = (Layout
         .create_empty("ergodox", "Professional Ergodox")
         .with_description("Ergodox layout optimized for programming and typing"))
-    
+
     # Define layer tap behaviors for each layer
     for i in range(1, 7):
         layout = (layout.behaviors
@@ -220,7 +220,7 @@ def create_ergodox_layout():
                 tap="&kp",
                 tapping_term_ms=200 - (i * 10))  # Faster for higher layers
             .parent())
-    
+
     # Layer structure:
     # 0: Base (Colemak)
     # 1: Symbols
@@ -229,7 +229,7 @@ def create_ergodox_layout():
     # 4: Media
     # 5: Gaming
     # 6: System
-    
+
     layers = [
         ("base", generate_colemak_bindings()),
         ("symbols", generate_symbol_bindings()),
@@ -239,12 +239,12 @@ def create_ergodox_layout():
         ("gaming", generate_gaming_bindings()),
         ("system", generate_system_bindings())
     ]
-    
+
     for layer_name, bindings in layers:
         layout = (layout.layers
             .add(layer_name, bindings=bindings)
             .parent())
-    
+
     # Add advanced features
     layout = (layout
         # One-shot modifiers
@@ -252,15 +252,15 @@ def create_ergodox_layout():
             .add_sticky_key("sk_shift", "&kp LSHIFT", release_after_ms=1000)
             .add_sticky_key("sk_ctrl", "&kp LCTRL", release_after_ms=1000)
         .parent()
-        
+
         # Leader key sequences
         .behaviors
-            .add_macro("leader_vim_save", 
+            .add_macro("leader_vim_save",
                 bindings=["&kp ESC", "&kp COLON", "&kp W", "&kp RET"])
             .add_macro("leader_vim_quit",
                 bindings=["&kp ESC", "&kp COLON", "&kp Q", "&kp RET"])
         .parent())
-    
+
     return layout
 
 def generate_colemak_bindings():
@@ -281,7 +281,7 @@ from zmk_layout import Layout, ConditionalBuilder
 # Create conditional behaviors based on layer state
 layout = (Layout
     .create_empty("crkbd", "Conditional Behaviors")
-    
+
     # Define conditional hold-tap based on active layer
     .behaviors
         .add_conditional("smart_shift",
@@ -289,7 +289,7 @@ layout = (Layout
             then_binding="&kp LCTRL",  # Ctrl in gaming
             else_binding="&kp LSHIFT")  # Shift otherwise
     .parent()
-    
+
     # Adaptive tap dance that changes based on layer
     .behaviors
         .add_adaptive_tap_dance("adaptive_td",
@@ -309,18 +309,18 @@ from zmk_layout import Layout
 # Create custom modifier combinations
 layout = (Layout
     .create_empty("crkbd", "Custom Modifiers")
-    
+
     .behaviors
         # Hyper key (all modifiers)
         .add_behavior("hyper",
             type="modifier",
             mods=["LGUI", "LALT", "LCTRL", "LSHIFT"])
-        
+
         # Meh key (Ctrl+Alt+Shift)
         .add_behavior("meh",
             type="modifier",
             mods=["LCTRL", "LALT", "LSHIFT"])
-        
+
         # Custom navigation modifier
         .add_hold_tap("nav_mod",
             hold="&mo NAV",
@@ -339,7 +339,7 @@ from zmk_layout import ProcessingPipeline, ValidationPipeline, GeneratorPipeline
 
 def process_keymap_file(input_file: str, output_dir: str):
     """Complete pipeline from DTSI to generated files"""
-    
+
     # Step 1: Parse and process
     processed = (ProcessingPipeline()
         .from_dtsi(input_file)
@@ -348,10 +348,10 @@ def process_keymap_file(input_file: str, output_dir: str):
         .extract_behaviors()
         .normalize_bindings()
         .optimize_redundant_behaviors()
-        .transform(lambda node: 
+        .transform(lambda node:
             node.replace("&trans", "&none") if node.layer == "gaming" else node)
         .build())
-    
+
     # Step 2: Validate
     validation = (ValidationPipeline()
         .for_layout(processed)
@@ -360,13 +360,13 @@ def process_keymap_file(input_file: str, output_dir: str):
         .check_behavior_references()
         .check_key_coverage(min_coverage=0.8)
         .validate())
-    
+
     if not validation.is_valid:
         print("Validation errors:")
         for error in validation.errors:
             print(f"  - {error}")
         return None
-    
+
     # Step 3: Generate output files
     result = (GeneratorPipeline()
         .from_layout(processed)
@@ -380,7 +380,7 @@ def process_keymap_file(input_file: str, output_dir: str):
         .generate_combos()
         .generate_documentation()
         .write_to(output_dir))
-    
+
     return result
 
 # Usage
@@ -395,7 +395,7 @@ from zmk_layout import Layout, TransformationPipeline
 
 class QMKToZMKConverter:
     """Convert QMK keymaps to ZMK format"""
-    
+
     def convert(self, qmk_file: str) -> Layout:
         return (TransformationPipeline()
             .from_qmk(qmk_file)
@@ -406,7 +406,7 @@ class QMKToZMKConverter:
             .add_zmk_specific_features()
             .validate()
             .to_layout())
-    
+
     def qmk_to_zmk_mapping(self):
         return {
             "KC_A": "&kp A",
@@ -434,21 +434,21 @@ logger = logging.getLogger(__name__)
 
 def safe_layout_processing(file_path: str) -> Layout | None:
     """Process layout with comprehensive error handling"""
-    
+
     try:
         # Try primary processing path
         layout = (Layout
             .from_file(file_path)
             .validate()
             .normalize())
-        
+
     except FileNotFoundError:
         logger.warning(f"File not found: {file_path}, creating default")
         layout = Layout.create_empty("crkbd", "Default")
-        
+
     except LayoutError as e:
         logger.error(f"Layout error: {e}")
-        
+
         # Try recovery
         if e.recoverable:
             layout = (Layout
@@ -457,16 +457,16 @@ def safe_layout_processing(file_path: str) -> Layout | None:
                 .validate_lenient())
         else:
             return None
-            
+
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         return None
-    
+
     finally:
         # Always save a backup
         if layout:
             layout.save(f"{file_path}.backup")
-    
+
     return layout
 ```
 
@@ -477,11 +477,11 @@ from zmk_layout import GeneratorPipeline, Template
 
 def generate_with_fallbacks(layout: Layout) -> dict:
     """Generate files with multiple fallback strategies"""
-    
+
     pipeline = (GeneratorPipeline()
         .from_layout(layout)
         .with_error_handler(lambda e: logger.error(f"Generation error: {e}")))
-    
+
     # Try custom template first
     try:
         result = pipeline.with_template("custom.dtsi.j2").generate()
@@ -492,7 +492,7 @@ def generate_with_fallbacks(layout: Layout) -> dict:
         except:
             # Final fallback: basic generation
             result = pipeline.generate_basic()
-    
+
     return result
 ```
 
@@ -506,16 +506,16 @@ import time
 
 def batch_process_layouts(files: list[str]):
     """Process multiple layouts efficiently"""
-    
+
     # Configure with caching
     providers = (ProviderBuilder()
         .enable_caching(size=1024)
         .enable_performance_tracking()
         .build())
-    
+
     results = []
     start_time = time.time()
-    
+
     # Process in batch with shared cache
     for file_path in files:
         layout = (Layout
@@ -524,13 +524,13 @@ def batch_process_layouts(files: list[str]):
             .cache_key(file_path)  # Enable result caching
             .validate_cached()  # Use cached validation if available
             .optimize_cached())  # Use cached optimization
-        
+
         results.append(layout)
-    
+
     elapsed = time.time() - start_time
     print(f"Processed {len(files)} layouts in {elapsed:.2f}s")
     print(f"Cache hit rate: {providers.cache_stats.hit_rate:.1%}")
-    
+
     return results
 ```
 
@@ -541,7 +541,7 @@ from zmk_layout import Layout, LazyPipeline
 
 def create_lazy_pipeline(layout: Layout):
     """Create pipeline with deferred execution"""
-    
+
     # Build pipeline without executing
     pipeline = (LazyPipeline()
         .from_layout(layout)
@@ -556,15 +556,15 @@ def create_lazy_pipeline(layout: Layout):
             lambda l: l.generate_behaviors(),
             lambda l: l.generate_documentation()
         ]))
-    
+
     # Pipeline not executed yet
     print(f"Pipeline has {len(pipeline.steps)} steps")
-    
+
     # Execute when needed
     if user_confirms():
         result = pipeline.execute()
         return result
-    
+
     return None
 ```
 
@@ -575,20 +575,20 @@ from zmk_layout import StreamingProcessor
 
 def process_large_keymap(file_path: str):
     """Process large keymaps in streaming fashion"""
-    
+
     processor = (StreamingProcessor()
         .from_file(file_path)
         .chunk_size(100)  # Process 100 bindings at a time
         .on_chunk(lambda chunk: validate_chunk(chunk))
         .on_progress(lambda p: print(f"Progress: {p:.1%}"))
         .parallel_chunks(4))  # Process 4 chunks in parallel
-    
+
     # Stream processing
     for result in processor.stream():
         # Handle each chunk result
         if result.has_errors:
             print(f"Errors in chunk: {result.errors}")
-        
+
     return processor.finalize()
 ```
 
@@ -611,7 +611,7 @@ def create(
     validate: bool = True
 ):
     """Create a new keyboard layout"""
-    
+
     layout = (Layout
         .create_empty(keyboard, name)
         .with_author(get_git_author())
@@ -619,18 +619,18 @@ def create(
             "created_with": "zmk-layout-cli",
             "version": "1.0.0"
         }))
-    
+
     if validate:
         validation = (ValidationPipeline()
             .for_layout(layout)
             .validate())
-        
+
         if not validation.is_valid:
             typer.echo("Validation failed:", err=True)
             for error in validation.errors:
                 typer.echo(f"  - {error}", err=True)
             raise typer.Exit(1)
-    
+
     layout.save(output)
     typer.echo(f"Created layout: {output}")
 
@@ -641,13 +641,13 @@ def convert(
     format: str = "zmk"
 ):
     """Convert layout to different format"""
-    
+
     layout = Layout.from_file(input_file)
-    
+
     pipeline = (GeneratorPipeline()
         .from_layout(layout)
         .with_format(format))
-    
+
     if format == "zmk":
         pipeline = (pipeline
             .generate_keymap()
@@ -657,22 +657,22 @@ def convert(
         pipeline = pipeline.generate_qmk()
     elif format == "via":
         pipeline = pipeline.generate_via()
-    
+
     result = pipeline.write_to(output_dir)
     typer.echo(f"Generated {len(result.files)} files in {output_dir}")
 
 @app.command()
 def validate(input_file: Path, strict: bool = False):
     """Validate a layout file"""
-    
+
     layout = Layout.from_file(input_file)
-    
+
     validation = (ValidationPipeline()
         .for_layout(layout)
         .with_level("strict" if strict else "normal")
         .check_all()
         .validate())
-    
+
     if validation.is_valid:
         typer.echo("✓ Layout is valid")
     else:

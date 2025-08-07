@@ -42,15 +42,15 @@ from typing import Protocol, Any
 
 class FileAdapterProtocol(Protocol):
     """Protocol for file operations."""
-    
+
     def read_file(self, path: Path) -> str:
         """Read file contents."""
         ...
-    
+
     def write_file(self, path: Path, content: str) -> None:
         """Write file contents."""
         ...
-    
+
     def exists(self, path: Path) -> bool:
         """Check if file exists."""
         ...
@@ -80,17 +80,17 @@ Create custom provider implementations:
 ```python
 class MyFileAdapter:
     """Custom file adapter implementation."""
-    
+
     def read_file(self, path: Path) -> str:
         # Custom implementation
         with open(path, 'r') as f:
             return f.read()
-    
+
     def write_file(self, path: Path, content: str) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, 'w') as f:
             f.write(content)
-    
+
     def exists(self, path: Path) -> bool:
         return path.exists()
 
@@ -138,43 +138,43 @@ layout_data = LayoutData(
 context = (TemplateContextBuilder()
     # Layout information
     .with_layout(layout_data)
-    
+
     # Keyboard profile
     .with_profile(glove80_profile)
-    
+
     # Behaviors
     .with_behaviors(
         behaviors=[home_row_mod],
         combos=[esc_combo],
         macros=[vim_save]
     )
-    
+
     # DTSI content
     .with_dtsi_content(
         layer_defines=layer_defines_str,
         behaviors_dtsi=behaviors_dtsi_str,
         keymap_node=keymap_node_str
     )
-    
+
     # Metadata
     .with_generation_metadata(
         author="John Doe",
         version="2.0.0"
     )
-    
+
     # Custom variables
     .with_custom_vars(
         theme="dark",
         layout_style="ergonomic"
     )
-    
+
     # Feature flags
     .with_features(
         home_row_mods=True,
         mouse_keys=False,
         rgb_underglow=True
     )
-    
+
     # Validate and build
     .validate_completeness()
     .build())
@@ -277,7 +277,7 @@ from zmk_layout.infrastructure.performance import LazyProperty
 class LayoutAnalyzer:
     def __init__(self, layout_data):
         self.layout_data = layout_data
-    
+
     @LazyProperty
     def complexity_score(self) -> float:
         """Expensive complexity analysis (computed once)."""
@@ -533,22 +533,22 @@ from zmk_layout.infrastructure import PipelineComposer
 def create_custom_workflow():
     """Create custom processing workflow."""
     composer = PipelineComposer()
-    
+
     # Add custom stages
     def normalize_stage(data):
         # Custom normalization
         return normalize_layout(data)
-    
+
     def optimize_stage(data):
         # Custom optimization
         return optimize_for_performance(data)
-    
+
     def validate_stage(layout):
         return (ValidationPipeline(layout)
             .validate_bindings()
             .validate_layer_references()
             .with_custom_rules(my_rules))
-    
+
     return (composer
         .add_custom_stage("normalize", normalize_stage)
         .checkpoint("after_normalization")

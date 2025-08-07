@@ -75,60 +75,74 @@ class DefaultLogger:
 
 
 class DefaultTemplateProvider:
-    """Default template provider with Jinja2 support and fallback."""
+    """Default template provider with Jinja2 as core dependency."""
 
     def render_string(
         self, template: str, context: dict[str, str | int | float | bool | None]
     ) -> str:
         """Render template string using Jinja2 or basic format."""
-        try:
-            import jinja2
-            from jinja2 import Environment, DictLoader
-            
-            # Create a Jinja2 environment with the template
+        from jinja2 import DictLoader, Environment
+
+        # Check if this is a Jinja2 template (has {{}} syntax) vs basic format template ({} syntax)
+        has_jinja2_syntax = any(
+            pattern in template for pattern in ["{%", "%}", "{{", "}}", "{#", "#}"]
+        )
+        has_basic_syntax = "{" in template and not has_jinja2_syntax
+
+        if has_jinja2_syntax:
+            # Use Jinja2 for templates with Jinja2 syntax
             env = Environment(
                 loader=DictLoader({"template": template}),
                 trim_blocks=True,
-                lstrip_blocks=True
+                lstrip_blocks=True,
             )
             template_obj = env.get_template("template")
             return template_obj.render(context)
-        except ImportError:
-            # Fallback to basic str.format()
+        elif has_basic_syntax:
+            # Use basic str.format() for templates with basic format syntax
             try:
                 return template.format(**context)
             except KeyError as e:
                 raise ValueError(f"Template variable not found in context: {e}") from e
+        else:
+            # No template syntax, return as-is
+            return template
 
     def render_template(
         self, template_path: str, context: dict[str, str | int | float | bool | None]
     ) -> str:
         """Render template file using Jinja2 or basic substitution."""
         from pathlib import Path
-        
+
+        from jinja2 import Environment, FileSystemLoader
+
         template_file = Path(template_path)
         if not template_file.exists():
             raise FileNotFoundError(f"Template file not found: {template_path}")
-        
+
         template_content = template_file.read_text()
-        
-        try:
-            import jinja2
-            from jinja2 import Environment, FileSystemLoader
-            
-            # Create Jinja2 environment with the template directory
+
+        # Check if this is a Jinja2 template vs basic format template
+        has_jinja2_syntax = any(
+            pattern in template_content
+            for pattern in ["{%", "%}", "{{", "}}", "{#", "#}"]
+        )
+
+        if has_jinja2_syntax:
+            # Use Jinja2 for templates with Jinja2 syntax
             env = Environment(
                 loader=FileSystemLoader(template_file.parent),
                 trim_blocks=True,
-                lstrip_blocks=True
+                lstrip_blocks=True,
             )
             template_obj = env.get_template(template_file.name)
             return template_obj.render(context)
-        except ImportError:
-            # Fallback to simple variable replacement
-            for key, value in context.items():
-                template_content = template_content.replace(f"{{{{{key}}}}}", str(value))
-            return template_content
+        else:
+            # Use basic format for simple templates
+            try:
+                return template_content.format(**context)
+            except KeyError as e:
+                raise ValueError(f"Template variable not found in context: {e}") from e
 
     def has_template_syntax(self, content: str) -> bool:
         """Check for Jinja2 or basic template syntax."""
@@ -139,19 +153,15 @@ class DefaultTemplateProvider:
 
     def escape_content(self, content: str) -> str:
         """Escape content for Jinja2 processing."""
-        try:
-            import jinja2
-            # For Jinja2, we need to escape template syntax
-            return (content
-                    .replace("{%", "{{ '{%' }}")
-                    .replace("%}", "{{ '%}' }}")
-                    .replace("{{", "{{ '{{' }}")
-                    .replace("}}", "{{ '}}' }}")
-                    .replace("{#", "{{ '{#' }}")
-                    .replace("#}", "{{ '#}' }}"))
-        except ImportError:
-            # Basic escaping by doubling braces
-            return content.replace("{", "{{").replace("}", "}}")
+        # For Jinja2, we need to escape template syntax
+        return (
+            content.replace("{%", "{{ '{%' }}")
+            .replace("%}", "{{ '%}' }}")
+            .replace("{{", "{{ '{{' }}")
+            .replace("}}", "{{ '}}' }}")
+            .replace("{#", "{{ '{#' }}")
+            .replace("#}", "{{ '#}' }}")
+        )
 
 
 class DefaultConfigurationProvider:

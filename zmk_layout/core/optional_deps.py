@@ -44,6 +44,13 @@ def get_template_provider() -> "TemplateProvider":
             ) -> str:
                 return template
 
+            def render_template(
+                self, template_path: str, context: dict[str, Any] | None = None
+            ) -> str:
+                # Fallback: just read the file as-is without template processing
+                with open(template_path) as f:
+                    return f.read()
+
             def has_template_syntax(self, text: str) -> bool:
                 return False
 

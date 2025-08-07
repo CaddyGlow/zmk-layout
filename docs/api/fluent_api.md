@@ -170,7 +170,7 @@ layout = (layout.layers
 ```python
 # Add hold-tap behavior
 layout = (layout.behaviors
-    .add_hold_tap("hm", 
+    .add_hold_tap("hm",
         hold="&kp",
         tap="&mo",
         tapping_term_ms=200,
@@ -600,15 +600,15 @@ layout.save("output.json")
 # Backward compatible wrapper
 class LayoutCompat:
     """Wrapper for backward compatibility"""
-    
+
     def __init__(self, layout):
         self._layout = layout
-    
+
     # Old API
     def add_layer(self, name, bindings=None):
         self._layout = self._layout.layers.add(name, bindings)
         return self
-    
+
     # Bridge to new API
     def fluent(self):
         return self._layout
