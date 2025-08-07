@@ -1,6 +1,5 @@
 """Tests specifically designed to boost coverage of under-tested modules."""
 
-
 import pytest
 
 from zmk_layout.models.behaviors import (

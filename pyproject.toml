@@ -105,6 +105,7 @@ timeout = 30
 addopts = "-v --tb=short --cov-report=term -m 'not performance'"
 markers = [
   "performance: marks tests as performance tests (deselect with '-m \"not performance\"')",
+  "integration: marks tests as integration tests",
 ]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
