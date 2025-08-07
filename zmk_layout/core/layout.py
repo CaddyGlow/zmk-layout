@@ -191,6 +191,7 @@ class Layout:
         """
         if not hasattr(self, "_export_manager"):
             from zmk_layout.generators.keymap_generator import ExportManager
+
             self._export_manager = ExportManager(self)
         return self._export_manager
 

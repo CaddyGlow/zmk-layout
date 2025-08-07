@@ -11,7 +11,7 @@ All generated files are saved to the output directory for inspection.
 
 The new approach uses:
 - Layout.from_string() for auto-detection of JSON/keymap formats
-- Layout.to_keymap() for direct keymap generation
+- Layout.export.keymap().generate() for direct keymap generation with fluent API
 - Much simpler code with less setup required
 
 OLD WAY (complex):
@@ -81,8 +81,8 @@ def main():
         layout = Layout.from_string(json_content, providers=providers)
         print(f"✅ Loaded Factory.json with {layout.layers.count} layers")
 
-        # Generate keymap using to_keymap()
-        keymap_content = layout.to_keymap(include_headers=True)
+        # Generate keymap using new fluent API
+        keymap_content = layout.export.keymap().with_headers(True).generate()
 
         # Save generated keymap
         generated_keymap_path = output_dir / "generated_from_json.keymap"
@@ -128,8 +128,8 @@ def main():
         layout1 = Layout.from_string(json_content, providers=providers)
         print("✅ Step 1: Loaded original JSON")
 
-        # Step 2: Convert to keymap
-        intermediate_keymap = layout1.to_keymap(include_headers=True)
+        # Step 2: Convert to keymap using new fluent API
+        intermediate_keymap = layout1.export.keymap().with_headers(True).generate()
         roundtrip_keymap_path = output_dir / "roundtrip_intermediate.keymap"
         roundtrip_keymap_path.write_text(intermediate_keymap)
         print("✅ Step 2: Generated intermediate keymap")

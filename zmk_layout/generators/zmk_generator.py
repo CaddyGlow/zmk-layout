@@ -192,6 +192,91 @@ class LayoutFormatter:
         if not bindings:
             return f"{base_indent}// Empty layer"
 
+        # Check if profile has proper formatting configuration
+        if (profile and 
+            hasattr(profile, 'keyboard_config') and 
+            hasattr(profile.keyboard_config, 'keymap') and 
+            hasattr(profile.keyboard_config.keymap, 'formatting') and 
+            hasattr(profile.keyboard_config.keymap.formatting, 'rows')):
+            
+            # Use profile-specific formatting (like Glove80)
+            return self._generate_profile_layout(bindings, profile, base_indent)
+        else:
+            # Fall back to simple grid layout for other keyboards
+            return self._generate_simple_grid_layout(bindings, profile, base_indent)
+
+    def _generate_profile_layout(self, bindings: list[str], profile: Any, base_indent: str) -> str:
+        """Generate layout using profile's formatting configuration."""
+        fmt = profile.keyboard_config.keymap.formatting
+        key_gap = getattr(fmt, 'key_gap', '  ')
+        rows = getattr(fmt, 'rows', [])
+        
+        if not isinstance(rows, list) or not all(isinstance(r, list) for r in rows):
+            # Fall back to simple grid if rows format is invalid
+            return self._generate_simple_grid_layout(bindings, profile, base_indent)
+
+        # Create bindings map
+        bindings_map = {}
+        for idx, binding_str in enumerate(bindings):
+            if idx >= len(bindings):
+                break
+            bindings_map[idx] = str(binding_str)
+
+        # Calculate grid dimensions
+        num_rows = len(rows)
+        num_cols = max(len(r) for r in rows) if rows else 0
+        
+        # Create grid matrix
+        grid_matrix = [[None] * num_cols for _ in range(num_rows)]
+        
+        # Populate matrix using profile's row configuration
+        for r, row_indices in enumerate(rows):
+            for c, key_index in enumerate(row_indices):
+                if c >= num_cols:
+                    continue
+                if key_index == -1:
+                    grid_matrix[r][c] = None  # Empty slot
+                elif key_index in bindings_map:
+                    grid_matrix[r][c] = bindings_map[key_index]
+                else:
+                    grid_matrix[r][c] = None  # Missing binding
+
+        # Calculate max width for each column
+        max_col_widths = [0] * num_cols
+        for c in range(num_cols):
+            col_binding_lengths = []
+            for r in range(num_rows):
+                cell_content = grid_matrix[r][c]
+                if cell_content is not None:
+                    col_binding_lengths.append(len(cell_content))
+            
+            if col_binding_lengths:
+                max_col_widths[c] = max(col_binding_lengths)
+
+        # Format output lines
+        output_lines = []
+        for r in range(num_rows):
+            current_row_parts = []
+            for c in range(num_cols):
+                cell_content = grid_matrix[r][c]
+                current_col_width = max_col_widths[c]
+                
+                if cell_content is None:
+                    # Empty slot - use spaces
+                    current_row_parts.append(" " * current_col_width if current_col_width > 0 else "")
+                else:
+                    # Right-align binding in its column width
+                    current_row_parts.append(cell_content.ljust(current_col_width))
+
+            # Join row with key gap and add base indent
+            row_string = key_gap.join(current_row_parts).rstrip()
+            if row_string.strip():  # Only add non-empty rows
+                output_lines.append(f"{base_indent}{row_string}")
+
+        return "\n".join(output_lines)
+
+    def _generate_simple_grid_layout(self, bindings: list[str], profile: Any, base_indent: str) -> str:
+        """Generate simple grid layout for keyboards without specific formatting."""
         # Determine grid layout based on keyboard profile or binding count
         rows, cols = self._determine_grid_layout(len(bindings), profile)
 

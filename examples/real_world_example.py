@@ -3,15 +3,15 @@
 Real-World Example: Creating a Complete Corne Layout
 
 This example demonstrates creating a realistic 3x6+3 Corne keyboard layout
-with home row mods, multiple layers, combos, and macros using the new
-helper methods for simplified API usage.
+with home row mods, multiple layers, combos, and macros using the modern
+fluent API with method chaining.
 
 Features demonstrated:
 - Layout.create_empty() for starting layouts
-- Layout.to_keymap() for generating ZMK keymap files
+- Layout.export.keymap().generate() for generating ZMK keymap files with fluent API
 - Layout.from_string() for loading any format
 - Automatic file format detection
-- Clean, simple API without complex setup
+- Modern fluent API with method chaining
 """
 
 import json
@@ -323,11 +323,11 @@ def save_layout_files():
     json_file.write_text(json_content)
     print(f"   ✓ JSON file saved ({json_file.stat().st_size:,} bytes)")
 
-    # Save as ZMK keymap using to_keymap() helper
+    # Save as ZMK keymap using new fluent API
     keymap_file = output_dir / "corne.keymap"
     print(f"2. Saving ZMK keymap to: {keymap_file}")
 
-    keymap_content = layout.to_keymap(keyboard_name="corne", include_headers=True)
+    keymap_content = layout.export.keymap().with_headers(True).generate()
     keymap_file.write_text(keymap_content)
     print(f"   ✓ Keymap file saved ({keymap_file.stat().st_size:,} bytes)")
 
@@ -448,10 +448,10 @@ def main():
         else:
             print("⚠️  Some validation tests failed (check output above)")
 
-        print("\nNew Helper Methods Demonstrated:")
+        print("\nNew Fluent API Methods Demonstrated:")
         print("• Layout.create_empty() - Start with empty layout")
         print("• Layout.to_dict() - Convert to dictionary")
-        print("• Layout.to_keymap() - Generate ZMK keymap directly")
+        print("• Layout.export.keymap().generate() - Generate ZMK keymap with fluent API")
         print("• Layout.from_string() - Auto-detect and load any format")
         print("• Path.read_text() / Path.write_text() - Handle file I/O externally")
 
@@ -460,7 +460,7 @@ def main():
         print("• corne.keymap - Ready-to-use ZMK keymap file")
 
         print("\nThis demonstrates a production-ready ZMK layout created")
-        print("entirely with the zmk-layout library's simplified helper API!")
+        print("entirely with the zmk-layout library's modern fluent API!")
 
     except Exception as e:
         print(f"✗ Example failed: {e}")
